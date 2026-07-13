@@ -1,0 +1,347 @@
+import { useState, useEffect } from 'react';
+import { supabase } from '@/config/supabase';
+import { toast } from 'react-hot-toast';
+import PageBreadcrumb from '@/components/common/PageBreadcrumb';
+import PageMeta from '@/components/common/PageMeta';
+import ConfirmationModal from '@/components/common/ConfirmationModal';
+import type { Database } from '@/types/database';
+
+type DynamicSchema = Database['public']['Tables']['dynamic_schemas']['Row'];
+
+interface FieldDef {
+  id: string;
+  name: string;
+  type: 'gender_split' | 'single_value';
+  chartType: 'bar' | 'pie' | 'stat_card' | 'hidden';
+}
+
+const DEPARTMENTS = [
+  'Demographics & Population',
+  'Social Development',
+  'Economic Development',
+  'Infrastructure',
+  'Local Governance',
+  'Justice & Safety',
+  'Institutional GAD'
+];
+
+export default function DynamicTablesPage() {
+  const [schemas, setSchemas] = useState<DynamicSchema[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingSchema, setEditingSchema] = useState<DynamicSchema | null>(null);
+  
+  // Form state
+  const [department, setDepartment] = useState(DEPARTMENTS[0]);
+  const [tabName, setTabName] = useState('');
+  const [description, setDescription] = useState('');
+  const [fields, setFields] = useState<FieldDef[]>([]);
+
+  // Delete Modal
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchSchemas();
+  }, []);
+
+  const fetchSchemas = async () => {
+    setLoading(true);
+    const { data, error } = await supabase.from('dynamic_schemas').select('*').order('department').order('tab_name');
+    if (error) {
+      toast.error('Failed to load dynamic tables');
+    } else {
+      setSchemas(data || []);
+    }
+    setLoading(false);
+  };
+
+  const handleOpenAdd = () => {
+    setEditingSchema(null);
+    setDepartment(DEPARTMENTS[0]);
+    setTabName('');
+    setDescription('');
+    setFields([]);
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEdit = (schema: DynamicSchema) => {
+    setEditingSchema(schema);
+    setDepartment(schema.department);
+    setTabName(schema.tab_name);
+    
+    const sData = schema.schema as any;
+    if (Array.isArray(sData)) {
+       setDescription('');
+       setFields(sData as unknown as FieldDef[]);
+    } else {
+       setDescription(sData?.description || '');
+       setFields(sData?.fields || []);
+    }
+    
+    setIsModalOpen(true);
+  };
+
+  const addField = () => {
+    setFields([...fields, { id: crypto.randomUUID(), name: '', type: 'gender_split', chartType: 'bar' }]);
+  };
+
+  const updateField = (index: number, key: keyof FieldDef, value: string) => {
+    const newFields = [...fields];
+    newFields[index] = { ...newFields[index], [key]: value };
+    setFields(newFields);
+  };
+
+  const removeField = (index: number) => {
+    const newFields = [...fields];
+    newFields.splice(index, 1);
+    setFields(newFields);
+  };
+
+  const handleSave = async () => {
+    if (!tabName.trim()) {
+      toast.error('Tab name is required');
+      return;
+    }
+    for (const f of fields) {
+      if (!f.name.trim()) {
+        toast.error('All fields must have a name');
+        return;
+      }
+    }
+
+    const payload = {
+      department,
+      tab_name: tabName,
+      schema: { description, fields } as any
+    };
+
+    try {
+      if (editingSchema) {
+        const { error } = await supabase.from('dynamic_schemas').update(payload).eq('id', editingSchema.id);
+        if (error) throw error;
+        toast.success('Table updated successfully');
+      } else {
+        const { error } = await supabase.from('dynamic_schemas').insert([payload]);
+        if (error) throw error;
+        toast.success('Table created successfully');
+      }
+      setIsModalOpen(false);
+      fetchSchemas();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to save table');
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!deletingId) return;
+    try {
+      const { error } = await supabase.from('dynamic_schemas').delete().eq('id', deletingId);
+      if (error) throw error;
+      toast.success('Table deleted successfully');
+      setDeleteModalOpen(false);
+      fetchSchemas();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete table');
+    }
+  };
+
+  return (
+    <div>
+      <PageMeta title="Dynamic Tables | Presentacion" description="Manage custom data tables" />
+      <PageBreadcrumb pageTitle="Dynamic Tables" />
+      
+      <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between mb-6">
+        <div>
+          <h2 className="text-xl font-bold text-gray-800 dark:text-white/90">Dynamic Schema Builder</h2>
+          <p className="text-sm text-gray-500 mt-1">Create custom data tables and dashboard metrics for departments.</p>
+        </div>
+        <button
+          onClick={handleOpenAdd}
+          className="flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600 shadow-sm"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          Add New Table
+        </button>
+      </div>
+
+      <div className="rounded-xl border border-gray-200 bg-white shadow-theme-sm dark:border-gray-800 dark:bg-gray-900">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm text-gray-500 dark:text-gray-400">
+            <thead className="bg-gray-50 text-xs uppercase text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+              <tr>
+                <th className="px-6 py-4 font-semibold">Department</th>
+                <th className="px-6 py-4 font-semibold">Tab Name</th>
+                <th className="px-6 py-4 font-semibold">Fields Configured</th>
+                <th className="px-6 py-4 font-semibold text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+              {loading ? (
+                <tr><td colSpan={4} className="p-8 text-center">Loading...</td></tr>
+              ) : schemas.length === 0 ? (
+                <tr><td colSpan={4} className="p-8 text-center">No dynamic tables created yet.</td></tr>
+              ) : (
+                schemas.map((schema) => {
+                  const sData = schema.schema as any;
+                  const fieldsArr = (Array.isArray(sData) ? sData : sData?.fields) || [];
+                  return (
+                    <tr key={schema.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                      <td className="px-6 py-4 text-gray-800 dark:text-white/90 font-medium">
+                        {schema.department}
+                      </td>
+                      <td className="px-6 py-4 font-medium text-brand-600 dark:text-brand-400">
+                        {schema.tab_name}
+                      </td>
+                      <td className="px-6 py-4 text-xs">
+                        <div className="flex flex-wrap gap-1">
+                          {fieldsArr.map((f: FieldDef) => (
+                            <span key={f.id} className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-md text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
+                              {f.name} ({f.type === 'gender_split' ? 'M/F' : 'Single'})
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <button onClick={() => handleOpenEdit(schema)} className="text-brand-500 hover:text-brand-600 font-medium mr-4">Edit</button>
+                        <button onClick={() => { setDeletingId(schema.id); setDeleteModalOpen(true); }} className="text-error-500 hover:text-error-600 font-medium">Delete</button>
+                      </td>
+                    </tr>
+                  )
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+            {isModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/50 backdrop-blur-sm p-4">
+          <div className="w-full max-w-3xl rounded-2xl bg-white shadow-2xl dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
+            <div className="p-6">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
+                {editingSchema ? "Edit Dynamic Table" : "Create Dynamic Table"}
+              </h2>
+              <div className="space-y-4 max-h-[70vh] overflow-y-auto">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Department</label>
+                    <select
+                      value={department}
+                      onChange={e => setDepartment(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-800 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:text-white"
+                    >
+                      {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Tab Name</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Health & Nutrition"
+                      value={tabName}
+                      onChange={e => setTabName(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-800 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:text-white"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Description (Optional)</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Manage custom data for fisherfolks."
+                    value={description}
+                    onChange={e => setDescription(e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-800 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:text-white"
+                  />
+                </div>
+
+                <div className="mt-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold text-gray-800 dark:text-white/90">Data Fields</h3>
+                    <button onClick={addField} className="text-xs font-medium text-brand-500 hover:text-brand-600">+ Add Field</button>
+                  </div>
+                  
+                  {fields.length === 0 ? (
+                    <div className="p-4 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 text-center text-sm text-gray-500">
+                      No fields added yet. Click "+ Add Field" to start building your table.
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {fields.map((field, idx) => (
+                        <div key={field.id} className="flex flex-col sm:flex-row gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/20">
+                          <div className="flex-1">
+                            <input
+                              type="text"
+                              placeholder="Field Name (e.g. Total Schools)"
+                              value={field.name}
+                              onChange={e => updateField(idx, 'name', e.target.value)}
+                              className="w-full rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                            />
+                          </div>
+                          <div className="w-full sm:w-32">
+                            <select
+                              value={field.type}
+                              onChange={e => updateField(idx, 'type', e.target.value)}
+                              className="w-full rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                            >
+                              <option value="gender_split">Male/Female</option>
+                              <option value="single_value">Single Value</option>
+                            </select>
+                          </div>
+                          <div className="w-full sm:w-36">
+                            <select
+                              value={field.chartType}
+                              onChange={e => updateField(idx, 'chartType', e.target.value)}
+                              className="w-full rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                            >
+                              <option value="bar">Bar Chart</option>
+                              <option value="pie">Pie Chart</option>
+                              <option value="stat_card">Stat Card</option>
+                              <option value="hidden">Hidden from Dash</option>
+                            </select>
+                          </div>
+                          <button onClick={() => removeField(idx)} className="p-1.5 text-gray-400 hover:text-error-500 rounded-md">
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-800">
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSave}
+                  className="rounded-lg bg-brand-500 px-5 py-2 text-sm font-medium text-white hover:bg-brand-600"
+                >
+                  Save Table
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <ConfirmationModal
+        isOpen={deleteModalOpen}
+        onCancel={() => setDeleteModalOpen(false)}
+        onConfirm={confirmDelete}
+        title="Delete Dynamic Table"
+        message="Are you sure you want to delete this table? All associated data entries for this table will be permanently deleted across all barangays."
+        isDestructive={true}
+      />
+    </div>
+  );
+}
