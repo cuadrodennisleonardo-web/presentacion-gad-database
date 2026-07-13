@@ -12,7 +12,7 @@ const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const from = (location.state as { from?: { pathname: string } })?.from?.pathname || "/";
+  const from = (location.state as { from?: { pathname: string } })?.from?.pathname;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,7 +22,7 @@ const LoginPage: React.FC = () => {
     if (result.error) {
       setError(result.error);
     } else {
-      navigate(from, { replace: true });
+      navigate(from && from !== "/" ? from : "/login-redirect", { replace: true });
     }
   };
 

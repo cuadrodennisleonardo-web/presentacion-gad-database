@@ -17,7 +17,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem("theme") as Theme | null;
+    const savedTheme = sessionStorage.getItem("theme") as Theme | null;
     const initialTheme = savedTheme || "light";
     setTheme(initialTheme);
     setIsInitialized(true);
@@ -25,7 +25,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
 
   useEffect(() => {
     if (isInitialized) {
-      localStorage.setItem("theme", theme);
+      sessionStorage.setItem("theme", theme);
       if (theme === "dark") {
         document.documentElement.classList.add("dark");
       } else {

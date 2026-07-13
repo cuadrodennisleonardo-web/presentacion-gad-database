@@ -24,6 +24,7 @@ const AuditLogPage = lazy(() => import("./pages/Settings/AuditLogPage"));
 const DynamicTablesPage = lazy(() => import("./pages/Settings/DynamicTablesPage"));
 const DataManagementPage = lazy(() => import("./pages/Settings/DataManagementPage"));
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
+const PublicLandingPage = lazy(() => import("./pages/PublicLandingPage"));
 
 // Data Entry Hub
 const DemographicsDataEntry = lazy(() => import("./pages/DataEntry/DemographicsDataEntry"));
@@ -120,7 +121,8 @@ export default function App() {
               <Route path="/data-entry/gad" element={<ModuleGuard module="Institutional GAD"><GADDataEntry /></ModuleGuard>} />
             </Route>
 
-            <Route path="/" element={<HomeRedirect />} />
+            <Route path="/login-redirect" element={<HomeRedirect />} />
+            <Route path="/" element={<PublicLandingPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
