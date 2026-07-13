@@ -3,6 +3,7 @@ import PageMeta from "@/components/common/PageMeta";
 import PageBreadcrumb from "@/components/common/PageBreadcrumb";
 import MultiSeriesChart from "@/components/charts/MultiSeriesChart";
 import DynamicDashboardCharts from '@/components/common/DynamicDashboardCharts';
+import DynamicBudgetCharts from '@/components/common/DynamicBudgetCharts';
 import { useGADStats } from "@/hooks/queries/useGADStats";
 
 
@@ -81,9 +82,11 @@ export default function GADDashboard() {
           </div>
 
           <DynamicDashboardCharts department="Institutional GAD" year={year} />
+          <DynamicBudgetCharts department="Institutional GAD" year={year} />
 
         </>
       )}
     </>
   );
 }
+

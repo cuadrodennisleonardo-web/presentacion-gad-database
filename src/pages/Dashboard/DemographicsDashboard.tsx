@@ -5,6 +5,7 @@ import PageBreadcrumb from "@/components/common/PageBreadcrumb";
 import PopulationByBarangayChart from "./PopulationByBarangayChart";
 import SexDistributionChart from "./SexDistributionChart";
 import DynamicDashboardCharts from "@/components/common/DynamicDashboardCharts";
+import DynamicBudgetCharts from '@/components/common/DynamicBudgetCharts';
 import ErrorBoundary from "@/components/common/ErrorBoundary";
 import { useDemographicsStats } from "@/hooks/queries/useDemographicsStats";
 
@@ -92,9 +93,12 @@ export default function DemographicsDashboard() {
           </div>
 
           <DynamicDashboardCharts department="Demographics & Population" year={year} />
+          <DynamicBudgetCharts department="Demographics & Population" year={year} />
 
         </>
       )}
     </>
   );
 }
+
+

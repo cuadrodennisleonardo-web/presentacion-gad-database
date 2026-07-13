@@ -3,6 +3,7 @@ import PageMeta from "@/components/common/PageMeta";
 import PageBreadcrumb from "@/components/common/PageBreadcrumb";
 import MultiSeriesChart from "@/components/charts/MultiSeriesChart";
 import DynamicDashboardCharts from '@/components/common/DynamicDashboardCharts';
+import DynamicBudgetCharts from '@/components/common/DynamicBudgetCharts';
 import { useJusticeStats } from "@/hooks/queries/useJusticeStats";
 
 
@@ -70,9 +71,11 @@ export default function JusticeDashboard() {
           </div>
           
           <DynamicDashboardCharts department="Justice & Safety" year={year} />
+          <DynamicBudgetCharts department="Justice & Safety" year={year} />
 
         </>
       )}
     </>
   );
 }
+

@@ -10,6 +10,7 @@ interface MultiSeriesChartProps {
   type?: "bar" | "line" | "area" | "pie" | "donut";
   stacked?: boolean;
   height?: number;
+  isCurrency?: boolean;
 }
 
 const MultiSeriesChart: React.FC<MultiSeriesChartProps> = ({ 
@@ -19,7 +20,8 @@ const MultiSeriesChart: React.FC<MultiSeriesChartProps> = ({
   colors,
   type = "bar",
   stacked = false,
-  height = 350
+  height = 350,
+  isCurrency = false
 }) => {
   const isPieOrDonut = type === "pie" || type === "donut";
 
@@ -60,8 +62,22 @@ const MultiSeriesChart: React.FC<MultiSeriesChartProps> = ({
       axisTicks: { show: false },
     } : undefined,
     yaxis: !isPieOrDonut ? {
-      title: { text: "Count" },
+      title: { text: isCurrency ? "Amount (₱)" : "Count" },
+      labels: {
+        formatter: (val) => {
+          if (isCurrency) return "₱" + val.toLocaleString();
+          return val.toString();
+        }
+      }
     } : undefined,
+    tooltip: {
+      y: {
+        formatter: (val) => {
+          if (isCurrency) return "₱" + val.toLocaleString();
+          return val.toString();
+        }
+      }
+    },
     legend: {
       position: 'top',
       horizontalAlign: 'right'

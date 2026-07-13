@@ -3,6 +3,7 @@ import PageMeta from "@/components/common/PageMeta";
 import PageBreadcrumb from "@/components/common/PageBreadcrumb";
 import MultiSeriesChart from "@/components/charts/MultiSeriesChart";
 import DynamicDashboardCharts from '@/components/common/DynamicDashboardCharts';
+import DynamicBudgetCharts from '@/components/common/DynamicBudgetCharts';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import { CHART_COLORS } from "@/config/chartColors";
 import { useEconomicDevStats } from "@/hooks/queries/useEconomicDevStats";
@@ -123,8 +124,10 @@ export default function EconomicDevelopmentDashboard() {
           </div>
 
           <DynamicDashboardCharts department="Economic Development" year={year} />
+          <DynamicBudgetCharts department="Economic Development" year={year} />
         </>
       )}
     </>
   );
 }
+

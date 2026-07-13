@@ -197,7 +197,7 @@ export default function DataManagementPage() {
                 value={tableSelection}
                 onChange={(e) => setTableSelection(e.target.value)}
                 disabled={!department}
-                className="w-full rounded-xl border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-shadow p-3 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full rounded-xl border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-shadow p-3 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:text-gray-500 dark:disabled:text-white"
               >
                 <option value="all">All Tables (Native + Dynamic)</option>
                 {department && (

@@ -36,7 +36,11 @@ export default function DynamicTablesPage() {
   const [department, setDepartment] = useState(DEPARTMENTS[0]);
   const [tabName, setTabName] = useState('');
   const [description, setDescription] = useState('');
+  const [isBudget, setIsBudget] = useState(false);
   const [fields, setFields] = useState<FieldDef[]>([]);
+
+  // Tabs
+  const [activeTab, setActiveTab] = useState<'standard' | 'budget'>('standard');
 
   // Delete Modal
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -62,6 +66,7 @@ export default function DynamicTablesPage() {
     setDepartment(DEPARTMENTS[0]);
     setTabName('');
     setDescription('');
+    setIsBudget(activeTab === 'budget');
     setFields([]);
     setIsModalOpen(true);
   };
@@ -74,9 +79,11 @@ export default function DynamicTablesPage() {
     const sData = schema.schema as any;
     if (Array.isArray(sData)) {
        setDescription('');
+       setIsBudget(false);
        setFields(sData as unknown as FieldDef[]);
     } else {
        setDescription(sData?.description || '');
+       setIsBudget(sData?.isBudget || false);
        setFields(sData?.fields || []);
     }
     
@@ -84,7 +91,7 @@ export default function DynamicTablesPage() {
   };
 
   const addField = () => {
-    setFields([...fields, { id: crypto.randomUUID(), name: '', type: 'gender_split', chartType: 'bar' }]);
+    setFields([...fields, { id: crypto.randomUUID(), name: '', type: isBudget ? 'single_value' : 'gender_split', chartType: 'bar' }]);
   };
 
   const updateField = (index: number, key: keyof FieldDef, value: string) => {
@@ -114,7 +121,7 @@ export default function DynamicTablesPage() {
     const payload = {
       department,
       tab_name: tabName,
-      schema: { description, fields } as any
+      schema: { description, isBudget, fields } as any
     };
 
     try {
@@ -164,7 +171,30 @@ export default function DynamicTablesPage() {
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
-          Add New Table
+          Add New {activeTab === 'budget' ? 'Budget' : 'Table'}
+        </button>
+      </div>
+
+      <div className="mb-6 flex border-b border-gray-200 dark:border-gray-800">
+        <button
+          onClick={() => setActiveTab('standard')}
+          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === 'standard' 
+              ? 'border-brand-500 text-brand-600 dark:border-brand-400 dark:text-brand-400' 
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+          }`}
+        >
+          Standard Data Tables
+        </button>
+        <button
+          onClick={() => setActiveTab('budget')}
+          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === 'budget' 
+              ? 'border-brand-500 text-brand-600 dark:border-brand-400 dark:text-brand-400' 
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+          }`}
+        >
+          Budget Tables
         </button>
       </div>
 
@@ -182,10 +212,18 @@ export default function DynamicTablesPage() {
             <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
               {loading ? (
                 <tr><td colSpan={4} className="p-8 text-center">Loading...</td></tr>
-              ) : schemas.length === 0 ? (
-                <tr><td colSpan={4} className="p-8 text-center">No dynamic tables created yet.</td></tr>
+              ) : schemas.filter(s => {
+                  const sData = s.schema as any;
+                  const schemaIsBudget = sData && !Array.isArray(sData) ? sData.isBudget : false;
+                  return activeTab === 'budget' ? schemaIsBudget : !schemaIsBudget;
+                }).length === 0 ? (
+                <tr><td colSpan={4} className="p-8 text-center">No dynamic tables created yet in this category.</td></tr>
               ) : (
-                schemas.map((schema) => {
+                schemas.filter(s => {
+                  const sData = s.schema as any;
+                  const schemaIsBudget = sData && !Array.isArray(sData) ? sData.isBudget : false;
+                  return activeTab === 'budget' ? schemaIsBudget : !schemaIsBudget;
+                }).map((schema) => {
                   const sData = schema.schema as any;
                   const fieldsArr = (Array.isArray(sData) ? sData : sData?.fields) || [];
                   return (
@@ -287,10 +325,11 @@ export default function DynamicTablesPage() {
                             <select
                               value={field.type}
                               onChange={e => updateField(idx, 'type', e.target.value)}
-                              className="w-full rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                              disabled={isBudget}
+                              className="w-full rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white disabled:bg-gray-50 disabled:text-gray-500 dark:disabled:bg-gray-800 dark:disabled:text-white"
                             >
-                              <option value="gender_split">Male/Female</option>
-                              <option value="single_value">Single Value</option>
+                              {!isBudget && <option value="gender_split">Male/Female</option>}
+                              <option value="single_value">{isBudget ? 'Currency' : 'Single Value'}</option>
                             </select>
                           </div>
                           <div className="w-full sm:w-36">
@@ -300,8 +339,8 @@ export default function DynamicTablesPage() {
                               className="w-full rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
                             >
                               <option value="bar">Bar Chart</option>
-                              <option value="pie">Pie Chart</option>
-                              <option value="stat_card">Stat Card</option>
+                              <option value="pie">{isBudget ? 'Line Graph' : 'Line/Area Graph'}</option>
+                              <option value="stat_card">Total Summary Card</option>
                               <option value="hidden">Hidden from Dash</option>
                             </select>
                           </div>

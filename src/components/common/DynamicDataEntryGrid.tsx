@@ -352,14 +352,15 @@ export default function DynamicDataEntryGrid({ schema, barangays, year }: Dynami
                         );
                       } else {
                         return (
-                          <td key={f.id} className={`border-l dark:border-gray-800 ${f === fields[fields.length-1] ? 'border-r' : ''}`}>
+                          <td key={f.id} className={`border-l dark:border-gray-800 relative ${f === fields[fields.length-1] ? 'border-r' : ''}`}>
+                            {sData.isBudget && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium pointer-events-none">₱</span>}
                             <input 
                                 type="number" 
                                 min="0" 
                                 value={fData.value !== undefined && fData.value !== null ? fData.value : ''} 
                                 onChange={(e) => handleChange(b.id, f.id, null, e.target.value)} 
                                 disabled={!canWrite || isLocked} 
-                                className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center text-gray-900 dark:text-white outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:bg-transparent disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" 
+                                className={`w-full min-w-[60px] bg-transparent py-2 text-gray-900 dark:text-white outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:bg-transparent disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white ${sData.isBudget ? 'pl-8 pr-2 text-left' : 'px-2 text-center'}`} 
                               />
                           </td>
                         );
@@ -410,13 +411,16 @@ export default function DynamicDataEntryGrid({ schema, barangays, year }: Dynami
                   } else {
                     return (
                       <MobileDataInput key={f.id} label={f.name}>
-                        <input 
-                          type="number" min="0" 
-                          value={fData.value !== undefined && fData.value !== null ? fData.value : ''} 
-                          onChange={(e) => handleChange(b.id, f.id, null, e.target.value)} 
-                          disabled={!canWrite || isLocked} 
-                          className="w-full px-2 py-2 rounded-lg border border-gray-300 dark:border-gray-800 bg-white dark:bg-gray-900 text-sm text-center text-gray-900 dark:text-white outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:text-gray-500" 
-                        />
+                        <div className="relative w-full">
+                          {sData.isBudget && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium pointer-events-none">₱</span>}
+                          <input 
+                            type="number" min="0" 
+                            value={fData.value !== undefined && fData.value !== null ? fData.value : ''} 
+                            onChange={(e) => handleChange(b.id, f.id, null, e.target.value)} 
+                            disabled={!canWrite || isLocked} 
+                            className={`w-full py-2 rounded-lg border border-gray-300 dark:border-gray-800 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-white outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:text-gray-500 ${sData.isBudget ? 'pl-8 pr-2 text-left' : 'px-2 text-center'}`} 
+                          />
+                        </div>
                       </MobileDataInput>
                     );
                   }

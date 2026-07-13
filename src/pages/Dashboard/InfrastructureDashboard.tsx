@@ -3,6 +3,7 @@ import PageMeta from "@/components/common/PageMeta";
 import PageBreadcrumb from "@/components/common/PageBreadcrumb";
 import MultiSeriesChart from "@/components/charts/MultiSeriesChart";
 import DynamicDashboardCharts from '@/components/common/DynamicDashboardCharts';
+import DynamicBudgetCharts from '@/components/common/DynamicBudgetCharts';
 import { useInfrastructureStats } from "@/hooks/queries/useInfrastructureStats";
 
 
@@ -91,9 +92,11 @@ export default function InfrastructureDashboard() {
           </div>
           
           <DynamicDashboardCharts department="Infrastructure" year={year} />
+          <DynamicBudgetCharts department="Infrastructure" year={year} />
 
         </>
       )}
     </>
   );
 }
+

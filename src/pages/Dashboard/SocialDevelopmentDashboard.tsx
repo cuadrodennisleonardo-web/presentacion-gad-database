@@ -3,6 +3,7 @@ import PageMeta from "@/components/common/PageMeta";
 import PageBreadcrumb from "@/components/common/PageBreadcrumb";
 import MultiSeriesChart from "@/components/charts/MultiSeriesChart";
 import DynamicDashboardCharts from "@/components/common/DynamicDashboardCharts";
+import DynamicBudgetCharts from '@/components/common/DynamicBudgetCharts';
 import ErrorBoundary from "@/components/common/ErrorBoundary";
 import { CHART_COLORS } from "@/config/chartColors";
 import { useSocialDevStats } from "@/hooks/queries/useSocialDevStats";
@@ -93,9 +94,12 @@ export default function SocialDevelopmentDashboard() {
           </div>
 
           <DynamicDashboardCharts department="Social Development" year={year} />
+          <DynamicBudgetCharts department="Social Development" year={year} />
 
         </>
       )}
     </>
   );
 }
+
+
