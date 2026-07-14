@@ -44,7 +44,7 @@ const PublicLandingPage: React.FC = () => {
           <div className="mx-auto max-w-7xl px-6 lg:px-8 text-center">
             <div className="mx-auto max-w-3xl">
               <h1 className="text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-7xl">
-                Data-Driven <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-blue-500">Governance</span>
+                GAD <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-blue-500"> Database </span>
               </h1>
               <p className="mt-6 text-lg leading-8 text-gray-600 dark:text-gray-400">
                 A centralized, highly secure platform for tracking demographic statistics, infrastructure developments, budget allocations, and Gender and Development (GAD) initiatives across all 18 barangays of Presentacion.
