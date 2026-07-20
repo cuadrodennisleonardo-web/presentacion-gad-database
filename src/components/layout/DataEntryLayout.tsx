@@ -21,6 +21,7 @@ interface DataEntryLayoutProps {
   
   year: number;
   setYear: (y: number) => void;
+  yearOptions?: { value: number; label: string }[];
   
   activeTab: string;
   setActiveTab: (tab: string) => void;
@@ -58,6 +59,7 @@ export default function DataEntryLayout({
   gridDescription,
   year,
   setYear,
+  yearOptions,
   activeTab,
   setActiveTab,
   dynamicSchemas,
@@ -132,12 +134,24 @@ export default function DataEntryLayout({
             
             <div className="flex items-center gap-2">
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">Year:</label>
-              <input 
-                type="number"  
-                className="w-24 rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:text-white"
-                value={year}
-                onChange={(e) => setYear(parseInt(e.target.value) || new Date().getFullYear())}
-              />
+              {yearOptions ? (
+                <select
+                  className="w-32 rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:text-white"
+                  value={year}
+                  onChange={(e) => setYear(parseInt(e.target.value))}
+                >
+                  {yearOptions.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              ) : (
+                <input 
+                  type="number"  
+                  className="w-24 rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:text-white"
+                  value={year}
+                  onChange={(e) => setYear(parseInt(e.target.value) || new Date().getFullYear())}
+                />
+              )}
             </div>
           </div>
           

@@ -68,7 +68,7 @@ export default function SocialDevelopmentDashboard() {
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <ErrorBoundary>
               <MultiSeriesChart 
-                title="Student Enrollment by Barangay (M vs F)"
+                title={`Student Enrollment by Barangay (M vs F) (${year}-${year + 1})`}
                 type="bar"
                 categories={stats?.barangays || []}
                 series={[

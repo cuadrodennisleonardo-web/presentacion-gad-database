@@ -45,6 +45,16 @@ export default function SocialDevelopmentDataEntry() {
   const tabLabel = nativeTabs.find(t => t.key === activeTab)?.label || 
                    dynamicSchemas.find(d => d.id === activeTab)?.tab_name || '';
 
+  const isEducation = activeTab === 'education';
+  
+  const educationYearOptions = Array.from({ length: 10 }, (_, i) => {
+    const y = new Date().getFullYear() - 5 + i;
+    return { value: y, label: `${y}-${y + 1}` };
+  });
+
+  const yearOptions = isEducation ? educationYearOptions : undefined;
+  const exportTitle = isEducation ? `Education (${year}-${year + 1})` : `${tabLabel} (${year})`;
+
   const { data: latestApproval } = useQuery({
     queryKey: ['latest_approval', 'Social Development', tabLabel, year],
     queryFn: () => getLatestApproval('Social Development', tabLabel, year)
@@ -216,6 +226,7 @@ export default function SocialDevelopmentDataEntry() {
       gridDescription={`Manage social development data for ${barangays.length} barangays. Enter Sex-Disaggregated Data.`}
       year={year}
       setYear={setYear}
+      yearOptions={yearOptions}
       activeTab={activeTab}
       setActiveTab={setActiveTab}
       dynamicSchemas={dynamicSchemas}
@@ -227,7 +238,7 @@ export default function SocialDevelopmentDataEntry() {
       canWrite={canWrite}
       exportData={isDynamic ? undefined : barangays.map(b => ({ barangay_name: b.name, ...stats[b.id] }))}
       exportColumns={isDynamic ? undefined : getExportColumns()}
-      exportTitle={`${tabLabel} (${year})`}
+      exportTitle={exportTitle}
       onImport={isDynamic ? undefined : handleImport}
       onSave={handleSaveAll}
       isSaving={mutation.isPending}
