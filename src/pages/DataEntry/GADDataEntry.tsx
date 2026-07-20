@@ -1,3 +1,4 @@
+import { getDefaultYear } from '@/utils/yearUtils';
 import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -17,7 +18,11 @@ export default function GADDataEntry() {
   const queryClient = useQueryClient();
   
   const [activeTab, setActiveTab] = useState<TabType>('main');
-  const [year, setYear] = useState(new Date().getFullYear());
+  const [year, setYear] = useState(getDefaultYear(`Institutional GAD_${'main'}`));
+
+  useEffect(() => {
+    setYear(getDefaultYear('Institutional GAD_' + activeTab));
+  }, [activeTab]);
   const [stat, setStat] = useState<Partial<GadStat>>({});
   const [originalStat, setOriginalStat] = useState<Partial<GadStat>>({});
   

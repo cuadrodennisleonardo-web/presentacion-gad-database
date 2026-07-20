@@ -1,3 +1,4 @@
+import { getDefaultYear } from '@/utils/yearUtils';
 import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -21,7 +22,11 @@ export default function EconomicDevelopmentDataEntry() {
   const queryClient = useQueryClient();
   
   const [activeTab, setActiveTab] = useState<TabType>('labor');
-  const [year, setYear] = useState(new Date().getFullYear());
+  const [year, setYear] = useState(getDefaultYear(`Economic Development_${'labor'}`));
+
+  useEffect(() => {
+    setYear(getDefaultYear('Economic Development_' + activeTab));
+  }, [activeTab]);
   const [stats, setStats] = useState<Record<string, Partial<EconStat>>>({});
   const [originalStats, setOriginalStats] = useState<Record<string, Partial<EconStat>>>({});
   

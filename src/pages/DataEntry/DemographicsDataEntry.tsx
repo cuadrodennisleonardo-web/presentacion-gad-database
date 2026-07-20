@@ -1,3 +1,4 @@
+import { getDefaultYear } from '@/utils/yearUtils';
 import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -22,7 +23,11 @@ export default function DemographicsDataEntry() {
   const [popStats, setPopStats] = useState<Record<string, Partial<PopStat>>>({});
   const [originalPopStats, setOriginalPopStats] = useState<Record<string, Partial<PopStat>>>({});
   const [activeTab, setActiveTab] = useState('main');
-  const [year, setYear] = useState(new Date().getFullYear());
+  const [year, setYear] = useState(getDefaultYear(`Demographics & Population_${'main'}`));
+
+  useEffect(() => {
+    setYear(getDefaultYear('Demographics & Population_' + activeTab));
+  }, [activeTab]);
   
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingChanges, setPendingChanges] = useState<Record<string, any> | null>(null);

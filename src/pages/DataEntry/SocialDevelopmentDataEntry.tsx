@@ -1,3 +1,4 @@
+import { getDefaultYear } from '@/utils/yearUtils';
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -23,7 +24,11 @@ export default function SocialDevelopmentDataEntry() {
   const [stats, setStats] = useState<Record<string, Partial<SocialStat>>>({});
   const [originalStats, setOriginalStats] = useState<Record<string, Partial<SocialStat>>>({});
   const [activeTab, setActiveTab] = useState<TabType>('education');
-  const [year, setYear] = useState(new Date().getFullYear());
+  const [year, setYear] = useState(getDefaultYear(`Social Development_${'education'}`));
+
+  useEffect(() => {
+    setYear(getDefaultYear('Social Development_' + activeTab));
+  }, [activeTab]);
   
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingChanges, setPendingChanges] = useState<Record<string, any> | null>(null);

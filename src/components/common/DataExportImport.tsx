@@ -121,11 +121,24 @@ export const DataExportImport: React.FC<DataExportImportProps> = ({ data, column
       complete: (results) => {
         try {
           const importedData = results.data.map((row: any) => {
-             if (row['Barangay'] === undefined) throw new Error("Missing Barangay column");
+             // Find the barangay column key, as it might have BOM or different casing
+             const barangayKey = Object.keys(row).find(k => k.trim().toLowerCase() === 'barangay');
+             if (!barangayKey) throw new Error("Missing Barangay column in CSV");
              
-             const parsedRow: any = { barangay_name: row['Barangay'] || '' };
+             const parsedRow: any = { barangay_name: row[barangayKey] || '' };
              columns.forEach(col => {
-               parsedRow[col.key] = parseInt(row[col.header]) || 0;
+               const matchingKey = Object.keys(row).find(k => k.trim().toLowerCase() === col.header.trim().toLowerCase());
+               if (matchingKey) {
+                 const val = row[matchingKey];
+                 if (val !== undefined && val !== null && val !== '') {
+                   if (col.key === 'barangay_name') {
+                     parsedRow[col.key] = val.toString().trim();
+                   } else {
+                     const cleanVal = typeof val === 'string' ? val.replace(/,/g, '') : val;
+                     parsedRow[col.key] = parseInt(cleanVal) || 0;
+                   }
+                 }
+               }
              });
              
              return parsedRow;

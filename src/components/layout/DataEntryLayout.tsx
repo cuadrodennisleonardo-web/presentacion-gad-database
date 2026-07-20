@@ -5,6 +5,7 @@ import { DataExportImport, ExportColumn } from '@/components/common/DataExportIm
 import ConfirmationModal from '@/components/common/ConfirmationModal';
 import DynamicDataEntryGrid from '@/components/common/DynamicDataEntryGrid';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
+import YearSelector from '@/components/common/YearSelector';
 import type { Database } from '@/types/database';
 
 type DynamicSchema = Database['public']['Tables']['dynamic_schemas']['Row'];
@@ -52,6 +53,7 @@ interface DataEntryLayoutProps {
 }
 
 export default function DataEntryLayout({
+  moduleName,
   pageTitle,
   pageDescription,
   breadcrumbTitle,
@@ -132,27 +134,12 @@ export default function DataEntryLayout({
               </p>
             </div>
             
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">Year:</label>
-              {yearOptions ? (
-                <select
-                  className="w-32 rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:text-white"
-                  value={year}
-                  onChange={(e) => setYear(parseInt(e.target.value))}
-                >
-                  {yearOptions.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-              ) : (
-                <input 
-                  type="number"  
-                  className="w-24 rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:text-white"
-                  value={year}
-                  onChange={(e) => setYear(parseInt(e.target.value) || new Date().getFullYear())}
-                />
-              )}
-            </div>
+            <YearSelector 
+              year={year} 
+              setYear={setYear} 
+              yearOptions={yearOptions} 
+              scopeKey={`${moduleName}_${activeTab}`}
+            />
           </div>
           
           {latestApproval?.status === 'rejected' && (

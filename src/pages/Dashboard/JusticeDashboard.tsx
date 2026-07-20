@@ -1,3 +1,5 @@
+import { getDefaultYear } from '@/utils/yearUtils';
+import YearSelector from '@/components/common/YearSelector';
 import { useState } from "react";
 import PageMeta from "@/components/common/PageMeta";
 import PageBreadcrumb from "@/components/common/PageBreadcrumb";
@@ -8,7 +10,7 @@ import { useJusticeStats } from "@/hooks/queries/useJusticeStats";
 
 
 export default function JusticeDashboard() {
-  const [year, setYear] = useState(new Date().getFullYear());
+  const [year, setYear] = useState(getDefaultYear('Justice_Dashboard'));
   const { data: stats, isLoading } = useJusticeStats(year);
 
   const statCards = [
@@ -22,15 +24,7 @@ export default function JusticeDashboard() {
       <PageMeta title="Justice & Safety Dashboard" description="Justice & Safety Overview" />
       <div className="flex items-center justify-between mb-6">
         <PageBreadcrumb pageTitle="Justice & Safety Dashboard" hideNav={true} />
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Year Filter:</label>
-          <input 
-            type="number" 
-            className="w-24 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-brand-500 dark:border-gray-800 dark:bg-gray-900 dark:text-white"
-            value={year}
-            onChange={(e) => setYear(parseInt(e.target.value) || new Date().getFullYear())}
-          />
-        </div>
+        <YearSelector year={year} setYear={setYear} scopeKey="Justice_Dashboard" />
       </div>
 
       {isLoading ? (

@@ -1,3 +1,4 @@
+import { getDefaultYear } from '@/utils/yearUtils';
 import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -23,7 +24,11 @@ export default function GovernanceDataEntry() {
   const [stats, setStats] = useState<Record<string, Partial<GovStat>>>({});
   const [originalStats, setOriginalStats] = useState<Record<string, Partial<GovStat>>>({});
   const [activeTab, setActiveTab] = useState<TabType>('main');
-  const [year, setYear] = useState(new Date().getFullYear());
+  const [year, setYear] = useState(getDefaultYear(`Local Governance_${'main'}`));
+
+  useEffect(() => {
+    setYear(getDefaultYear('Local Governance_' + activeTab));
+  }, [activeTab]);
   
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingChanges, setPendingChanges] = useState<Record<string, any> | null>(null);

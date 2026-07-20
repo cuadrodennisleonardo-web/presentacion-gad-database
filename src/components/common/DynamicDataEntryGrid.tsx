@@ -230,7 +230,7 @@ export default function DynamicDataEntryGrid({ schema, barangays, year }: Dynami
     importedData.forEach(row => {
       const b = barangays.find(b => b.name === row.barangay_name);
       if (b) {
-        if (!newData[b.id]) newData[b.id] = {};
+        newData[b.id] = { ...(newData[b.id] || {}) };
         fields.forEach(f => {
           if (f.type === 'gender_split') {
             const m = row[`${f.id}_m`];
