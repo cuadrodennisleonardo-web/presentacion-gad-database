@@ -260,7 +260,7 @@ export default function SocialDevelopmentDataEntry() {
         <thead className="bg-gray-50 text-xs uppercase text-gray-500 dark:bg-gray-800/50 dark:text-gray-400">
              {activeTab === 'education' && (
                <tr>
-                 <th className="whitespace-nowrap px-4 py-3 font-medium border-b dark:border-gray-800" rowSpan={2}>Barangay</th>
+                 <th className="whitespace-nowrap px-4 py-3 font-medium border-b dark:border-gray-800" rowSpan={2}>School</th>
                  <th className="whitespace-nowrap px-4 py-2 font-medium text-center border-l dark:border-gray-800 text-blue-600 dark:text-blue-400" colSpan={3}>Student Enrollment</th>
                  <th className="whitespace-nowrap px-4 py-2 font-medium text-center border-l dark:border-gray-800 text-orange-600 dark:text-orange-400" colSpan={3}>School Drop-out</th>
                  <th className="whitespace-nowrap px-4 py-2 font-medium text-center border-l border-r dark:border-gray-800 text-red-600 dark:text-red-400" colSpan={3}>Out-of-School Youth</th>
