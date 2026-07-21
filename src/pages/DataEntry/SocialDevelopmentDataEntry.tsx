@@ -312,7 +312,7 @@ export default function SocialDevelopmentDataEntry() {
             const row = stats[b.id] || {};
             const prevDistrict = index > 0 ? entities[index - 1].district : null;
             const showCategoryHeader = isEducation && b.district !== prevDistrict;
-            const categoryLabel = b.district === 'School-Primary' ? '📚 PRIMARY & ELEMENTARY SCHOOLS' : b.district === 'School-Secondary' ? '🏫 SECONDARY SCHOOLS' : b.district === 'School-Private' ? '🔒 PRIVATE SCHOOLS' : '';
+            const categoryLabel = b.district === 'School-Primary' ? 'PRIMARY & ELEMENTARY SCHOOLS' : b.district === 'School-Secondary' ? 'SECONDARY SCHOOLS' : b.district === 'School-Private' ? 'PRIVATE SCHOOLS' : '';
             
             if (activeTab === 'education') {
               return (
@@ -398,7 +398,7 @@ export default function SocialDevelopmentDataEntry() {
             const row = stats[b.id] || {};
             const prevDistrict = index > 0 ? entities[index - 1].district : null;
             const showCategoryHeader = isEducation && b.district !== prevDistrict;
-            const categoryLabel = b.district === 'School-Primary' ? '📚 PRIMARY & ELEMENTARY SCHOOLS' : b.district === 'School-Secondary' ? '🏫 SECONDARY SCHOOLS' : b.district === 'School-Private' ? '🔒 PRIVATE SCHOOLS' : '';
+            const categoryLabel = b.district === 'School-Primary' ? 'PRIMARY & ELEMENTARY SCHOOLS' : b.district === 'School-Secondary' ? 'SECONDARY SCHOOLS' : b.district === 'School-Private' ? 'PRIVATE SCHOOLS' : '';
             
             if (activeTab === 'education') {
               return (
