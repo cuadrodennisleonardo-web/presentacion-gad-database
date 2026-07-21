@@ -22,8 +22,12 @@ export default function JusticeDashboard() {
   return (
     <>
       <PageMeta title="Justice & Safety Dashboard" description="Justice & Safety Overview" />
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6">
         <PageBreadcrumb pageTitle="Justice & Safety Dashboard" hideNav={true} />
+      </div>
+
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-xl font-bold text-gray-800 dark:text-white/90">Overview Metrics</h3>
         <YearSelector year={year} setYear={setYear} scopeKey="Justice_Dashboard" />
       </div>
 
@@ -64,8 +68,8 @@ export default function JusticeDashboard() {
              </div>
           </div>
           
-          <DynamicDashboardCharts department="Justice & Safety" year={year} />
-          <DynamicBudgetCharts department="Justice & Safety" year={year} />
+          <DynamicDashboardCharts department="Justice & Safety" />
+          <DynamicBudgetCharts department="Justice & Safety" />
 
         </>
       )}

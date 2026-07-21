@@ -1,15 +1,34 @@
 import { supabase } from "@/config/supabase";
 
 export async function fetchBarangays() {
-  const { data, error } = await supabase.from('barangays').select('*').order('name');
+  const { data, error } = await supabase.from('barangays')
+    .select('*')
+    .order('name');
   if (error) throw error;
-  return data || [];
+  
+  // Filter out schools in javascript to avoid PostgREST syntax errors with nulls
+  return (data || []).filter(b => !b.district || !b.district.startsWith('School-'));
+}
+
+export async function fetchSchools() {
+  const { data, error } = await supabase.from('barangays')
+    .select('*')
+    .order('district', { ascending: true })
+    .order('name');
+  if (error) throw error;
+  
+  return (data || []).filter(b => b.district && b.district.startsWith('School-'));
 }
 
 export async function fetchBarangayOptions() {
-  const { data, error } = await supabase.from('barangays').select('id, name').order('name');
+  const { data, error } = await supabase.from('barangays')
+    .select('id, name, district')
+    .order('name');
   if (error) throw error;
-  return data || [];
+  
+  return (data || [])
+    .filter(b => !b.district || !b.district.startsWith('School-'))
+    .map(b => ({ id: b.id, name: b.name }));
 }
 
 export async function fetchStats(table: string, year: number) {

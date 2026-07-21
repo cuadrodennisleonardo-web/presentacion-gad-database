@@ -26,8 +26,12 @@ export default function DemographicsDashboard() {
   return (
     <>
       <PageMeta title="Demographics Dashboard" description="Demographics & Population Overview" />
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6">
         <PageBreadcrumb pageTitle="Demographics & Population Dashboard" hideNav={true} />
+      </div>
+
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-xl font-bold text-gray-800 dark:text-white/90">Overview Metrics</h3>
         <YearSelector year={year} setYear={setYear} scopeKey="Demographics_Dashboard" />
       </div>
 
@@ -86,8 +90,8 @@ export default function DemographicsDashboard() {
             </div>
           </div>
 
-          <DynamicDashboardCharts department="Demographics & Population" year={year} />
-          <DynamicBudgetCharts department="Demographics & Population" year={year} />
+          <DynamicDashboardCharts department="Demographics & Population" />
+          <DynamicBudgetCharts department="Demographics & Population" />
 
         </>
       )}

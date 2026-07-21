@@ -26,8 +26,12 @@ export default function GADDashboard() {
   return (
     <>
       <PageMeta title="Institutional GAD Dashboard" description="GAD Overview" />
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6">
         <PageBreadcrumb pageTitle="Institutional GAD Dashboard" hideNav={true} />
+      </div>
+
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-xl font-bold text-gray-800 dark:text-white/90">Overview Metrics</h3>
         <YearSelector year={year} setYear={setYear} scopeKey="GAD_Dashboard" />
       </div>
 
@@ -75,8 +79,8 @@ export default function GADDashboard() {
              </div>
           </div>
 
-          <DynamicDashboardCharts department="Institutional GAD" year={year} />
-          <DynamicBudgetCharts department="Institutional GAD" year={year} />
+          <DynamicDashboardCharts department="Institutional GAD" />
+          <DynamicBudgetCharts department="Institutional GAD" />
 
         </>
       )}

@@ -76,6 +76,7 @@ export default function SocialDevelopmentDataEntry() {
     }
   }, [fetchedData]);
 
+  const entities = isEducation ? fetchedData?.schools || [] : fetchedData?.barangays || [];
   const barangays = fetchedData?.barangays || [];
 
   const handleChange = (barangayId: string, field: keyof SocialStat, value: string) => {
@@ -228,20 +229,21 @@ export default function SocialDevelopmentDataEntry() {
       pageDescription="Manage Social Development stats"
       breadcrumbTitle={`Social Development ${!canWrite ? 'View Data' : 'Data Entry'}`}
       gridTitle={`${tabLabel} Grid`}
-      gridDescription={`Manage social development data for ${barangays.length} barangays. Enter Sex-Disaggregated Data.`}
+      gridDescription={`Manage social development data for ${entities.length} ${isEducation ? "schools" : "barangays"}. Enter Sex-Disaggregated Data.`}
       year={year}
       setYear={setYear}
       yearOptions={yearOptions}
       activeTab={activeTab}
       setActiveTab={setActiveTab}
       dynamicSchemas={dynamicSchemas}
-      barangays={barangays}
+      barangays={entities}
+      entityName={isEducation ? "School" : "Barangay"}
       nativeTabs={nativeTabs}
       isLocked={isLocked}
       latestApproval={latestApproval}
       isSuperAdmin={isSuperAdmin}
       canWrite={canWrite}
-      exportData={isDynamic ? undefined : barangays.map(b => ({ barangay_name: b.name, ...stats[b.id] }))}
+      exportData={isDynamic ? undefined : entities.map(b => ({ barangay_name: b.name, ...stats[b.id] }))}
       exportColumns={isDynamic ? undefined : getExportColumns()}
       exportTitle={exportTitle}
       onImport={isDynamic ? undefined : handleImport}
@@ -306,12 +308,23 @@ export default function SocialDevelopmentDataEntry() {
              </tr>
         </thead>
         <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
-          {barangays.map((b) => {
+          {entities.map((b, index) => {
             const row = stats[b.id] || {};
+            const prevDistrict = index > 0 ? entities[index - 1].district : null;
+            const showCategoryHeader = isEducation && b.district !== prevDistrict;
+            const categoryLabel = b.district === 'School-Primary' ? '📚 PRIMARY & ELEMENTARY SCHOOLS' : b.district === 'School-Secondary' ? '🏫 SECONDARY SCHOOLS' : b.district === 'School-Private' ? '🔒 PRIVATE SCHOOLS' : '';
             
             if (activeTab === 'education') {
               return (
-                <tr key={b.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                <React.Fragment key={b.id}>
+                  {showCategoryHeader && (
+                    <tr>
+                      <td colSpan={10} className="px-4 py-2.5 text-xs font-bold tracking-wider text-white bg-brand-500 dark:bg-brand-600 border-y-2 border-brand-600 dark:border-brand-700">
+                        {categoryLabel}
+                      </td>
+                    </tr>
+                  )}
+                <tr className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                   <td className="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white ">{b.name}</td>
                   {['student_enrollment_', 'drop_out_', 'osy_'].map((prefix, idx) => {
                     const kM = prefix + 'm';
@@ -331,6 +344,7 @@ export default function SocialDevelopmentDataEntry() {
                     )
                   })}
                 </tr>
+                </React.Fragment>
               );
             }
             
@@ -380,12 +394,21 @@ export default function SocialDevelopmentDataEntry() {
         </table>
       </div>
         <div className="block lg:hidden mt-2">
-          {barangays.map((b) => {
+          {entities.map((b, index) => {
             const row = stats[b.id] || {};
+            const prevDistrict = index > 0 ? entities[index - 1].district : null;
+            const showCategoryHeader = isEducation && b.district !== prevDistrict;
+            const categoryLabel = b.district === 'School-Primary' ? '📚 PRIMARY & ELEMENTARY SCHOOLS' : b.district === 'School-Secondary' ? '🏫 SECONDARY SCHOOLS' : b.district === 'School-Private' ? '🔒 PRIVATE SCHOOLS' : '';
             
             if (activeTab === 'education') {
               return (
-                <MobileDataCard key={b.id} title={b.name}>
+                <React.Fragment key={b.id}>
+                  {showCategoryHeader && (
+                    <div className="px-4 py-2.5 mt-4 mb-2 text-xs font-bold tracking-wider text-white bg-brand-500 dark:bg-brand-600 rounded-lg">
+                      {categoryLabel}
+                    </div>
+                  )}
+                <MobileDataCard title={b.name}>
                   {['Student Enrollment', 'School Drop-out', 'Out-of-school Youth'].map((label, idx) => {
                     const prefix = ['student_enrollment_', 'drop_out_', 'osy_'][idx];
                     const kM = prefix + 'm';
@@ -403,6 +426,7 @@ export default function SocialDevelopmentDataEntry() {
                     );
                   })}
                 </MobileDataCard>
+                </React.Fragment>
               );
             }
             

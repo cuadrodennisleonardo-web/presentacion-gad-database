@@ -32,8 +32,12 @@ export default function EconomicDevelopmentDashboard() {
   return (
     <>
       <PageMeta title="Economic Development Dashboard" description="Economic Development Overview" />
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6">
         <PageBreadcrumb pageTitle="Economic Development Dashboard" hideNav={true} />
+      </div>
+
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-xl font-bold text-gray-800 dark:text-white/90">Overview Metrics</h3>
         <YearSelector year={year} setYear={setYear} scopeKey="EconomicDevelopment_Dashboard" />
       </div>
 
@@ -117,8 +121,8 @@ export default function EconomicDevelopmentDashboard() {
              </ErrorBoundary>
           </div>
 
-          <DynamicDashboardCharts department="Economic Development" year={year} />
-          <DynamicBudgetCharts department="Economic Development" year={year} />
+          <DynamicDashboardCharts department="Economic Development" />
+          <DynamicBudgetCharts department="Economic Development" />
         </>
       )}
     </>

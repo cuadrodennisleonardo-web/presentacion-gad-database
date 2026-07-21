@@ -25,9 +25,10 @@ interface DynamicDataEntryGridProps {
   schema: DynamicSchema;
   barangays: Barangay[];
   year: number;
+  entityName?: string;
 }
 
-export default function DynamicDataEntryGrid({ schema, barangays, year }: DynamicDataEntryGridProps) {
+export default function DynamicDataEntryGrid({ schema, barangays, year, entityName = "Barangay" }: DynamicDataEntryGridProps) {
   const { isSuperAdmin, canWrite } = useRole();
   const { user } = useAuth();
   
@@ -287,7 +288,7 @@ export default function DynamicDataEntryGrid({ schema, barangays, year }: Dynami
           <table className="w-full text-left text-sm text-gray-600 dark:text-gray-300">
             <thead className="bg-gray-50 text-xs uppercase text-gray-500 dark:bg-gray-800/50 dark:text-gray-400">
               <tr>
-                <th className="whitespace-nowrap px-4 py-3 font-medium border-b dark:border-gray-800" rowSpan={2}>Barangay</th>
+                <th className="whitespace-nowrap px-4 py-3 font-medium border-b dark:border-gray-800" rowSpan={2}>{entityName}</th>
                 {fields.map(f => (
                   <th key={f.id} className={`whitespace-nowrap px-4 py-2 font-medium text-center border-b border-l ${f === fields[fields.length-1] ? 'border-r' : ''} dark:border-gray-800`} colSpan={f.type === 'gender_split' ? 3 : 1} rowSpan={f.type === 'gender_split' ? 1 : 2}>
                     {f.name}

@@ -25,6 +25,7 @@ interface DataEntryLayoutProps {
   yearOptions?: { value: number; label: string }[];
   
   activeTab: string;
+  entityName?: string;
   setActiveTab: (tab: string) => void;
   
   dynamicSchemas: DynamicSchema[];

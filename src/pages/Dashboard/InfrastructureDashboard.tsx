@@ -22,8 +22,12 @@ export default function InfrastructureDashboard() {
   return (
     <>
       <PageMeta title="Infrastructure Dashboard" description="Infrastructure Overview" />
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6">
         <PageBreadcrumb pageTitle="Infrastructure Dashboard" hideNav={true} />
+      </div>
+
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-xl font-bold text-gray-800 dark:text-white/90">Overview Metrics</h3>
         <YearSelector year={year} setYear={setYear} scopeKey="Infrastructure_Dashboard" />
       </div>
 
@@ -85,8 +89,8 @@ export default function InfrastructureDashboard() {
              />
           </div>
           
-          <DynamicDashboardCharts department="Infrastructure" year={year} />
-          <DynamicBudgetCharts department="Infrastructure" year={year} />
+          <DynamicDashboardCharts department="Infrastructure" />
+          <DynamicBudgetCharts department="Infrastructure" />
 
         </>
       )}

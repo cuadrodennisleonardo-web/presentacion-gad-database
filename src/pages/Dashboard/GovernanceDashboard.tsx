@@ -30,8 +30,12 @@ export default function GovernanceDashboard() {
   return (
     <>
       <PageMeta title="Local Governance Dashboard" description="Local Governance Overview" />
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6">
         <PageBreadcrumb pageTitle="Local Governance Dashboard" hideNav={true} />
+      </div>
+
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-xl font-bold text-gray-800 dark:text-white/90">Overview Metrics</h3>
         <YearSelector year={year} setYear={setYear} scopeKey="Governance_Dashboard" />
       </div>
 
@@ -94,8 +98,8 @@ export default function GovernanceDashboard() {
               </div>
            </div>
 
-           <DynamicDashboardCharts department="Local Governance" year={year} />
-          <DynamicBudgetCharts department="Local Governance" year={year} />
+           <DynamicDashboardCharts department="Local Governance" />
+          <DynamicBudgetCharts department="Local Governance" />
         </>
       )}
     </>

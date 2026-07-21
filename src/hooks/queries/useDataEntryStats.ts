@@ -1,13 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
-import { fetchBarangays, fetchStats, fetchApprovalChanges } from '@/services/api';
+import { fetchBarangays, fetchStats, fetchApprovalChanges, fetchSchools } from '@/services/api';
 
 export function useDataEntryStats(department: string, tableName: string, year: number) {
   return useQuery({
     queryKey: ['native_data', department, year],
     queryFn: async () => {
-      const [barangays, sData] = await Promise.all([
+      const [barangays, schools, sData] = await Promise.all([
         fetchBarangays(),
+        fetchSchools(),
         fetchStats(tableName, year)
       ]);
 
@@ -38,7 +39,7 @@ export function useDataEntryStats(department: string, tableName: string, year: n
         }
       }
 
-      return { barangays, stats: sMap };
+      return { barangays, schools, stats: sMap };
     }
   });
 }
