@@ -35,7 +35,7 @@ export default function SocialDevelopmentDataEntry() {
 
   const nativeTabs = [
     { key: 'education', label: 'Education' },
-    { key: 'health', label: 'Health & Nutrition' },
+    { key: 'health', label: 'Health & Nutrition (1st Quarter)' },
     { key: 'welfare', label: 'Social Welfare' },
   ];
 
