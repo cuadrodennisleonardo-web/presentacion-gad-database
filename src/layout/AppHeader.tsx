@@ -30,55 +30,131 @@ const AppHeader: React.FC = () => {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   const searchItems = useMemo(() => {
-    const items: { name: string; path: string; category: string }[] = [];
+    const items: { name: string; path: string; category: string; keywords?: string }[] = [];
     const isDeptUser = role?.startsWith("dept_");
 
     const getDeptPath = (dept?: string | null) => {
       if (!dept) return "";
       if (dept === "Institutional GAD") return "gad";
-      return dept.toLowerCase().replace(" ", "-");
+      return dept.toLowerCase().replace("& ", "").replace(/\s+/g, "-");
     };
 
-    if (isDeptUser) {
-      const deptPath = getDeptPath(department);
-      if (deptPath) {
-        items.push({ name: "Dept Dashboard", path: `/dashboard/${deptPath}`, category: "Menu" });
-        items.push({ name: (role === 'dept_viewer') ? "View Data" : "Data Entry", path: `/data-entry/${deptPath}`, category: "Menu" });
-      }
-      items.push({ name: "Barangays", path: "/barangays", category: "Menu" });
-    } else {
-      items.push({ name: "Dashboard", path: "/dashboard", category: "Menu" });
-      items.push({ name: "Barangays", path: "/barangays", category: "Menu" });
+    const isAuthorizedForDept = (deptName: Department) => {
+      if (isSuperAdmin) return true;
+      if (isDeptUser && department === deptName) return true;
+      return canAccessModule(deptName);
+    };
 
-      const modules: Department[] = ["Social Development", "Economic Development", "Infrastructure", "Local Governance", "Institutional GAD"];
-      modules.forEach((mod) => {
-        if (isSuperAdmin || canAccessModule(mod)) {
-          const pathSlug = getDeptPath(mod);
-          const nameSuffix = (role === 'viewer' || role === 'senior_viewer') ? "View Data" : "Data Entry";
-          items.push({ name: `${mod} ${nameSuffix}`, path: `/data-entry/${pathSlug}`, category: (role === 'viewer' || role === 'senior_viewer') ? "View Data" : "Data Entry" });
-          items.push({ name: `${mod} Dashboard`, path: `/dashboard/${pathSlug}`, category: "Dashboards" });
-        }
-      });
+    if (!isDeptUser || isSuperAdmin) {
+      items.push({ name: "Main Overview Dashboard", path: "/dashboard", category: "Menu", keywords: "home main dashboard overview summary" });
     }
+    items.push({ name: "Barangays List", path: "/barangays", category: "Menu", keywords: "barangay list locations directory" });
+
+    const ALL_DEPARTMENTS: { name: Department; indicators: { name: string; keywords: string }[] }[] = [
+      {
+        name: "Demographics & Population",
+        indicators: [
+          { name: "Total Population & Household Heads", keywords: "population household heads demographics residents census" }
+        ]
+      },
+      {
+        name: "Social Development",
+        indicators: [
+          { name: "Education & Student Enrollment", keywords: "student enrollment dropouts osy school education" },
+          { name: "Health & Malnourished Children", keywords: "health malnourished nutrition teenage pregnancy maternal mortality" },
+          { name: "Social Welfare (PWD, 4Ps, Senior Citizens, Solo Parents)", keywords: "pwd 4ps senior citizens solo parents welfare disability" }
+        ]
+      },
+      {
+        name: "Economic Development",
+        indicators: [
+          { name: "Labor Force & Employment", keywords: "employment labor employed unemployed jobs work" },
+          { name: "Agriculture & Fisheries (Farmers, Fisherfolks)", keywords: "farmers fisherfolks agriculture fishing crops fish" },
+          { name: "Commerce & Trade (Business Owners, Vendors)", keywords: "business owners ambulant vendors commerce trade market stores" }
+        ]
+      },
+      {
+        name: "Infrastructure",
+        indicators: [
+          { name: "Utilities & Housing (Safe Water, Sanitary Toilets, Informal Settlers)", keywords: "safe water sanitary toilets informal settlers utilities housing infrastructure water toilet" }
+        ]
+      },
+      {
+        name: "Local Governance",
+        indicators: [
+          { name: "Local Governance & Officials (Elected, Appointed Heads)", keywords: "elected officials appointed department heads governance leadership barangay officials" }
+        ]
+      },
+      {
+        name: "Justice & Safety",
+        indicators: [
+          { name: "Justice & Protection (VAWC, CICL, Sexual Assault)", keywords: "vawc cicl sexual assault justice protection cases police safety crime" }
+        ]
+      },
+      {
+        name: "Institutional GAD",
+        indicators: [
+          { name: "Institutional GAD Budget & Trainings", keywords: "gad budget allocated utilized trainings participants institutional" }
+        ]
+      }
+    ];
+
+    ALL_DEPARTMENTS.forEach((deptObj) => {
+      if (isAuthorizedForDept(deptObj.name)) {
+        const pathSlug = getDeptPath(deptObj.name);
+        const nameSuffix = (role === 'viewer' || role === 'senior_viewer' || role === 'dept_viewer') ? "View Data" : "Data Entry";
+        
+        items.push({ 
+          name: `${deptObj.name} (${nameSuffix})`, 
+          path: `/data-entry/${pathSlug}`, 
+          category: (role === 'viewer' || role === 'senior_viewer' || role === 'dept_viewer') ? "View Data" : "Data Entry",
+          keywords: `${deptObj.name} data entry view input grid table` 
+        });
+        
+        items.push({ 
+          name: `${deptObj.name} Dashboard`, 
+          path: `/dashboard/${pathSlug}`, 
+          category: "Dashboards",
+          keywords: `${deptObj.name} dashboard charts overview analytics` 
+        });
+
+        deptObj.indicators.forEach(ind => {
+          items.push({
+            name: ind.name,
+            path: `/data-entry/${pathSlug}`,
+            category: "Indicators",
+            keywords: `${deptObj.name} ${ind.keywords}`
+          });
+        });
+      }
+    });
 
     if (canManageUsers) {
-      items.push({ name: "User Management", path: "/users", category: "Administration" });
-      items.push({ name: "Data Approvals", path: "/approvals", category: "Administration" });
+      items.push({ name: "User Management", path: "/users", category: "Administration", keywords: "users accounts roles superadmin admin viewers create user password email" });
+      items.push({ name: "Data Approvals", path: "/approvals", category: "Administration", keywords: "approvals pending submissions requests review approve reject" });
+      items.push({ name: "Dynamic Tables", path: "/settings/dynamic-tables", category: "Administration", keywords: "dynamic tables schema custom fields tabs create table" });
+      items.push({ name: "Data Management", path: "/settings/data-management", category: "Administration", keywords: "data management delete reset tables wipe clear remove data" });
     } else if (role === 'dept_admin') {
-      items.push({ name: "My Submissions", path: "/approvals", category: "Menu" });
+      items.push({ name: "My Submissions & Approvals", path: "/approvals", category: "Menu", keywords: "approvals submissions status pending" });
     }
+    
     if (canViewAuditLog) {
-      items.push({ name: "Audit Log", path: "/audit-logs", category: "Administration" });
+      items.push({ name: "Audit Log & System Activity", path: "/audit-logs", category: "Administration", keywords: "audit log activity events history logins data changes updates" });
     }
-    items.push({ name: "Settings", path: "/settings", category: "Account" });
+    
+    items.push({ name: "Profile & Account Settings", path: "/settings", category: "Account", keywords: "profile settings account password email name theme" });
 
     return items;
   }, [role, isSuperAdmin, canManageUsers, canViewAuditLog, canAccessModule, department]);
 
   const filteredSearchItems = useMemo(() => {
     if (!searchQuery) return [];
-    const q = searchQuery.toLowerCase();
-    return searchItems.filter((item) => item.name.toLowerCase().includes(q) || item.category.toLowerCase().includes(q));
+    const q = searchQuery.toLowerCase().trim();
+    return searchItems.filter((item) => 
+      item.name.toLowerCase().includes(q) || 
+      item.category.toLowerCase().includes(q) ||
+      (item.keywords && item.keywords.toLowerCase().includes(q))
+    );
   }, [searchQuery, searchItems]);
 
   const handleToggle = () => {

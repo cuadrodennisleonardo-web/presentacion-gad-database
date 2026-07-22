@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, useLocation } from "react-router";
 import { useAuth } from "@/hooks/useAuth";
 import PageMeta from "@/components/common/PageMeta";
+import { ThemeToggleButton } from "@/components/common/ThemeToggleButton";
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -29,45 +30,85 @@ const LoginPage: React.FC = () => {
   return (
     <>
       <PageMeta title="Sign In" description="Sign in to Presentacion Municipal Database" />
-      <div className="flex min-h-screen">
-        {/* Left Panel — Branding */}
-        <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-brand-600 via-brand-500 to-blue-light-500" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-white/10 to-transparent" />
+      <div className="flex min-h-screen w-full bg-white dark:bg-gray-900 font-outfit">
+        
+        {/* Left Panel — App Theme Hero */}
+        <div className="hidden lg:flex lg:w-1/2 relative flex-col justify-between p-12 xl:p-16 overflow-hidden">
+          {/* Brand Gradient Background matching app design system */}
+          <div className="absolute inset-0 bg-gradient-to-br from-brand-700 via-brand-600 to-brand-500" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white/15 via-transparent to-transparent" />
           
-          {/* Decorative shapes */}
-          <div className="absolute -top-20 -left-20 h-72 w-72 rounded-full bg-white/5 blur-3xl" />
-          <div className="absolute -bottom-32 -right-20 h-96 w-96 rounded-full bg-brand-700/30 blur-3xl" />
-          <div className="absolute top-1/3 right-10 h-40 w-40 rounded-2xl bg-white/5 rotate-12" />
+          {/* Soft Decorative Ambient Orbs */}
+          <div className="absolute -top-20 -left-20 h-72 w-72 rounded-full bg-white/10 blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-32 -right-20 h-96 w-96 rounded-full bg-brand-900/30 blur-3xl pointer-events-none" />
           
-          <div className="relative z-10 flex flex-col justify-center px-12 xl:px-20">
-            <div className="mb-8">
-              <img src="/logo.png" alt="Presentacion Logo" className="h-20 w-20 object-contain drop-shadow-md" />
+          {/* Top Logo & Branding Header */}
+          <div className="relative z-10 flex items-center gap-4">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 p-2.5 backdrop-blur-xl border border-white/20 shadow-lg ring-1 ring-white/10 shrink-0">
+              <img src="/logo.png" alt="Presentacion Logo" className="h-full w-full object-contain drop-shadow" />
             </div>
-            <h1 className="text-4xl xl:text-5xl font-bold text-white leading-tight mb-4">
-              Presentacion<br />GAD Database
+            <div>
+              <span className="text-xs font-semibold uppercase tracking-wider text-brand-100">
+                Republic of the Philippines
+              </span>
+              <h2 className="text-base font-bold text-white tracking-wide">
+                Municipality of Presentacion
+              </h2>
+            </div>
+          </div>
+
+          {/* Main Hero Content */}
+          <div className="relative z-10 my-auto py-6 max-w-xl">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1 text-xs font-medium text-white border border-white/20 backdrop-blur-md mb-6">
+              <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+              Centralized Municipal Database System
+            </div>
+
+            <h1 className="text-4xl xl:text-5xl font-extrabold text-white leading-tight tracking-tight mb-4">
+              Presentacion <br />
+              <span>GAD Database</span>
             </h1>
-            <p className="text-lg text-white/80 max-w-md leading-relaxed">
-              A centralized platform for tracking, analyzing, and managing 
-              Gender and Development (GAD) initiatives and demographic data 
-              across Presentacion's 18 barangays.
+
+            <p className="text-base text-white/85 leading-relaxed max-w-lg">
+              A centralized digital platform for tracking, analyzing, and managing 
+              Gender and Development (GAD) initiatives and demographic statistical 
+              data across Presentacion's 18 barangays.
             </p>
+          </div>
+
+          {/* Footer Info */}
+          <div className="relative z-10 text-xs text-white/70 flex items-center justify-between border-t border-white/15 pt-4">
+            <span>Camarines Sur, Bicol Region</span>
+            <span>© {new Date().getFullYear()} Municipal Government</span>
           </div>
         </div>
 
-        {/* Right Panel — Login Form */}
-        <div className="flex w-full items-center justify-center bg-white px-4 dark:bg-gray-900 lg:w-1/2">
+        {/* Right Panel — Matches Exact App Theme (Light/Dark Mode) */}
+        <div className="flex w-full items-center justify-center bg-white dark:bg-gray-900 px-6 py-12 lg:w-1/2 relative">
+          
+          {/* Top Theme Switcher */}
+          <div className="absolute top-6 right-6 z-20">
+            <ThemeToggleButton />
+          </div>
+
           <div className="w-full max-w-md">
-            {/* Mobile Logo */}
+            
+            {/* Mobile Header Logo */}
             <div className="mb-8 lg:hidden text-center">
-              <img src="/logo.png" alt="Presentacion Logo" className="h-16 w-16 mx-auto object-contain mb-4 drop-shadow-sm" />
+              <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-50 dark:bg-brand-500/10 p-3 mb-3 ring-1 ring-brand-500/20">
+                <img src="/logo.png" alt="Presentacion Logo" className="h-full w-full object-contain" />
+              </div>
               <h1 className="text-2xl font-bold text-gray-800 dark:text-white/90">
                 Presentacion GAD Database
               </h1>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Municipality of Presentacion, Camarines Sur
+              </p>
             </div>
 
+            {/* Form Title */}
             <div className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-800 dark:text-white/90">
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white/90">
                 Sign In
               </h2>
               <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
@@ -82,13 +123,15 @@ const LoginPage: React.FC = () => {
                   <svg className="h-5 w-5 text-error-500 shrink-0" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
                   </svg>
-                  <p className="text-sm text-error-700 dark:text-error-400">{error}</p>
+                  <p className="text-sm text-error-700 dark:text-error-400 font-medium">{error}</p>
                 </div>
               </div>
             )}
 
+            {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Email Field */}
+              
+              {/* Email Address */}
               <div>
                 <label
                   htmlFor="login-email"
@@ -108,13 +151,13 @@ const LoginPage: React.FC = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Enter your email"
-                    className="h-12 w-full rounded-lg border border-gray-300 bg-transparent py-3 pl-12 pr-4 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-800 dark:text-white/90 dark:placeholder:text-gray-500 dark:focus:border-brand-800"
+                    className="h-11 w-full rounded-lg border border-gray-200 bg-transparent py-2.5 pl-12 pr-4 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-800 dark:bg-gray-900 dark:bg-white/[0.03] dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800 transition-colors"
                     required
                   />
                 </div>
               </div>
 
-              {/* Password Field */}
+              {/* Password */}
               <div>
                 <label
                   htmlFor="login-password"
@@ -134,14 +177,14 @@ const LoginPage: React.FC = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"
-                    className="h-12 w-full rounded-lg border border-gray-300 bg-transparent py-3 pl-12 pr-12 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-800 dark:text-white/90 dark:placeholder:text-gray-500 dark:focus:border-brand-800"
+                    className="h-11 w-full rounded-lg border border-gray-200 bg-transparent py-2.5 pl-12 pr-12 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-800 dark:bg-gray-900 dark:bg-white/[0.03] dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800 transition-colors"
                     required
                     minLength={8}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                     aria-label={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? (
@@ -163,7 +206,7 @@ const LoginPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="flex h-12 w-full items-center justify-center rounded-lg bg-brand-500 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600 focus:outline-hidden focus:ring-3 focus:ring-brand-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex h-11 w-full items-center justify-center rounded-lg bg-brand-500 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 {isLoading ? (
                   <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -177,8 +220,10 @@ const LoginPage: React.FC = () => {
             <p className="mt-8 text-center text-xs text-gray-400 dark:text-gray-500">
               Presentacion, Camarines Sur • Municipal Government
             </p>
+
           </div>
         </div>
+
       </div>
     </>
   );

@@ -28,6 +28,7 @@ interface ApprovalLog {
   year: number;
   status: string;
   comments: string | null;
+  changes?: any;
   created_at: string;
   updated_at: string;
   user_profiles: {
@@ -107,14 +108,15 @@ export default function AuditLogPage() {
     fetchSchemas();
   }, []);
 
-  const inferTableName = (log: any) => {
+  const inferSubTableInfo = (log: any) => {
     if (log.table_name === 'dynamic_data') {
       const schemaId = log.new_data?.schema_id || log.old_data?.schema_id;
       const schema = dynamicSchemas.find(s => s.id === schemaId);
-      return schema ? `Dynamic: ${schema.tab_name}` : 'Dynamic Table Data';
+      return {
+        mainTable: 'Dynamic Tables',
+        subTable: schema ? schema.tab_name : 'Dynamic Table Data'
+      };
     }
-
-    if (log.table_name === 'population_stats') return 'Demographics Data';
 
     const oldData = log.old_data || {};
     const newData = log.new_data || {};
@@ -124,36 +126,109 @@ export default function AuditLogPage() {
       oldData[k] !== newData[k]
     );
 
-    if (changedKeys.length === 0) return getTableReadableName(log.table_name);
+    if (log.table_name === 'population_stats') {
+      const mainTable = 'Population Stats';
+      const hasPop = changedKeys.some(k => k.includes('male_count') || k.includes('female_count') || k === 'total_population');
+      const hasHH = changedKeys.some(k => k.startsWith('household_heads'));
+      if (hasPop && hasHH) return { mainTable, subTable: 'Total Population & Household Heads' };
+      if (hasHH) return { mainTable, subTable: 'Household Heads' };
+      return { mainTable, subTable: 'Total Population' };
+    }
+
+    if (log.table_name === 'social_dev_stats') {
+      const mainTable = 'Social Dev Stats';
+      if (changedKeys.some(k => k.includes('student_enrollment'))) return { mainTable, subTable: 'Student Enrollment' };
+      if (changedKeys.some(k => k.includes('drop_out'))) return { mainTable, subTable: 'School Drop-outs' };
+      if (changedKeys.some(k => k.includes('osy'))) return { mainTable, subTable: 'Out-of-School Youth' };
+      if (changedKeys.some(k => k.includes('malnourished'))) return { mainTable, subTable: 'Malnourished Children' };
+      if (changedKeys.some(k => k.includes('teenage_pregnancy') || k.includes('maternal_mortality'))) return { mainTable, subTable: 'Teen Pregnancy & Maternal Mortality' };
+      if (changedKeys.some(k => k.includes('pwd'))) return { mainTable, subTable: 'Persons with Disabilities (PWDs)' };
+      if (changedKeys.some(k => k.includes('four_ps'))) return { mainTable, subTable: '4Ps Beneficiaries' };
+      if (changedKeys.some(k => k.includes('senior_citizens'))) return { mainTable, subTable: 'Senior Citizens' };
+      if (changedKeys.some(k => k.includes('solo_parents'))) return { mainTable, subTable: 'Solo Parents' };
+      return { mainTable, subTable: 'Social Development Data' };
+    }
 
     if (log.table_name === 'econ_dev_stats') {
-      if (changedKeys.some(k => k.includes('labor_force') || k.includes('employed'))) return 'Labor Force';
-      if (changedKeys.some(k => k.includes('farmers') || k.includes('fisherfolks'))) return 'Agriculture & Fisheries';
-      if (changedKeys.some(k => k.includes('business') || k.includes('vendors'))) return 'Commerce & Trade';
-    }
-    if (log.table_name === 'social_dev_stats') {
-      if (changedKeys.some(k => k.includes('malnourished') || k.includes('pwd') || k.includes('solo_parents'))) return 'Health & Nutrition';
-      if (changedKeys.some(k => k.includes('osyc') || k.includes('literate') || k.includes('college'))) return 'Education';
-      if (changedKeys.some(k => k.includes('informal') || k.includes('safe_water') || k.includes('sanitary'))) return 'Housing & Basic Needs';
-    }
-    if (log.table_name === 'infra_stats') {
-       if (changedKeys.some(k => k.includes('road') || k.includes('bridge') || k.includes('water_supply'))) return 'Utilities & Transport';
-       if (changedKeys.some(k => k.includes('health_centers') || k.includes('schools') || k.includes('evacuation'))) return 'Facilities';
-    }
-    if (log.table_name === 'governance_stats') {
-       if (changedKeys.some(k => k.includes('elected') || k.includes('appointed'))) return 'Officials Demographics';
-       if (changedKeys.some(k => k.includes('trained'))) return 'Trainings & Seminars';
-    }
-    if (log.table_name === 'justice_stats') {
-       if (changedKeys.some(k => k.includes('cases'))) return 'Incidence';
-       if (changedKeys.some(k => k.includes('rehab') || k.includes('counseling'))) return 'Interventions';
-    }
-    if (log.table_name === 'gad_stats') {
-       if (changedKeys.some(k => k.includes('budget'))) return 'GAD Budget';
-       if (changedKeys.some(k => k.includes('endorsed') || k.includes('implemented'))) return 'GAD Programs';
+      const mainTable = 'Economic Dev Stats';
+      if (changedKeys.some(k => k.includes('employed') && !k.includes('unemployed'))) return { mainTable, subTable: 'Employed Population' };
+      if (changedKeys.some(k => k.includes('unemployed'))) return { mainTable, subTable: 'Unemployed Population' };
+      if (changedKeys.some(k => k.includes('farmers'))) return { mainTable, subTable: 'Farmers' };
+      if (changedKeys.some(k => k.includes('fisherfolks'))) return { mainTable, subTable: 'Fisherfolks' };
+      if (changedKeys.some(k => k.includes('business_owners'))) return { mainTable, subTable: 'Business Owners' };
+      if (changedKeys.some(k => k.includes('ambulant_vendors'))) return { mainTable, subTable: 'Ambulant Vendors' };
+      return { mainTable, subTable: 'Economic Development Data' };
     }
 
-    return getTableReadableName(log.table_name);
+    if (log.table_name === 'infra_stats') {
+      const mainTable = 'Infrastructure Stats';
+      if (changedKeys.some(k => k.includes('safe_water'))) return { mainTable, subTable: 'Safe Water Access' };
+      if (changedKeys.some(k => k.includes('sanitary_toilet'))) return { mainTable, subTable: 'Sanitary Toilets' };
+      if (changedKeys.some(k => k.includes('informal_settlers'))) return { mainTable, subTable: 'Informal Settlers' };
+      return { mainTable, subTable: 'Infrastructure Data' };
+    }
+
+    if (log.table_name === 'governance_stats') {
+      const mainTable = 'Governance Stats';
+      if (changedKeys.some(k => k.includes('elected_officials'))) return { mainTable, subTable: 'Elected Officials' };
+      if (changedKeys.some(k => k.includes('appointed_heads'))) return { mainTable, subTable: 'Appointed Department Heads' };
+      return { mainTable, subTable: 'Governance Data' };
+    }
+
+    if (log.table_name === 'justice_stats') {
+      const mainTable = 'Justice Stats';
+      if (changedKeys.some(k => k.includes('vawc'))) return { mainTable, subTable: 'Reported VAWC Cases' };
+      if (changedKeys.some(k => k.includes('cicl'))) return { mainTable, subTable: 'Children in Conflict with Law' };
+      if (changedKeys.some(k => k.includes('sexual_assault'))) return { mainTable, subTable: 'Sexual Assault Cases' };
+      return { mainTable, subTable: 'Justice Data' };
+    }
+
+    if (log.table_name === 'gad_stats') {
+      const mainTable = 'GAD Stats';
+      if (changedKeys.some(k => k.includes('budget') || k.includes('amount'))) return { mainTable, subTable: 'GAD Budget & Allocations' };
+      if (changedKeys.some(k => k.includes('trainings') || k.includes('participants'))) return { mainTable, subTable: 'GAD Trainings' };
+      return { mainTable, subTable: 'Institutional GAD Data' };
+    }
+
+    return {
+      mainTable: getTableReadableName(log.table_name),
+      subTable: 'General Record'
+    };
+  };
+
+  const inferApprovalSubTable = (log: ApprovalLog) => {
+    const changes = log.changes || {};
+    const firstKey = Object.keys(changes)[0];
+    const rowChanges = firstKey ? changes[firstKey] : {};
+    const keys = Object.keys(rowChanges || {});
+
+    if (keys.some(k => k.startsWith('household_heads'))) return 'Household Heads';
+    if (keys.some(k => k.includes('male_count') || k.includes('female_count') || k === 'total_population')) return 'Total Population';
+    if (keys.some(k => k.includes('student_enrollment'))) return 'Student Enrollment';
+    if (keys.some(k => k.includes('drop_out'))) return 'School Drop-outs';
+    if (keys.some(k => k.includes('osy'))) return 'Out-of-School Youth';
+    if (keys.some(k => k.includes('malnourished'))) return 'Malnourished Children';
+    if (keys.some(k => k.includes('teenage_pregnancy') || k.includes('maternal_mortality'))) return 'Teen Pregnancy & Maternal Mortality';
+    if (keys.some(k => k.includes('pwd'))) return 'Persons with Disabilities';
+    if (keys.some(k => k.includes('four_ps'))) return '4Ps Beneficiaries';
+    if (keys.some(k => k.includes('senior_citizens'))) return 'Senior Citizens';
+    if (keys.some(k => k.includes('solo_parents'))) return 'Solo Parents';
+    if (keys.some(k => k.includes('employed') && !k.includes('unemployed'))) return 'Employed Population';
+    if (keys.some(k => k.includes('unemployed'))) return 'Unemployed Population';
+    if (keys.some(k => k.includes('farmers'))) return 'Farmers';
+    if (keys.some(k => k.includes('fisherfolks'))) return 'Fisherfolks';
+    if (keys.some(k => k.includes('business_owners'))) return 'Business Owners';
+    if (keys.some(k => k.includes('ambulant_vendors'))) return 'Ambulant Vendors';
+    if (keys.some(k => k.includes('safe_water'))) return 'Safe Water Access';
+    if (keys.some(k => k.includes('sanitary_toilet'))) return 'Sanitary Toilets';
+    if (keys.some(k => k.includes('informal_settlers'))) return 'Informal Settlers';
+    if (keys.some(k => k.includes('elected_officials'))) return 'Elected Officials';
+    if (keys.some(k => k.includes('appointed_heads'))) return 'Appointed Department Heads';
+    if (keys.some(k => k.includes('vawc'))) return 'Reported VAWC Cases';
+    if (keys.some(k => k.includes('cicl'))) return 'Children in Conflict with Law';
+    if (keys.some(k => k.includes('sexual_assault'))) return 'Sexual Assault Cases';
+
+    return null;
   };
 
   useEffect(() => {
@@ -279,6 +354,15 @@ export default function AuditLogPage() {
     { key: 'approvals' as const, label: 'Approvals' },
   ];
 
+  const getTargetColumnHeader = () => {
+    switch (activeTab) {
+      case 'data': return 'Table / Sub-Table';
+      case 'auth': return 'Device / Platform';
+      case 'approvals': return 'Module / Tab / Sub-Table';
+      default: return 'Table / Device / Platform';
+    }
+  };
+
   return (
     <>
       <PageMeta title="System Audit Logs" description="Track system changes and activity" />
@@ -333,46 +417,51 @@ export default function AuditLogPage() {
                  <tr>
                    <th className="whitespace-nowrap px-4 py-3 font-medium">Date</th>
                    <th className="whitespace-nowrap px-4 py-3 font-medium">Submitted By</th>
-                   <th className="whitespace-nowrap px-4 py-3 font-medium">Module / Tab</th>
+                   <th className="whitespace-nowrap px-4 py-3 font-medium">Module / Tab / Sub-Table</th>
                    <th className="whitespace-nowrap px-4 py-3 font-medium">Year</th>
                    <th className="whitespace-nowrap px-4 py-3 font-medium">Status</th>
                    <th className="whitespace-nowrap px-4 py-3 font-medium">Comments</th>
                  </tr>
                </thead>
                <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
-                 {approvalLogs.map((log) => (
-                   <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                     <td className="whitespace-nowrap px-4 py-3 text-xs">
-                       {formatDate(log.created_at, { hour: 'numeric', minute: 'numeric' })}
-                     </td>
-                     <td className="whitespace-nowrap px-4 py-3">
-                       <div className="flex flex-col">
-                         <span className="font-medium text-gray-900 dark:text-white">
-                           {log.user_profiles?.full_name || 'Unknown'}
+                 {approvalLogs.map((log) => {
+                   const subTableLabel = inferApprovalSubTable(log);
+                   return (
+                     <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                       <td className="whitespace-nowrap px-4 py-3 text-xs">
+                         {formatDate(log.created_at, { hour: 'numeric', minute: 'numeric' })}
+                       </td>
+                       <td className="whitespace-nowrap px-4 py-3">
+                         <div className="flex flex-col">
+                           <span className="font-medium text-gray-900 dark:text-white">
+                             {log.user_profiles?.full_name || 'Unknown'}
+                           </span>
+                           <span className="text-xs text-gray-500">
+                             {log.user_profiles?.email || 'N/A'}
+                           </span>
+                         </div>
+                       </td>
+                       <td className="whitespace-nowrap px-4 py-3">
+                         <div className="flex flex-col">
+                           <span className="font-medium text-gray-900 dark:text-white">{log.module}</span>
+                           <span className="text-xs text-gray-500">
+                             {log.tab}{subTableLabel ? ` › ${subTableLabel}` : ''}
+                           </span>
+                         </div>
+                       </td>
+                       <td className="whitespace-nowrap px-4 py-3 text-gray-700 dark:text-gray-300">{log.year}</td>
+                       <td className="whitespace-nowrap px-4 py-3">
+                         <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(log.status)}`}>
+                           {getStatusIcon(log.status)}
+                           {log.status.charAt(0).toUpperCase() + log.status.slice(1)}
                          </span>
-                         <span className="text-xs text-gray-500">
-                           {log.user_profiles?.email || 'N/A'}
-                         </span>
-                       </div>
-                     </td>
-                     <td className="whitespace-nowrap px-4 py-3">
-                       <div className="flex flex-col">
-                         <span className="font-medium text-gray-900 dark:text-white">{log.module}</span>
-                         <span className="text-xs text-gray-500">{log.tab}</span>
-                       </div>
-                     </td>
-                     <td className="whitespace-nowrap px-4 py-3 text-gray-700 dark:text-gray-300">{log.year}</td>
-                     <td className="whitespace-nowrap px-4 py-3">
-                       <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(log.status)}`}>
-                         {getStatusIcon(log.status)}
-                         {log.status.charAt(0).toUpperCase() + log.status.slice(1)}
-                       </span>
-                     </td>
-                     <td className="px-4 py-3 text-xs text-gray-500 max-w-[200px] truncate" title={log.comments || ''}>
-                       {log.comments || '—'}
-                     </td>
-                   </tr>
-                 ))}
+                       </td>
+                       <td className="px-4 py-3 text-xs text-gray-500 max-w-[200px] truncate" title={log.comments || ''}>
+                         {log.comments || '—'}
+                       </td>
+                     </tr>
+                   );
+                 })}
                  {approvalLogs.length === 0 && (
                    <tr>
                      <td colSpan={6} className="py-8 text-center text-sm text-gray-500">
@@ -392,48 +481,56 @@ export default function AuditLogPage() {
                    <th className="whitespace-nowrap px-4 py-3 font-medium">Timestamp</th>
                    <th className="whitespace-nowrap px-4 py-3 font-medium">User</th>
                    <th className="whitespace-nowrap px-4 py-3 font-medium">Action</th>
-                   <th className="whitespace-nowrap px-4 py-3 font-medium">Table</th>
+                   <th className="whitespace-nowrap px-4 py-3 font-medium">{getTargetColumnHeader()}</th>
                    <th className="whitespace-nowrap px-4 py-3 font-medium">Department</th>
                  </tr>
                </thead>
                <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
-                 {logs.map((log) => (
-                   <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                     <td className="whitespace-nowrap px-4 py-3 text-xs">
-                       {formatDate(log.changed_at, { hour: 'numeric', minute: 'numeric' })}
-                     </td>
-                     <td className="whitespace-nowrap px-4 py-3">
-                       <div className="flex flex-col">
-                         <span className="font-medium text-gray-900 dark:text-white">
-                           {log.user_profiles?.full_name || 'System / Unknown'}
+                 {logs.map((log) => {
+                   const { mainTable, subTable } = inferSubTableInfo(log);
+                   const isAuthAction = ['LOGIN', 'LOGOUT'].includes(log.action);
+
+                   return (
+                     <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                       <td className="whitespace-nowrap px-4 py-3 text-xs">
+                         {formatDate(log.changed_at, { hour: 'numeric', minute: 'numeric' })}
+                       </td>
+                       <td className="whitespace-nowrap px-4 py-3">
+                         <div className="flex flex-col">
+                           <span className="font-medium text-gray-900 dark:text-white">
+                             {log.user_profiles?.full_name || 'System / Unknown'}
+                           </span>
+                           <span className="text-xs text-gray-500">
+                             {log.user_profiles?.email || 'N/A'}
+                           </span>
+                         </div>
+                       </td>
+                       <td className="whitespace-nowrap px-4 py-3">
+                         <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getActionColor(log.action)}`}>
+                           {log.action}
                          </span>
-                         <span className="text-xs text-gray-500">
-                           {log.user_profiles?.email || 'N/A'}
-                         </span>
-                       </div>
-                     </td>
-                     <td className="whitespace-nowrap px-4 py-3">
-                       <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getActionColor(log.action)}`}>
-                         {log.action}
-                       </span>
-                     </td>
-                     <td className="whitespace-nowrap px-4 py-3 text-xs">
-                       {['LOGIN', 'LOGOUT'].includes(log.action) ? (
-                         <span className="font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
-                           {parseDevice(log.new_data?.user_agent)}
-                         </span>
-                       ) : (
-                         <span className="font-mono text-gray-600 dark:text-gray-400">{inferTableName(log)}</span>
-                       )}
-                     </td>
-                     <td className="whitespace-nowrap px-4 py-3 text-xs text-gray-700 dark:text-gray-300">
-                       {['LOGIN', 'LOGOUT'].includes(log.action) 
-                         ? (log.user_profiles?.department || 'System Auth')
-                         : getTableLabel(log.table_name)
-                       }
-                     </td>
-                   </tr>
-                 ))}
+                       </td>
+                       <td className="whitespace-nowrap px-4 py-3 text-xs">
+                         {isAuthAction ? (
+                           <span className="font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded font-medium text-gray-700 dark:text-gray-300">
+                             {parseDevice(log.new_data?.user_agent)}
+                           </span>
+                         ) : (
+                           <div className="flex flex-col">
+                             <span className="font-medium text-gray-900 dark:text-white">{mainTable}</span>
+                             <span className="text-xs text-gray-500">{subTable}</span>
+                           </div>
+                         )}
+                       </td>
+                       <td className="whitespace-nowrap px-4 py-3 text-xs text-gray-700 dark:text-gray-300">
+                         {isAuthAction 
+                           ? (log.user_profiles?.department || 'System Auth')
+                           : getTableLabel(log.table_name)
+                         }
+                       </td>
+                     </tr>
+                   );
+                 })}
                  {logs.length === 0 && (
                    <tr>
                      <td colSpan={5} className="py-8 text-center text-sm text-gray-500">
