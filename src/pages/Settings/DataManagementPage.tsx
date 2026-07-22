@@ -6,6 +6,89 @@ import PageMeta from '../../components/common/PageMeta';
 import PageBreadcrumb from '../../components/common/PageBreadcrumb';
 import { createPortal } from 'react-dom';
 
+interface NativeSubTable {
+  key: string;
+  label: string;
+  columns: string[];
+}
+
+const NATIVE_SUB_TABLES: Record<string, NativeSubTable[]> = {
+  'Demographics & Population': [
+    {
+      key: 'demographics',
+      label: 'Native: Demographics & Household Heads',
+      columns: ['total_population', 'total_households', 'male_count', 'female_count', 'household_heads_m', 'household_heads_f']
+    }
+  ],
+  'Social Development': [
+    {
+      key: 'education',
+      label: 'Native: Education (Enrollment, Dropouts, OSY)',
+      columns: ['student_enrollment_m', 'student_enrollment_f', 'drop_out_m', 'drop_out_f', 'osy_m', 'osy_f']
+    },
+    {
+      key: 'health',
+      label: 'Native: Health & Nutrition',
+      columns: ['malnourished_m', 'malnourished_f', 'teenage_pregnancy', 'maternal_mortality']
+    },
+    {
+      key: 'welfare',
+      label: 'Native: Social Welfare (PWD, 4Ps, Senior Citizens, Solo Parents)',
+      columns: ['pwd_m', 'pwd_f', 'four_ps_m', 'four_ps_f', 'senior_citizens_m', 'senior_citizens_f', 'solo_parents_m', 'solo_parents_f']
+    }
+  ],
+  'Economic Development': [
+    {
+      key: 'labor',
+      label: 'Native: Labor Force / Employment',
+      columns: ['employed_m', 'employed_f', 'unemployed_m', 'unemployed_f']
+    },
+    {
+      key: 'agriculture',
+      label: 'Native: Agriculture & Fisheries',
+      columns: ['farmers_m', 'farmers_f', 'fisherfolks_m', 'fisherfolks_f']
+    },
+    {
+      key: 'commerce',
+      label: 'Native: Commerce & Trade',
+      columns: ['business_owners_m', 'business_owners_f', 'ambulant_vendors_m', 'ambulant_vendors_f']
+    }
+  ],
+  'Infrastructure': [
+    {
+      key: 'utilities',
+      label: 'Native: Household Utilities (Water & Sanitary Toilet)',
+      columns: ['safe_water_m', 'safe_water_f', 'sanitary_toilet_m', 'sanitary_toilet_f']
+    },
+    {
+      key: 'housing',
+      label: 'Native: Housing & Informal Settlers',
+      columns: ['informal_settlers_m', 'informal_settlers_f']
+    }
+  ],
+  'Local Governance': [
+    {
+      key: 'officials',
+      label: 'Native: Governance & Leadership',
+      columns: ['elected_officials_m', 'elected_officials_f', 'appointed_heads_m', 'appointed_heads_f']
+    }
+  ],
+  'Justice & Safety': [
+    {
+      key: 'justice',
+      label: 'Native: Justice & Protection (VAWC, CICL, Sexual Assault)',
+      columns: ['vawc_cases_reported', 'cicl_m', 'cicl_f', 'sexual_assault_m', 'sexual_assault_f']
+    }
+  ],
+  'Institutional GAD': [
+    {
+      key: 'gad',
+      label: 'Native: Institutional GAD (Budget & Trainings)',
+      columns: ['total_lgu_budget', 'gad_allocated_amount', 'gad_utilized_amount', 'number_of_gad_trainings', 'participants_trained']
+    }
+  ]
+};
+
 export default function DataManagementPage() {
   const queryClient = useQueryClient();
   const [department, setDepartment] = useState('');
@@ -50,9 +133,14 @@ export default function DataManagementPage() {
 
   const getSelectedTableName = () => {
     if (tableSelection === 'all') return 'All Tables';
-    if (tableSelection === 'native') return 'Native Data';
+    if (tableSelection === 'native_all') return `All Native Tables (${getNativeTableName(department)})`;
+    if (tableSelection.startsWith('native:')) {
+      const subKey = tableSelection.replace('native:', '');
+      const sub = (NATIVE_SUB_TABLES[department] || []).find(s => s.key === subKey);
+      return sub ? sub.label : 'Native Sub-Table';
+    }
     const schema = dynamicSchemas.find(s => s.id === tableSelection);
-    if (schema) return schema.tab_name;
+    if (schema) return `Dynamic: ${schema.tab_name}`;
     return 'Data';
   };
 
@@ -60,32 +148,46 @@ export default function DataManagementPage() {
 
   const mutation = useMutation({
     mutationFn: async () => {
-      let targetNative = false;
-      let targetSchemas: string[] = [];
+      const nativeTable = getNativeTableName(department);
 
       if (tableSelection === 'all') {
-        targetNative = true;
-        targetSchemas = dynamicSchemas.map(s => s.id);
-      } else if (tableSelection === 'native') {
-        targetNative = true;
-      } else {
-        targetSchemas = [tableSelection];
-      }
-
-      // 1. Delete Native Data (RLS allows superadmin to delete their own rows)
-      if (targetNative) {
-        const nativeTable = getNativeTableName(department);
+        // Delete all native data for this department and year
         if (nativeTable) {
           const { error } = await supabase.from(nativeTable).delete().eq('year', year);
           if (error) throw error;
         }
-      }
-
-      // 2. Delete Dynamic Data via SECURITY DEFINER RPC (bypasses RLS)
-      if (targetSchemas.length > 0) {
+        // Delete all dynamic data for this department and year
+        const targetSchemas = dynamicSchemas.map(s => s.id);
+        if (targetSchemas.length > 0) {
+          const { error } = await supabase.rpc('delete_dynamic_data_by_year', {
+            p_year: year,
+            p_schema_ids: targetSchemas
+          });
+          if (error) throw error;
+        }
+      } else if (tableSelection === 'native_all') {
+        // Delete entire native table records for this year
+        if (nativeTable) {
+          const { error } = await supabase.from(nativeTable).delete().eq('year', year);
+          if (error) throw error;
+        }
+      } else if (tableSelection.startsWith('native:')) {
+        // Reset specific columns of a native sub-table for this year
+        const subKey = tableSelection.replace('native:', '');
+        const sub = (NATIVE_SUB_TABLES[department] || []).find(s => s.key === subKey);
+        if (nativeTable && sub) {
+          const resetObj: Record<string, number> = {};
+          sub.columns.forEach(col => {
+            resetObj[col] = 0;
+          });
+          const { error } = await supabase.from(nativeTable).update(resetObj).eq('year', year);
+          if (error) throw error;
+        }
+      } else {
+        // Delete dynamic data for a specific dynamic table schema
         const { error } = await supabase.rpc('delete_dynamic_data_by_year', {
           p_year: year,
-          p_schema_ids: targetSchemas
+          p_schema_ids: [tableSelection]
         });
         if (error) throw error;
       }
@@ -137,9 +239,8 @@ export default function DataManagementPage() {
           <div>
             <h2 className="text-xl font-bold text-red-800 dark:text-red-300 mb-2">Caution: Destructive Actions</h2>
             <p className="text-red-700/80 dark:text-red-400/80 text-sm leading-relaxed max-w-2xl">
-              This module allows you to permanently delete records for a specific department and year. 
-              <strong> This action cannot be undone.</strong> We strongly recommend verifying the selected year and department before proceeding. 
-              A Backup & Restore feature will be implemented in a future update to help recover accidentally deleted data.
+              This module allows you to permanently delete records for a specific table or sub-table for a selected year. 
+              <strong> This action cannot be undone.</strong> Please review your selection carefully before proceeding.
             </p>
           </div>
         </div>
@@ -191,7 +292,7 @@ export default function DataManagementPage() {
 
             <div className="space-y-2 md:col-span-2">
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                Target Table
+                Target Table / Sub-Table
               </label>
               <select
                 value={tableSelection}
@@ -201,7 +302,14 @@ export default function DataManagementPage() {
               >
                 <option value="all">All Tables (Native + Dynamic)</option>
                 {department && (
-                  <option value="native">Native Data ({getNativeTableName(department)})</option>
+                  <>
+                    <option value="native_all">All Native Tables ({getNativeTableName(department)})</option>
+                    {(NATIVE_SUB_TABLES[department] || []).map(sub => (
+                      <option key={sub.key} value={`native:${sub.key}`}>
+                        {sub.label}
+                      </option>
+                    ))}
+                  </>
                 )}
                 {dynamicSchemas.map((schema: any) => (
                   <option key={schema.id} value={schema.id}>
