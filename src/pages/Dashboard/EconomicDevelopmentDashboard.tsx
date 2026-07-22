@@ -65,29 +65,23 @@ export default function EconomicDevelopmentDashboard() {
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <ErrorBoundary>
               <MultiSeriesChart 
-                title="Employed by Barangay (M vs F)"
+                title={stats?.empHasTotalOnly ? "Employed by Barangay (Total)" : "Employed by Barangay (M vs F)"}
                 type="bar"
                 stacked={false}
                 categories={stats?.barangays || []}
-                series={[
-                  { name: "Male", data: stats?.employedM_series || [] },
-                  { name: "Female", data: stats?.employedF_series || [] }
-                ]}
-                colors={[CHART_COLORS.male, CHART_COLORS.female]}
+                series={stats?.employedSeries || []}
+                colors={stats?.empHasTotalOnly ? ["#10b981"] : [CHART_COLORS.male, CHART_COLORS.female]}
               />
             </ErrorBoundary>
             
             <ErrorBoundary>
               <MultiSeriesChart 
-                title="Unemployed by Barangay (M vs F)"
+                title={stats?.unempHasTotalOnly ? "Unemployed by Barangay (Total)" : "Unemployed by Barangay (M vs F)"}
                 type="bar"
-                stacked={true}
+                stacked={!stats?.unempHasTotalOnly}
                 categories={stats?.barangays || []}
-                series={[
-                  { name: "Male", data: stats?.unemployedM_series || [] },
-                  { name: "Female", data: stats?.unemployedF_series || [] }
-                ]}
-                colors={[CHART_COLORS.male, CHART_COLORS.female]}
+                series={stats?.unemployedSeries || []}
+                colors={stats?.unempHasTotalOnly ? ["#ef4444"] : [CHART_COLORS.male, CHART_COLORS.female]}
               />
             </ErrorBoundary>
           </div>

@@ -81,11 +81,32 @@ export default function SocialDevelopmentDataEntry() {
 
   const handleChange = (barangayId: string, field: keyof SocialStat, value: string) => {
     const numValue = value === '' ? 0 : parseInt(value, 10);
+    const prefix = field.toString().replace(/_[mf]$/, '');
+    const keyTotal = `${prefix}_total` as keyof SocialStat;
+
     setStats((prev) => ({
       ...prev,
       [barangayId]: {
         ...prev[barangayId],
         [field]: numValue,
+        [keyTotal]: null,
+      },
+    }));
+  };
+
+  const handleTotalChange = (barangayId: string, prefix: string, value: string) => {
+    const numValue = value === '' ? null : parseInt(value, 10);
+    const keyTotal = `${prefix}_total` as keyof SocialStat;
+    const keyM = `${prefix}_m` as keyof SocialStat;
+    const keyF = `${prefix}_f` as keyof SocialStat;
+
+    setStats((prev) => ({
+      ...prev,
+      [barangayId]: {
+        ...prev[barangayId],
+        [keyTotal]: numValue,
+        [keyM]: 0,
+        [keyF]: 0,
       },
     }));
   };
@@ -96,15 +117,19 @@ export default function SocialDevelopmentDataEntry() {
         return [
           { header: 'Student Enrollment (M)', key: 'student_enrollment_m' },
           { header: 'Student Enrollment (F)', key: 'student_enrollment_f' },
+          { header: 'Student Enrollment (Total)', key: 'student_enrollment_total' },
           { header: 'School Drop-out (M)', key: 'drop_out_m' },
           { header: 'School Drop-out (F)', key: 'drop_out_f' },
+          { header: 'School Drop-out (Total)', key: 'drop_out_total' },
           { header: 'OSY (M)', key: 'osy_m' },
           { header: 'OSY (F)', key: 'osy_f' },
+          { header: 'OSY (Total)', key: 'osy_total' },
         ];
       case 'health':
         return [
           { header: 'Malnourished (M)', key: 'malnourished_m' },
           { header: 'Malnourished (F)', key: 'malnourished_f' },
+          { header: 'Malnourished (Total)', key: 'malnourished_total' },
           { header: 'Teenage Pregnancy (Total)', key: 'teenage_pregnancy' },
           { header: 'Maternal Mortality (Total)', key: 'maternal_mortality' },
         ];
@@ -112,15 +137,71 @@ export default function SocialDevelopmentDataEntry() {
         return [
           { header: 'PWDs (M)', key: 'pwd_m' },
           { header: 'PWDs (F)', key: 'pwd_f' },
+          { header: 'PWDs (Total)', key: 'pwd_total' },
           { header: '4Ps Beneficiaries (M)', key: 'four_ps_m' },
           { header: '4Ps Beneficiaries (F)', key: 'four_ps_f' },
+          { header: '4Ps Beneficiaries (Total)', key: 'four_ps_total' },
           { header: 'Senior Citizens (M)', key: 'senior_citizens_m' },
           { header: 'Senior Citizens (F)', key: 'senior_citizens_f' },
+          { header: 'Senior Citizens (Total)', key: 'senior_citizens_total' },
           { header: 'Solo Parents (M)', key: 'solo_parents_m' },
           { header: 'Solo Parents (F)', key: 'solo_parents_f' },
+          { header: 'Solo Parents (Total)', key: 'solo_parents_total' },
         ];
       default: return [];
     }
+  };
+
+  const renderIndicatorCells = (entityId: string, row: any, prefix: string, isLastInGroup: boolean) => {
+    const kM = prefix + 'm';
+    const kF = prefix + 'f';
+    const kTot = prefix + 'total';
+
+    const mM = Number(row[kM] || 0);
+    const fF = Number(row[kF] || 0);
+    const rawTot = row[kTot];
+
+    const hasMF = mM > 0 || fF > 0;
+    const borderRight = isLastInGroup ? 'border-r dark:border-gray-800' : '';
+
+    return (
+      <React.Fragment key={prefix}>
+        <td className="px-0 py-0 border-l dark:border-gray-800">
+          <input 
+            type="number" min="0" 
+            value={row[kM] || ''} 
+            onChange={(e) => handleChange(entityId, kM as any, e.target.value)} 
+            disabled={!canWrite || isLocked} 
+            className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" 
+          />
+        </td>
+        <td className="px-0 py-0">
+          <input 
+            type="number" min="0" 
+            value={row[kF] || ''} 
+            onChange={(e) => handleChange(entityId, kF as any, e.target.value)} 
+            disabled={!canWrite || isLocked} 
+            className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" 
+          />
+        </td>
+        {hasMF ? (
+          <td className={`px-4 py-3 text-center font-medium bg-gray-100 dark:bg-gray-800/50 ${borderRight}`}>
+            {mM + fF}
+          </td>
+        ) : (
+          <td className={`px-0 py-0 text-center font-medium bg-amber-50/40 dark:bg-amber-900/10 ${borderRight}`}>
+            <input 
+              type="number" min="0"
+              placeholder="Total" 
+              value={rawTot ?? ''} 
+              onChange={(e) => handleTotalChange(entityId, prefix.replace(/_$/, ''), e.target.value)} 
+              disabled={!canWrite || isLocked} 
+              className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center text-brand-600 dark:text-brand-400 font-semibold outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 placeholder:text-gray-400 placeholder:font-normal" 
+            />
+          </td>
+        )}
+      </React.Fragment>
+    );
   };
 
   const handleImport = (importedData: any[]) => {
@@ -179,7 +260,7 @@ export default function SocialDevelopmentDataEntry() {
     const changedData: Record<string, any> = {};
     const fields = getExportColumns().map(c => c.key);
     
-    barangays.forEach(b => {
+    entities.forEach(b => {
       const row = stats[b.id] || {};
       const originalRow = originalStats[b.id] || {};
       
@@ -188,8 +269,8 @@ export default function SocialDevelopmentDataEntry() {
       
       fields.forEach(f => {
         const key = f as keyof SocialStat;
-        const oldVal = (originalRow as any)[key] || 0;
-        const newVal = (row as any)[key] || 0;
+        const oldVal = (originalRow as any)[key] ?? null;
+        const newVal = (row as any)[key] ?? null;
         if (newVal !== oldVal) {
           hasChanges = true;
         }
@@ -326,23 +407,9 @@ export default function SocialDevelopmentDataEntry() {
                   )}
                 <tr className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                   <td className="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white ">{b.name}</td>
-                  {['student_enrollment_', 'drop_out_', 'osy_'].map((prefix, idx) => {
-                    const kM = prefix + 'm';
-                    const kF = prefix + 'f';
-                    return (
-                      <React.Fragment key={prefix}>
-                        <td className="px-0 py-0 border-l dark:border-gray-800 ">
-                          <input type="number" min="0" value={(row as any)[kM] || ''} onChange={(e) => handleChange(b.id, kM as any, e.target.value)} disabled={!canWrite || isLocked} className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" />
-                        </td>
-                        <td className="px-0 py-0  ">
-                          <input type="number" min="0" value={(row as any)[kF] || ''} onChange={(e) => handleChange(b.id, kF as any, e.target.value)} disabled={!canWrite || isLocked} className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" />
-                        </td>
-                        <td className={`px-4 py-3 text-center font-medium bg-gray-100 dark:bg-gray-800/50 ${idx === 2 ? 'border-r dark:border-gray-800' : ''}`}>
-                          {((row as any)[kM] || 0) + ((row as any)[kF] || 0)}
-                        </td>
-                      </React.Fragment>
-                    )
-                  })}
+                  {['student_enrollment_', 'drop_out_', 'osy_'].map((prefix, idx) => 
+                    renderIndicatorCells(b.id, row, prefix, idx === 2)
+                  )}
                 </tr>
                 </React.Fragment>
               );
@@ -352,23 +419,9 @@ export default function SocialDevelopmentDataEntry() {
               return (
                 <tr key={b.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                   <td className="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white ">{b.name}</td>
-                  {['pwd_', 'four_ps_', 'senior_citizens_', 'solo_parents_'].map((prefix, idx) => {
-                    const kM = prefix + 'm';
-                    const kF = prefix + 'f';
-                    return (
-                      <React.Fragment key={prefix}>
-                        <td className="px-0 py-0 border-l dark:border-gray-800 ">
-                          <input type="number" min="0" value={(row as any)[kM] || ''} onChange={(e) => handleChange(b.id, kM as any, e.target.value)} disabled={!canWrite || isLocked} className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" />
-                        </td>
-                        <td className="px-0 py-0  ">
-                          <input type="number" min="0" value={(row as any)[kF] || ''} onChange={(e) => handleChange(b.id, kF as any, e.target.value)} disabled={!canWrite || isLocked} className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" />
-                        </td>
-                        <td className={`px-4 py-3 text-center font-medium bg-gray-100 dark:bg-gray-800/50 ${idx === 3 ? 'border-r dark:border-gray-800' : ''}`}>
-                          {((row as any)[kM] || 0) + ((row as any)[kF] || 0)}
-                        </td>
-                      </React.Fragment>
-                    )
-                  })}
+                  {['pwd_', 'four_ps_', 'senior_citizens_', 'solo_parents_'].map((prefix, idx) => 
+                    renderIndicatorCells(b.id, row, prefix, idx === 3)
+                  )}
                 </tr>
               );
             }
@@ -377,9 +430,7 @@ export default function SocialDevelopmentDataEntry() {
               return (
                 <tr key={b.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                   <td className="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white ">{b.name}</td>
-                  <td className="px-0 py-0 border-l dark:border-gray-800 "><input type="number" min="0" value={row['malnourished_m'] || ''} onChange={(e) => handleChange(b.id, 'malnourished_m', e.target.value)} disabled={!canWrite || isLocked} className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" /></td>
-                  <td className="px-0 py-0  "><input type="number" min="0" value={row['malnourished_f'] || ''} onChange={(e) => handleChange(b.id, 'malnourished_f', e.target.value)} disabled={!canWrite || isLocked} className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" /></td>
-                  <td className="px-4 py-3 text-center font-medium bg-gray-100 dark:bg-gray-800/50 border-r dark:border-gray-800">{(row['malnourished_m'] || 0) + (row['malnourished_f'] || 0)}</td>
+                  {renderIndicatorCells(b.id, row, 'malnourished_', false)}
                   
                   <td className="px-0 py-0 border-l border-r dark:border-gray-800 "><input type="number" min="0" value={row['teenage_pregnancy'] || ''} onChange={(e) => handleChange(b.id, 'teenage_pregnancy', e.target.value)} disabled={!canWrite || isLocked} className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" /></td>
                   <td className="px-0 py-0 border-r dark:border-gray-800 "><input type="number" min="0" value={row['maternal_mortality'] || ''} onChange={(e) => handleChange(b.id, 'maternal_mortality', e.target.value)} disabled={!canWrite || isLocked} className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" /></td>

@@ -33,6 +33,9 @@ const MultiSeriesChart: React.FC<MultiSeriesChartProps> = ({
     }
   }
 
+  const hasManyCategories = !isPieOrDonut && categories && categories.length > 12;
+  const chartHeight = hasManyCategories ? Math.max(height, 420) : height;
+
   const options: ApexOptions = {
     chart: {
       type: type,
@@ -45,7 +48,7 @@ const MultiSeriesChart: React.FC<MultiSeriesChartProps> = ({
       bar: {
         borderRadius: 4,
         horizontal: false,
-        columnWidth: "55%",
+        columnWidth: categories && categories.length > 15 ? "70%" : "55%",
       },
     },
     dataLabels: {
@@ -58,8 +61,18 @@ const MultiSeriesChart: React.FC<MultiSeriesChartProps> = ({
     ...(isPieOrDonut && categories && categories.length > 0 ? { labels: categories } : {}),
     xaxis: !isPieOrDonut ? {
       categories: categories || [],
+      tickAmount: categories ? categories.length : undefined,
       axisBorder: { show: false },
       axisTicks: { show: false },
+      labels: {
+        rotate: -45,
+        rotateAlways: hasManyCategories,
+        hideOverlappingLabels: false,
+        maxHeight: 140,
+        style: {
+          fontSize: hasManyCategories ? "10px" : "11px",
+        }
+      }
     } : undefined,
     yaxis: !isPieOrDonut ? {
       title: { text: isCurrency ? "Amount (₱)" : "Count" },
@@ -96,11 +109,11 @@ const MultiSeriesChart: React.FC<MultiSeriesChartProps> = ({
         </h2>
       </div>
       {isZeroPie ? (
-        <div style={{ height }} className="flex w-full items-center justify-center text-sm font-medium text-gray-500 dark:text-gray-400">
+        <div style={{ height: chartHeight }} className="flex w-full items-center justify-center text-sm font-medium text-gray-500 dark:text-gray-400">
           No Data Recorded
         </div>
       ) : (
-        <ReactApexChart options={options} series={series} type={type} height={height} />
+        <ReactApexChart options={options} series={series} type={type} height={chartHeight} />
       )}
     </div>
   );

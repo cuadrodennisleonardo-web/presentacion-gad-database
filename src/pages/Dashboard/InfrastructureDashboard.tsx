@@ -54,38 +54,29 @@ export default function InfrastructureDashboard() {
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <MultiSeriesChart 
-              title="Safe Drinking Water (M-Led vs F-Led)"
+              title={stats?.waterHasTotalOnly ? "Safe Drinking Water (Total HH)" : "Safe Drinking Water (M-Led vs F-Led)"}
               type="bar"
               categories={stats?.barangays || []}
-              series={[
-                { name: "Male-Led HH", data: stats?.waterM_series || [] },
-                { name: "Female-Led HH", data: stats?.waterF_series || [] }
-              ]}
-              colors={["#3b82f6", "#2dd4bf"]}
+              series={stats?.waterSeries || []}
+              colors={stats?.waterHasTotalOnly ? ["#3b82f6"] : ["#3b82f6", "#2dd4bf"]}
             />
             
             <MultiSeriesChart 
-              title="Sanitary Toilet Facilities (M-Led vs F-Led)"
+              title={stats?.toiletHasTotalOnly ? "Sanitary Toilet Facilities (Total HH)" : "Sanitary Toilet Facilities (M-Led vs F-Led)"}
               type="bar"
               categories={stats?.barangays || []}
-              series={[
-                { name: "Male-Led HH", data: stats?.toiletM_series || [] },
-                { name: "Female-Led HH", data: stats?.toiletF_series || [] }
-              ]}
-              colors={["#0ea5e9", "#14b8a6"]}
+              series={stats?.toiletSeries || []}
+              colors={stats?.toiletHasTotalOnly ? ["#0ea5e9"] : ["#0ea5e9", "#14b8a6"]}
             />
           </div>
 
           <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
              <MultiSeriesChart 
-               title="Informal Settlers (M-Led vs F-Led)"
+               title={stats?.informalHasTotalOnly ? "Informal Settlers (Total HH)" : "Informal Settlers (M-Led vs F-Led)"}
                type="area"
                categories={stats?.barangays || []}
-               series={[
-                 { name: "Male-Led HH", data: stats?.informalM_series || [] },
-                 { name: "Female-Led HH", data: stats?.informalF_series || [] }
-               ]}
-               colors={["#f97316", "#fbbf24"]}
+               series={stats?.informalSeries || []}
+               colors={stats?.informalHasTotalOnly ? ["#f97316"] : ["#f97316", "#fbbf24"]}
              />
           </div>
           

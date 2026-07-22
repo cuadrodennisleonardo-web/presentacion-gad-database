@@ -15,76 +15,151 @@ interface NativeSubTable {
 const NATIVE_SUB_TABLES: Record<string, NativeSubTable[]> = {
   'Demographics & Population': [
     {
-      key: 'demographics',
-      label: 'Native: Demographics & Household Heads',
-      columns: ['total_population', 'total_households', 'male_count', 'female_count', 'household_heads_m', 'household_heads_f']
+      key: 'total_population',
+      label: 'Native: Total Population',
+      columns: ['male_count', 'female_count', 'total_population']
+    },
+    {
+      key: 'household_heads',
+      label: 'Native: Household Heads',
+      columns: ['household_heads_m', 'household_heads_f', 'household_heads_total']
     }
   ],
   'Social Development': [
     {
-      key: 'education',
-      label: 'Native: Education (Enrollment, Dropouts, OSY)',
-      columns: ['student_enrollment_m', 'student_enrollment_f', 'drop_out_m', 'drop_out_f', 'osy_m', 'osy_f']
+      key: 'student_enrollment',
+      label: 'Native: Student Enrollment',
+      columns: ['student_enrollment_m', 'student_enrollment_f', 'student_enrollment_total']
     },
     {
-      key: 'health',
-      label: 'Native: Health & Nutrition',
-      columns: ['malnourished_m', 'malnourished_f', 'teenage_pregnancy', 'maternal_mortality']
+      key: 'drop_outs',
+      label: 'Native: School Drop-outs',
+      columns: ['drop_out_m', 'drop_out_f', 'drop_out_total']
     },
     {
-      key: 'welfare',
-      label: 'Native: Social Welfare (PWD, 4Ps, Senior Citizens, Solo Parents)',
-      columns: ['pwd_m', 'pwd_f', 'four_ps_m', 'four_ps_f', 'senior_citizens_m', 'senior_citizens_f', 'solo_parents_m', 'solo_parents_f']
+      key: 'osy',
+      label: 'Native: Out-of-School Youth (OSY)',
+      columns: ['osy_m', 'osy_f', 'osy_total']
+    },
+    {
+      key: 'malnourished',
+      label: 'Native: Malnourished Children',
+      columns: ['malnourished_m', 'malnourished_f', 'malnourished_total']
+    },
+    {
+      key: 'teen_maternal',
+      label: 'Native: Teen Pregnancy & Maternal Mortality',
+      columns: ['teenage_pregnancy', 'maternal_mortality']
+    },
+    {
+      key: 'pwds',
+      label: 'Native: Persons with Disabilities (PWDs)',
+      columns: ['pwd_m', 'pwd_f', 'pwd_total']
+    },
+    {
+      key: 'four_ps',
+      label: 'Native: 4Ps Beneficiaries',
+      columns: ['four_ps_m', 'four_ps_f', 'four_ps_total']
+    },
+    {
+      key: 'senior_citizens',
+      label: 'Native: Senior Citizens',
+      columns: ['senior_citizens_m', 'senior_citizens_f', 'senior_citizens_total']
+    },
+    {
+      key: 'solo_parents',
+      label: 'Native: Solo Parents',
+      columns: ['solo_parents_m', 'solo_parents_f', 'solo_parents_total']
     }
   ],
   'Economic Development': [
     {
-      key: 'labor',
-      label: 'Native: Labor Force / Employment',
-      columns: ['employed_m', 'employed_f', 'unemployed_m', 'unemployed_f']
+      key: 'employed',
+      label: 'Native: Employed Population',
+      columns: ['employed_m', 'employed_f', 'employed_total']
     },
     {
-      key: 'agriculture',
-      label: 'Native: Agriculture & Fisheries',
-      columns: ['farmers_m', 'farmers_f', 'fisherfolks_m', 'fisherfolks_f']
+      key: 'unemployed',
+      label: 'Native: Unemployed Population',
+      columns: ['unemployed_m', 'unemployed_f', 'unemployed_total']
     },
     {
-      key: 'commerce',
-      label: 'Native: Commerce & Trade',
-      columns: ['business_owners_m', 'business_owners_f', 'ambulant_vendors_m', 'ambulant_vendors_f']
+      key: 'farmers',
+      label: 'Native: Farmers',
+      columns: ['farmers_m', 'farmers_f', 'farmers_total']
+    },
+    {
+      key: 'fisherfolks',
+      label: 'Native: Fisherfolks',
+      columns: ['fisherfolks_m', 'fisherfolks_f', 'fisherfolks_total']
+    },
+    {
+      key: 'business_owners',
+      label: 'Native: Business Owners',
+      columns: ['business_owners_m', 'business_owners_f', 'business_owners_total']
+    },
+    {
+      key: 'ambulant_vendors',
+      label: 'Native: Ambulant Vendors',
+      columns: ['ambulant_vendors_m', 'ambulant_vendors_f', 'ambulant_vendors_total']
     }
   ],
   'Infrastructure': [
     {
-      key: 'utilities',
-      label: 'Native: Household Utilities (Water & Sanitary Toilet)',
-      columns: ['safe_water_m', 'safe_water_f', 'sanitary_toilet_m', 'sanitary_toilet_f']
+      key: 'safe_water',
+      label: 'Native: Safe Water Access',
+      columns: ['safe_water_m', 'safe_water_f', 'safe_water_total']
     },
     {
-      key: 'housing',
-      label: 'Native: Housing & Informal Settlers',
-      columns: ['informal_settlers_m', 'informal_settlers_f']
+      key: 'sanitary_toilet',
+      label: 'Native: Sanitary Toilets',
+      columns: ['sanitary_toilet_m', 'sanitary_toilet_f', 'sanitary_toilet_total']
+    },
+    {
+      key: 'informal_settlers',
+      label: 'Native: Informal Settlers',
+      columns: ['informal_settlers_m', 'informal_settlers_f', 'informal_settlers_total']
     }
   ],
   'Local Governance': [
     {
-      key: 'officials',
-      label: 'Native: Governance & Leadership',
-      columns: ['elected_officials_m', 'elected_officials_f', 'appointed_heads_m', 'appointed_heads_f']
+      key: 'elected_officials',
+      label: 'Native: Elected Officials',
+      columns: ['elected_officials_m', 'elected_officials_f', 'elected_officials_total']
+    },
+    {
+      key: 'appointed_heads',
+      label: 'Native: Appointed Department Heads',
+      columns: ['appointed_heads_m', 'appointed_heads_f', 'appointed_heads_total']
     }
   ],
   'Justice & Safety': [
     {
-      key: 'justice',
-      label: 'Native: Justice & Protection (VAWC, CICL, Sexual Assault)',
-      columns: ['vawc_cases_reported', 'cicl_m', 'cicl_f', 'sexual_assault_m', 'sexual_assault_f']
+      key: 'vawc',
+      label: 'Native: Reported VAWC Cases',
+      columns: ['vawc_cases_reported']
+    },
+    {
+      key: 'cicl',
+      label: 'Native: Children in Conflict with Law (CICL)',
+      columns: ['cicl_m', 'cicl_f', 'cicl_total']
+    },
+    {
+      key: 'sexual_assault',
+      label: 'Native: Sexual Assault Cases',
+      columns: ['sexual_assault_m', 'sexual_assault_f', 'sexual_assault_total']
     }
   ],
   'Institutional GAD': [
     {
-      key: 'gad',
-      label: 'Native: Institutional GAD (Budget & Trainings)',
-      columns: ['total_lgu_budget', 'gad_allocated_amount', 'gad_utilized_amount', 'number_of_gad_trainings', 'participants_trained']
+      key: 'gad_budget',
+      label: 'Native: GAD Budget & Allocations',
+      columns: ['total_lgu_budget', 'gad_allocated_amount', 'gad_utilized_amount']
+    },
+    {
+      key: 'gad_trainings',
+      label: 'Native: GAD Trainings & Participants',
+      columns: ['number_of_gad_trainings', 'participants_trained']
     }
   ]
 };
@@ -176,9 +251,13 @@ export default function DataManagementPage() {
         const subKey = tableSelection.replace('native:', '');
         const sub = (NATIVE_SUB_TABLES[department] || []).find(s => s.key === subKey);
         if (nativeTable && sub) {
-          const resetObj: Record<string, number> = {};
+          const resetObj: Record<string, any> = {};
           sub.columns.forEach(col => {
-            resetObj[col] = 0;
+            if (col.endsWith('_total') || col === 'total_population') {
+              resetObj[col] = null;
+            } else {
+              resetObj[col] = 0;
+            }
           });
           const { error } = await supabase.from(nativeTable).update(resetObj).eq('year', year);
           if (error) throw error;

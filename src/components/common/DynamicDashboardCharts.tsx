@@ -52,11 +52,19 @@ function DynamicSchemaSection({ schema, barangays, department }: { schema: any, 
                 let total = 0;
                 if (f.type === 'gender_split') {
                   data.forEach(d => {
-                    total += (d.data[f.id]?.m || 0) + (d.data[f.id]?.f || 0);
+                    const fData = d.data[f.id] || {};
+                    const m = Number(fData.m || 0);
+                    const fVal = Number(fData.f || 0);
+                    const rawTot = fData.total;
+                    if (m > 0 || fVal > 0) {
+                      total += m + fVal;
+                    } else if (rawTot !== null && rawTot !== undefined && rawTot > 0) {
+                      total += Number(rawTot);
+                    }
                   });
                 } else {
                   data.forEach(d => {
-                    total += d.data[f.id]?.value || 0;
+                    total += Number(d.data[f.id]?.value || 0);
                   });
                 }
                 return (
@@ -72,22 +80,40 @@ function DynamicSchemaSection({ schema, barangays, department }: { schema: any, 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             {chartFields.map((f, i) => {
               const colorVals = Object.values(CHART_COLORS).flat() as string[];
-              const colors = [colorVals[i % colorVals.length], colorVals[(i + 1) % colorVals.length]];
               
               let series: any[] = [];
+              let chartColors = [colorVals[i % colorVals.length], colorVals[(i + 1) % colorVals.length]];
+
               if (f.type === 'gender_split') {
-                const mData = barangays.map(b => {
+                let hasTotalOnly = false;
+                const mData: number[] = [];
+                const fData: number[] = [];
+                const totData: number[] = [];
+
+                barangays.forEach(b => {
                   const bd = data.find(d => d.barangay_id === b.id);
-                  return bd?.data[f.id]?.m || 0;
+                  const fObj = bd?.data[f.id] || {};
+                  const m = Number(fObj.m || 0);
+                  const fVal = Number(fObj.f || 0);
+                  const rawTot = fObj.total;
+                  const isTot = rawTot !== null && rawTot !== undefined && rawTot > 0 && !m && !fVal;
+
+                  if (isTot) hasTotalOnly = true;
+
+                  mData.push(m);
+                  fData.push(fVal);
+                  totData.push(isTot || (rawTot > 0 && m + fVal === 0) ? Number(rawTot) : m + fVal);
                 });
-                const fData = barangays.map(b => {
-                  const bd = data.find(d => d.barangay_id === b.id);
-                  return bd?.data[f.id]?.f || 0;
-                });
-                series = [
-                  { name: "Male", data: mData },
-                  { name: "Female", data: fData }
-                ];
+
+                if (hasTotalOnly) {
+                  series = [{ name: "Total", data: totData }];
+                  chartColors = ["#3b82f6"];
+                } else {
+                  series = [
+                    { name: "Male", data: mData },
+                    { name: "Female", data: fData }
+                  ];
+                }
               } else {
                 const valData = barangays.map(b => {
                   const bd = data.find(d => d.barangay_id === b.id);
@@ -103,7 +129,7 @@ function DynamicSchemaSection({ schema, barangays, department }: { schema: any, 
                   type={f.chartType as any}
                   categories={bNames}
                   series={series}
-                  colors={colors}
+                  colors={chartColors}
                 />
               );
             })}

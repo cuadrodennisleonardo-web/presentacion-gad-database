@@ -65,13 +65,86 @@ export default function GovernanceDataEntry() {
 
   const handleChange = (barangayId: string, field: keyof GovStat, value: string) => {
     const numValue = value === '' ? 0 : parseInt(value, 10);
+    const prefix = field.toString().replace(/_[mf]$/, '');
+    const keyTotal = `${prefix}_total` as keyof GovStat;
+
     setStats((prev) => ({
       ...prev,
       [barangayId]: {
         ...prev[barangayId],
         [field]: numValue,
+        [keyTotal]: null,
       },
     }));
+  };
+
+  const handleTotalChange = (barangayId: string, prefix: string, value: string) => {
+    const numValue = value === '' ? null : parseInt(value, 10);
+    const keyTotal = `${prefix}_total` as keyof GovStat;
+    const keyM = `${prefix}_m` as keyof GovStat;
+    const keyF = `${prefix}_f` as keyof GovStat;
+
+    setStats((prev) => ({
+      ...prev,
+      [barangayId]: {
+        ...prev[barangayId],
+        [keyTotal]: numValue,
+        [keyM]: 0,
+        [keyF]: 0,
+      },
+    }));
+  };
+
+  const renderIndicatorCells = (barangayId: string, row: any, prefix: string, isLastInGroup: boolean) => {
+    const kM = prefix + '_m';
+    const kF = prefix + '_f';
+    const kTot = prefix + '_total';
+
+    const mM = Number(row[kM] || 0);
+    const fF = Number(row[kF] || 0);
+    const rawTot = row[kTot];
+
+    const hasMF = mM > 0 || fF > 0;
+    const borderRight = isLastInGroup ? 'border-r dark:border-gray-800' : '';
+
+    return (
+      <>
+        <td className="px-0 py-0 border-l dark:border-gray-800 bg-blue-50/30 dark:bg-blue-900/10">
+          <input 
+            type="number" min="0" 
+            value={row[kM] || ''} 
+            onChange={(e) => handleChange(barangayId, kM as any, e.target.value)} 
+            disabled={!canWrite || isLocked} 
+            className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" 
+          />
+        </td>
+        <td className="px-0 py-0 bg-blue-50/30 dark:bg-blue-900/10">
+          <input 
+            type="number" min="0" 
+            value={row[kF] || ''} 
+            onChange={(e) => handleChange(barangayId, kF as any, e.target.value)} 
+            disabled={!canWrite || isLocked} 
+            className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" 
+          />
+        </td>
+        {hasMF ? (
+          <td className={`px-4 py-3 text-center font-medium bg-gray-100 dark:bg-gray-800/50 ${borderRight}`}>
+            {mM + fF}
+          </td>
+        ) : (
+          <td className={`px-0 py-0 text-center font-medium bg-amber-50/40 dark:bg-amber-900/10 ${borderRight}`}>
+            <input 
+              type="number" min="0" 
+              placeholder="Total"
+              value={rawTot ?? ''} 
+              onChange={(e) => handleTotalChange(barangayId, prefix, e.target.value)} 
+              disabled={!canWrite || isLocked} 
+              className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center text-brand-600 dark:text-brand-400 font-semibold outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 placeholder:text-gray-400 placeholder:font-normal" 
+            />
+          </td>
+        )}
+      </>
+    );
   };
 
   const handleImport = (importedData: any[]) => {
@@ -80,7 +153,7 @@ export default function GovernanceDataEntry() {
       if (b) {
         Object.keys(row).forEach(key => {
           if (key !== 'barangay_name') {
-            if (['elected_officials_m', 'elected_officials_f', 'appointed_heads_m', 'appointed_heads_f'].includes(key)) {
+            if (['elected_officials_m', 'elected_officials_f', 'elected_officials_total', 'appointed_heads_m', 'appointed_heads_f', 'appointed_heads_total'].includes(key)) {
               handleChange(b.id, key as keyof GovStat, String(row[key]));
             }
           }
@@ -129,7 +202,7 @@ export default function GovernanceDataEntry() {
 
   const handleSaveAll = () => {
     const changedData: Record<string, any> = {};
-    const fields = ['elected_officials_m', 'elected_officials_f', 'appointed_heads_m', 'appointed_heads_f'];
+    const fields = ['elected_officials_m', 'elected_officials_f', 'elected_officials_total', 'appointed_heads_m', 'appointed_heads_f', 'appointed_heads_total'];
     
     barangays.forEach(b => {
       const row = stats[b.id] || {};
@@ -140,8 +213,8 @@ export default function GovernanceDataEntry() {
       
       fields.forEach(f => {
         const key = f as keyof GovStat;
-        const oldVal = (originalRow as any)[key] || 0;
-        const newVal = (row as any)[key] || 0;
+        const oldVal = (originalRow as any)[key] ?? null;
+        const newVal = (row as any)[key] ?? null;
         if (newVal !== oldVal) {
           hasChanges = true;
         }
@@ -175,8 +248,10 @@ export default function GovernanceDataEntry() {
   const columns: ExportColumn[] = [
     { header: 'Elected Officials (M)', key: 'elected_officials_m' },
     { header: 'Elected Officials (F)', key: 'elected_officials_f' },
+    { header: 'Elected Officials (Total)', key: 'elected_officials_total' },
     { header: 'Appointed Heads (M)', key: 'appointed_heads_m' },
     { header: 'Appointed Heads (F)', key: 'appointed_heads_f' },
+    { header: 'Appointed Heads (Total)', key: 'appointed_heads_total' },
   ];
 
   return (
@@ -238,49 +313,8 @@ export default function GovernanceDataEntry() {
                   {b.name}
                 </td>
                 
-                <td className="px-0 py-0 border-l dark:border-gray-800 bg-blue-50/30 dark:bg-blue-900/10">
-                  <input 
-                    type="number" min="0" 
-                    value={row['elected_officials_m'] || ''} 
-                    onChange={(e) => handleChange(b.id, 'elected_officials_m', e.target.value)} 
-                    disabled={!canWrite || isLocked} 
-                    className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" 
-                  />
-                </td>
-                <td className="px-0 py-0  bg-blue-50/30 dark:bg-blue-900/10">
-                  <input 
-                    type="number" min="0" 
-                    value={row['elected_officials_f'] || ''} 
-                    onChange={(e) => handleChange(b.id, 'elected_officials_f', e.target.value)} 
-                    disabled={!canWrite || isLocked} 
-                    className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" 
-                  />
-                </td>
-                <td className="px-4 py-3 border-r dark:border-gray-800 text-center font-medium bg-gray-100 dark:bg-gray-800/50">
-                  {(row.elected_officials_m || 0) + (row.elected_officials_f || 0)}
-                </td>
-
-                <td className="px-0 py-0  bg-indigo-50/30 dark:bg-indigo-900/10">
-                  <input 
-                    type="number" min="0" 
-                    value={row['appointed_heads_m'] || ''} 
-                    onChange={(e) => handleChange(b.id, 'appointed_heads_m', e.target.value)} 
-                    disabled={!canWrite || isLocked} 
-                    className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" 
-                  />
-                </td>
-                <td className="px-0 py-0  bg-indigo-50/30 dark:bg-indigo-900/10">
-                  <input 
-                    type="number" min="0" 
-                    value={row['appointed_heads_f'] || ''} 
-                    onChange={(e) => handleChange(b.id, 'appointed_heads_f', e.target.value)} 
-                    disabled={!canWrite || isLocked} 
-                    className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" 
-                  />
-                </td>
-                <td className="px-4 py-3  text-center font-medium bg-gray-100 dark:bg-gray-800/50 border-r dark:border-gray-800">
-                  {(row.appointed_heads_m || 0) + (row.appointed_heads_f || 0)}
-                </td>
+                {renderIndicatorCells(b.id, row, 'elected_officials', false)}
+                {renderIndicatorCells(b.id, row, 'appointed_heads', true)}
               </tr>
             );
           })}

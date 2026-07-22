@@ -1,6 +1,20 @@
 import { useQuery } from "@tanstack/react-query";
 import { fetchBarangays, fetchStats } from "@/services/api";
 
+function extractStatField(st: any, prefix: string) {
+  const m = Number(st?.[`${prefix}_m`] || 0);
+  const f = Number(st?.[`${prefix}_f`] || 0);
+  const rawTotal = st?.[`${prefix}_total`];
+  
+  const isTotalOnly = rawTotal !== null && rawTotal !== undefined && rawTotal > 0 && !st?.[`${prefix}_m`] && !st?.[`${prefix}_f`];
+  
+  let total = m + f;
+  if (isTotalOnly || (rawTotal !== null && rawTotal !== undefined && rawTotal > 0 && (m + f) === 0)) {
+    total = Number(rawTotal);
+  }
+  return { m, f, total, isTotalOnly };
+}
+
 export function useJusticeStats(year: number) {
   return useQuery({
     queryKey: ['justice_stats', year],
@@ -24,13 +38,16 @@ export function useJusticeStats(year: number) {
         
         const g = gMap.get(b.id) || {};
 
+        const c = extractStatField(g, 'cicl');
+        const a = extractStatField(g, 'sexual_assault');
+
         tVawc += g.vawc_cases_reported || 0;
-        tCicl += (g.cicl_m || 0) + (g.cicl_f || 0);
-        tAssault += (g.sexual_assault_m || 0) + (g.sexual_assault_f || 0);
+        tCicl += c.total;
+        tAssault += a.total;
 
         vawc.push(g.vawc_cases_reported || 0);
-        cicl.push((g.cicl_m || 0) + (g.cicl_f || 0));
-        assault.push((g.sexual_assault_m || 0) + (g.sexual_assault_f || 0));
+        cicl.push(c.total);
+        assault.push(a.total);
       });
 
       return {

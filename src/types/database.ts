@@ -79,6 +79,7 @@ export interface Database {
           age_60_plus: number | null
           household_heads_m: number | null
           household_heads_f: number | null
+          household_heads_total: number | null
           created_at: string | null
           updated_at: string | null
         }
@@ -96,6 +97,7 @@ export interface Database {
           age_60_plus?: number | null
           household_heads_m?: number | null
           household_heads_f?: number | null
+          household_heads_total?: number | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -113,6 +115,7 @@ export interface Database {
           age_60_plus?: number | null
           household_heads_m?: number | null
           household_heads_f?: number | null
+          household_heads_total?: number | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -125,22 +128,30 @@ export interface Database {
           month_updated: number | null
           student_enrollment_m: number | null
           student_enrollment_f: number | null
+          student_enrollment_total: number | null
           drop_out_m: number | null
           drop_out_f: number | null
+          drop_out_total: number | null
           osy_m: number | null
           osy_f: number | null
+          osy_total: number | null
           malnourished_m: number | null
           malnourished_f: number | null
+          malnourished_total: number | null
           teenage_pregnancy: number | null
           maternal_mortality: number | null
           pwd_m: number | null
           pwd_f: number | null
+          pwd_total: number | null
           four_ps_m: number | null
           four_ps_f: number | null
+          four_ps_total: number | null
           senior_citizens_m: number | null
           senior_citizens_f: number | null
+          senior_citizens_total: number | null
           solo_parents_m: number | null
           solo_parents_f: number | null
+          solo_parents_total: number | null
           created_at: string | null
           updated_at: string | null
         }
@@ -151,22 +162,30 @@ export interface Database {
           month_updated?: number | null
           student_enrollment_m?: number | null
           student_enrollment_f?: number | null
+          student_enrollment_total?: number | null
           drop_out_m?: number | null
           drop_out_f?: number | null
+          drop_out_total?: number | null
           osy_m?: number | null
           osy_f?: number | null
+          osy_total?: number | null
           malnourished_m?: number | null
           malnourished_f?: number | null
+          malnourished_total?: number | null
           teenage_pregnancy?: number | null
           maternal_mortality?: number | null
           pwd_m?: number | null
           pwd_f?: number | null
+          pwd_total?: number | null
           four_ps_m?: number | null
           four_ps_f?: number | null
+          four_ps_total?: number | null
           senior_citizens_m?: number | null
           senior_citizens_f?: number | null
+          senior_citizens_total?: number | null
           solo_parents_m?: number | null
           solo_parents_f?: number | null
+          solo_parents_total?: number | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -177,22 +196,30 @@ export interface Database {
           month_updated?: number | null
           student_enrollment_m?: number | null
           student_enrollment_f?: number | null
+          student_enrollment_total?: number | null
           drop_out_m?: number | null
           drop_out_f?: number | null
+          drop_out_total?: number | null
           osy_m?: number | null
           osy_f?: number | null
+          osy_total?: number | null
           malnourished_m?: number | null
           malnourished_f?: number | null
+          malnourished_total?: number | null
           teenage_pregnancy?: number | null
           maternal_mortality?: number | null
           pwd_m?: number | null
           pwd_f?: number | null
+          pwd_total?: number | null
           four_ps_m?: number | null
           four_ps_f?: number | null
+          four_ps_total?: number | null
           senior_citizens_m?: number | null
           senior_citizens_f?: number | null
+          senior_citizens_total?: number | null
           solo_parents_m?: number | null
           solo_parents_f?: number | null
+          solo_parents_total?: number | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -205,16 +232,22 @@ export interface Database {
           month_updated: number | null
           employed_m: number | null
           employed_f: number | null
+          employed_total: number | null
           unemployed_m: number | null
           unemployed_f: number | null
+          unemployed_total: number | null
           farmers_m: number | null
           farmers_f: number | null
+          farmers_total: number | null
           fisherfolks_m: number | null
           fisherfolks_f: number | null
+          fisherfolks_total: number | null
           business_owners_m: number | null
           business_owners_f: number | null
+          business_owners_total: number | null
           ambulant_vendors_m: number | null
           ambulant_vendors_f: number | null
+          ambulant_vendors_total: number | null
           created_at: string | null
           updated_at: string | null
         }
@@ -225,16 +258,22 @@ export interface Database {
           month_updated?: number | null
           employed_m?: number | null
           employed_f?: number | null
+          employed_total?: number | null
           unemployed_m?: number | null
           unemployed_f?: number | null
+          unemployed_total?: number | null
           farmers_m?: number | null
           farmers_f?: number | null
+          farmers_total?: number | null
           fisherfolks_m?: number | null
           fisherfolks_f?: number | null
+          fisherfolks_total?: number | null
           business_owners_m?: number | null
           business_owners_f?: number | null
+          business_owners_total?: number | null
           ambulant_vendors_m?: number | null
           ambulant_vendors_f?: number | null
+          ambulant_vendors_total?: number | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -245,16 +284,22 @@ export interface Database {
           month_updated?: number | null
           employed_m?: number | null
           employed_f?: number | null
+          employed_total?: number | null
           unemployed_m?: number | null
           unemployed_f?: number | null
+          unemployed_total?: number | null
           farmers_m?: number | null
           farmers_f?: number | null
+          farmers_total?: number | null
           fisherfolks_m?: number | null
           fisherfolks_f?: number | null
+          fisherfolks_total?: number | null
           business_owners_m?: number | null
           business_owners_f?: number | null
+          business_owners_total?: number | null
           ambulant_vendors_m?: number | null
           ambulant_vendors_f?: number | null
+          ambulant_vendors_total?: number | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -267,10 +312,13 @@ export interface Database {
           month_updated: number | null
           safe_water_m: number | null
           safe_water_f: number | null
+          safe_water_total: number | null
           sanitary_toilet_m: number | null
           sanitary_toilet_f: number | null
+          sanitary_toilet_total: number | null
           informal_settlers_m: number | null
           informal_settlers_f: number | null
+          informal_settlers_total: number | null
           created_at: string | null
           updated_at: string | null
         }
@@ -281,10 +329,13 @@ export interface Database {
           month_updated?: number | null
           safe_water_m?: number | null
           safe_water_f?: number | null
+          safe_water_total?: number | null
           sanitary_toilet_m?: number | null
           sanitary_toilet_f?: number | null
+          sanitary_toilet_total?: number | null
           informal_settlers_m?: number | null
           informal_settlers_f?: number | null
+          informal_settlers_total?: number | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -295,10 +346,13 @@ export interface Database {
           month_updated?: number | null
           safe_water_m?: number | null
           safe_water_f?: number | null
+          safe_water_total?: number | null
           sanitary_toilet_m?: number | null
           sanitary_toilet_f?: number | null
+          sanitary_toilet_total?: number | null
           informal_settlers_m?: number | null
           informal_settlers_f?: number | null
+          informal_settlers_total?: number | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -311,8 +365,10 @@ export interface Database {
           month_updated: number | null
           elected_officials_m: number | null
           elected_officials_f: number | null
+          elected_officials_total: number | null
           appointed_heads_m: number | null
           appointed_heads_f: number | null
+          appointed_heads_total: number | null
           created_at: string | null
           updated_at: string | null
         }
@@ -323,8 +379,10 @@ export interface Database {
           month_updated?: number | null
           elected_officials_m?: number | null
           elected_officials_f?: number | null
+          elected_officials_total?: number | null
           appointed_heads_m?: number | null
           appointed_heads_f?: number | null
+          appointed_heads_total?: number | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -335,8 +393,10 @@ export interface Database {
           month_updated?: number | null
           elected_officials_m?: number | null
           elected_officials_f?: number | null
+          elected_officials_total?: number | null
           appointed_heads_m?: number | null
           appointed_heads_f?: number | null
+          appointed_heads_total?: number | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -350,8 +410,10 @@ export interface Database {
           vawc_cases_reported: number | null
           cicl_m: number | null
           cicl_f: number | null
+          cicl_total: number | null
           sexual_assault_m: number | null
           sexual_assault_f: number | null
+          sexual_assault_total: number | null
           created_at: string | null
           updated_at: string | null
         }
@@ -363,8 +425,10 @@ export interface Database {
           vawc_cases_reported?: number | null
           cicl_m?: number | null
           cicl_f?: number | null
+          cicl_total?: number | null
           sexual_assault_m?: number | null
           sexual_assault_f?: number | null
+          sexual_assault_total?: number | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -376,8 +440,10 @@ export interface Database {
           vawc_cases_reported?: number | null
           cicl_m?: number | null
           cicl_f?: number | null
+          cicl_total?: number | null
           sexual_assault_m?: number | null
           sexual_assault_f?: number | null
+          sexual_assault_total?: number | null
           created_at?: string | null
           updated_at?: string | null
         }

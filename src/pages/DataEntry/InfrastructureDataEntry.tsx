@@ -65,13 +65,86 @@ export default function InfrastructureDataEntry() {
 
   const handleChange = (barangayId: string, field: keyof InfraStat, value: string) => {
     const numValue = value === '' ? 0 : parseInt(value, 10);
+    const prefix = field.toString().replace(/_[mf]$/, '');
+    const keyTotal = `${prefix}_total` as keyof InfraStat;
+
     setStats((prev) => ({
       ...prev,
       [barangayId]: {
         ...prev[barangayId],
         [field]: numValue,
+        [keyTotal]: null,
       },
     }));
+  };
+
+  const handleTotalChange = (barangayId: string, prefix: string, value: string) => {
+    const numValue = value === '' ? null : parseInt(value, 10);
+    const keyTotal = `${prefix}_total` as keyof InfraStat;
+    const keyM = `${prefix}_m` as keyof InfraStat;
+    const keyF = `${prefix}_f` as keyof InfraStat;
+
+    setStats((prev) => ({
+      ...prev,
+      [barangayId]: {
+        ...prev[barangayId],
+        [keyTotal]: numValue,
+        [keyM]: 0,
+        [keyF]: 0,
+      },
+    }));
+  };
+
+  const renderIndicatorCells = (barangayId: string, row: any, prefix: string, isLastInGroup: boolean) => {
+    const kM = prefix + '_m';
+    const kF = prefix + '_f';
+    const kTot = prefix + '_total';
+
+    const mM = Number(row[kM] || 0);
+    const fF = Number(row[kF] || 0);
+    const rawTot = row[kTot];
+
+    const hasMF = mM > 0 || fF > 0;
+    const borderRight = isLastInGroup ? 'border-r dark:border-gray-800' : '';
+
+    return (
+      <>
+        <td className="px-0 py-0 border-l dark:border-gray-800 bg-blue-50/30 dark:bg-blue-900/10">
+          <input 
+            type="number" min="0" 
+            value={row[kM] || ''} 
+            onChange={(e) => handleChange(barangayId, kM as any, e.target.value)} 
+            disabled={!canWrite || isLocked} 
+            className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" 
+          />
+        </td>
+        <td className="px-0 py-0 bg-blue-50/30 dark:bg-blue-900/10">
+          <input 
+            type="number" min="0" 
+            value={row[kF] || ''} 
+            onChange={(e) => handleChange(barangayId, kF as any, e.target.value)} 
+            disabled={!canWrite || isLocked} 
+            className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" 
+          />
+        </td>
+        {hasMF ? (
+          <td className={`px-4 py-3 text-center font-medium bg-gray-100 dark:bg-gray-800/50 ${borderRight}`}>
+            {mM + fF}
+          </td>
+        ) : (
+          <td className={`px-0 py-0 text-center font-medium bg-amber-50/40 dark:bg-amber-900/10 ${borderRight}`}>
+            <input 
+              type="number" min="0" 
+              placeholder="Total"
+              value={rawTot ?? ''} 
+              onChange={(e) => handleTotalChange(barangayId, prefix, e.target.value)} 
+              disabled={!canWrite || isLocked} 
+              className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center text-brand-600 dark:text-brand-400 font-semibold outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 placeholder:text-gray-400 placeholder:font-normal" 
+            />
+          </td>
+        )}
+      </>
+    );
   };
 
   const handleImport = (importedData: any[]) => {
@@ -80,7 +153,7 @@ export default function InfrastructureDataEntry() {
       if (b) {
         Object.keys(row).forEach(key => {
           if (key !== 'barangay_name') {
-            if (['safe_water_m', 'safe_water_f', 'sanitary_toilet_m', 'sanitary_toilet_f', 'informal_settlers_m', 'informal_settlers_f'].includes(key)) {
+            if (['safe_water_m', 'safe_water_f', 'safe_water_total', 'sanitary_toilet_m', 'sanitary_toilet_f', 'sanitary_toilet_total', 'informal_settlers_m', 'informal_settlers_f', 'informal_settlers_total'].includes(key)) {
               handleChange(b.id, key as keyof InfraStat, String(row[key]));
             }
           }
@@ -129,7 +202,7 @@ export default function InfrastructureDataEntry() {
 
   const handleSaveAll = () => {
     const changedData: Record<string, any> = {};
-    const fields = ['safe_water_m', 'safe_water_f', 'sanitary_toilet_m', 'sanitary_toilet_f', 'informal_settlers_m', 'informal_settlers_f'];
+    const fields = ['safe_water_m', 'safe_water_f', 'safe_water_total', 'sanitary_toilet_m', 'sanitary_toilet_f', 'sanitary_toilet_total', 'informal_settlers_m', 'informal_settlers_f', 'informal_settlers_total'];
     
     barangays.forEach(b => {
       const row = stats[b.id] || {};
@@ -140,8 +213,8 @@ export default function InfrastructureDataEntry() {
       
       fields.forEach(f => {
         const key = f as keyof InfraStat;
-        const oldVal = (originalRow as any)[key] || 0;
-        const newVal = (row as any)[key] || 0;
+        const oldVal = (originalRow as any)[key] ?? null;
+        const newVal = (row as any)[key] ?? null;
         if (newVal !== oldVal) {
           hasChanges = true;
         }
@@ -175,11 +248,16 @@ export default function InfrastructureDataEntry() {
   const columns: ExportColumn[] = [
     { header: 'Safe Water (M)', key: 'safe_water_m' },
     { header: 'Safe Water (F)', key: 'safe_water_f' },
+    { header: 'Safe Water (Total)', key: 'safe_water_total' },
     { header: 'Sanitary Toilet (M)', key: 'sanitary_toilet_m' },
     { header: 'Sanitary Toilet (F)', key: 'sanitary_toilet_f' },
+    { header: 'Sanitary Toilet (Total)', key: 'sanitary_toilet_total' },
     { header: 'Informal Settlers (M)', key: 'informal_settlers_m' },
-    { header: 'Informal Settlers (F)', key: 'informal_settlers_f' }
+    { header: 'Informal Settlers (F)', key: 'informal_settlers_f' },
+    { header: 'Informal Settlers (Total)', key: 'informal_settlers_total' }
   ];
+
+  const isDynamic = !nativeTabs.some(t => t.key === activeTab);
 
   return (
     <DataEntryLayout
@@ -188,7 +266,7 @@ export default function InfrastructureDataEntry() {
       pageDescription="Manage Infrastructure stats"
       breadcrumbTitle={`Infrastructure ${!canWrite ? 'View Data' : 'Data Entry'}`}
       gridTitle="Basic Utilities & Housing Grid"
-      gridDescription={`Manage infrastructure and housing data for ${barangays.length} barangays. Enter Sex-Disaggregated Data.`}
+      gridDescription={`Manage basic utilities and housing metrics for ${barangays.length} barangays. Enter Sex-Disaggregated Data.`}
       year={year}
       setYear={setYear}
       activeTab={activeTab}
@@ -200,10 +278,10 @@ export default function InfrastructureDataEntry() {
       latestApproval={latestApproval}
       isSuperAdmin={isSuperAdmin}
       canWrite={canWrite}
-      exportData={barangays.map(b => ({ barangay_name: b.name, ...stats[b.id] }))}
-      exportColumns={columns}
-      exportTitle={`Infrastructure (${year})`}
-      onImport={handleImport}
+      exportData={isDynamic ? undefined : barangays.map(b => ({ barangay_name: b.name, ...stats[b.id] }))}
+      exportColumns={isDynamic ? undefined : columns}
+      exportTitle={`Basic Utilities & Housing (${year})`}
+      onImport={isDynamic ? undefined : handleImport}
       onSave={handleSaveAll}
       isSaving={mutation.isPending}
       isLoading={isLoading}
@@ -215,25 +293,25 @@ export default function InfrastructureDataEntry() {
       <div className="hidden lg:block overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
         <table className="w-full text-left text-sm text-gray-600 dark:text-gray-300">
         <thead className="bg-gray-50 text-xs uppercase text-gray-500 dark:bg-gray-800/50 dark:text-gray-400">
-               <tr>
-                 <th className="whitespace-nowrap px-4 py-3 font-medium border-b dark:border-gray-800" rowSpan={2}>Barangay</th>
-                 <th className="whitespace-nowrap px-4 py-2 font-medium text-center border-l dark:border-gray-800 text-blue-600 dark:text-blue-400" colSpan={3}>Access to Safe Water</th>
-                 <th className="whitespace-nowrap px-4 py-2 font-medium text-center border-l border-r dark:border-gray-800 text-indigo-600 dark:text-indigo-400" colSpan={3}>Access to Sanitary Toilet</th>
-                 <th className="whitespace-nowrap px-4 py-2 font-medium text-center border-r dark:border-gray-800 text-emerald-600 dark:text-emerald-400" colSpan={3}>Informal Settlers</th>
-               </tr>
-             <tr>
-               <th className="px-2 py-2 text-center border-l dark:border-gray-800">M</th>
-               <th className="px-2 py-2 text-center">F</th>
-               <th className="px-2 py-2 text-center bg-gray-100 dark:bg-gray-800/50">Total</th>
-               
-               <th className="px-2 py-2 text-center border-l dark:border-gray-800">M</th>
-               <th className="px-2 py-2 text-center">F</th>
-               <th className="px-2 py-2 text-center bg-gray-100 dark:bg-gray-800/50 border-r dark:border-gray-800">Total</th>
-               
-               <th className="px-2 py-2 text-center border-l dark:border-gray-800">M</th>
-               <th className="px-2 py-2 text-center">F</th>
-               <th className="px-2 py-2 text-center bg-gray-100 dark:bg-gray-800/50 border-r dark:border-gray-800">Total</th>
-             </tr>
+          <tr>
+            <th className="whitespace-nowrap px-4 py-3 font-medium border-b dark:border-gray-800" rowSpan={2}>Barangay</th>
+            <th className="whitespace-nowrap px-4 py-2 font-medium text-center border-l dark:border-gray-800 text-blue-600 dark:text-blue-400" colSpan={3}>Households w/ Access to Safe Water</th>
+            <th className="whitespace-nowrap px-4 py-2 font-medium text-center border-l dark:border-gray-800 text-teal-600 dark:text-teal-400" colSpan={3}>Households w/ Sanitary Toilet</th>
+            <th className="whitespace-nowrap px-4 py-2 font-medium text-center border-l border-r dark:border-gray-800 text-orange-600 dark:text-orange-400" colSpan={3}>Informal Settler Families</th>
+          </tr>
+          <tr>
+            <th className="px-2 py-2 text-center border-l dark:border-gray-800">M-Led</th>
+            <th className="px-2 py-2 text-center">F-Led</th>
+            <th className="px-2 py-2 text-center bg-gray-100 dark:bg-gray-800/50">Total</th>
+            
+            <th className="px-2 py-2 text-center border-l dark:border-gray-800">M-Led</th>
+            <th className="px-2 py-2 text-center">F-Led</th>
+            <th className="px-2 py-2 text-center bg-gray-100 dark:bg-gray-800/50">Total</th>
+
+            <th className="px-2 py-2 text-center border-l dark:border-gray-800">M-Led</th>
+            <th className="px-2 py-2 text-center">F-Led</th>
+            <th className="px-2 py-2 text-center bg-gray-100 dark:bg-gray-800/50 border-r dark:border-gray-800">Total</th>
+          </tr>
         </thead>
         <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
           {barangays.map((b) => {
@@ -245,74 +323,9 @@ export default function InfrastructureDataEntry() {
                   {b.name}
                 </td>
                 
-                {/* Safe Water */}
-                <td className="px-0 py-0 border-l dark:border-gray-800 bg-blue-50/30 dark:bg-blue-900/10">
-                  <input 
-                    type="number" min="0" 
-                    value={row['safe_water_m'] || ''} 
-                    onChange={(e) => handleChange(b.id, 'safe_water_m', e.target.value)} 
-                    disabled={!canWrite || isLocked} 
-                    className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" 
-                  />
-                </td>
-                <td className="px-0 py-0  bg-blue-50/30 dark:bg-blue-900/10">
-                  <input 
-                    type="number" min="0" 
-                    value={row['safe_water_f'] || ''} 
-                    onChange={(e) => handleChange(b.id, 'safe_water_f', e.target.value)} 
-                    disabled={!canWrite || isLocked} 
-                    className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" 
-                  />
-                </td>
-                <td className="px-4 py-3 border-r dark:border-gray-800 text-center font-medium bg-gray-100 dark:bg-gray-800/50">
-                  {(row.safe_water_m || 0) + (row.safe_water_f || 0)}
-                </td>
-
-                {/* Sanitary Toilet */}
-                <td className="px-0 py-0  bg-indigo-50/30 dark:bg-indigo-900/10">
-                  <input 
-                    type="number" min="0" 
-                    value={row['sanitary_toilet_m'] || ''} 
-                    onChange={(e) => handleChange(b.id, 'sanitary_toilet_m', e.target.value)} 
-                    disabled={!canWrite || isLocked} 
-                    className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" 
-                  />
-                </td>
-                <td className="px-0 py-0  bg-indigo-50/30 dark:bg-indigo-900/10">
-                  <input 
-                    type="number" min="0" 
-                    value={row['sanitary_toilet_f'] || ''} 
-                    onChange={(e) => handleChange(b.id, 'sanitary_toilet_f', e.target.value)} 
-                    disabled={!canWrite || isLocked} 
-                    className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" 
-                  />
-                </td>
-                <td className="px-4 py-3  text-center font-medium bg-gray-100 dark:bg-gray-800/50 border-r dark:border-gray-800">
-                  {(row.sanitary_toilet_m || 0) + (row.sanitary_toilet_f || 0)}
-                </td>
-                
-                {/* Informal Settlers */}
-                <td className="px-0 py-0  bg-emerald-50/30 dark:bg-emerald-900/10">
-                  <input 
-                    type="number" min="0" 
-                    value={row['informal_settlers_m'] || ''} 
-                    onChange={(e) => handleChange(b.id, 'informal_settlers_m', e.target.value)} 
-                    disabled={!canWrite || isLocked} 
-                    className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" 
-                  />
-                </td>
-                <td className="px-0 py-0  bg-emerald-50/30 dark:bg-emerald-900/10">
-                  <input 
-                    type="number" min="0" 
-                    value={row['informal_settlers_f'] || ''} 
-                    onChange={(e) => handleChange(b.id, 'informal_settlers_f', e.target.value)} 
-                    disabled={!canWrite || isLocked} 
-                    className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" 
-                  />
-                </td>
-                <td className="px-4 py-3  text-center font-medium bg-gray-100 dark:bg-gray-800/50 border-r dark:border-gray-800">
-                  {(row.informal_settlers_m || 0) + (row.informal_settlers_f || 0)}
-                </td>
+                {renderIndicatorCells(b.id, row, 'safe_water', false)}
+                {renderIndicatorCells(b.id, row, 'sanitary_toilet', false)}
+                {renderIndicatorCells(b.id, row, 'informal_settlers', true)}
               </tr>
             );
           })}

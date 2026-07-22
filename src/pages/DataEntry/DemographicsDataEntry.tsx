@@ -61,14 +61,102 @@ export default function DemographicsDataEntry() {
   const barangays = fetchedData?.barangays || [];
 
   const handlePopChange = (barangayId: string, field: keyof PopStat, value: string) => {
-    const numValue = value === '' ? 0 : parseInt(value, 10);
+    const numValue = value === '' ? (field === 'total_population' ? null : 0) : parseInt(value, 10);
+    const prefix = field.toString().replace(/_[mf]$/, '');
+    const keyTotal = `${prefix}_total` as keyof PopStat;
+
+    setPopStats((prev) => {
+      const prevRow = prev[barangayId] || {};
+      if (field === 'total_population') {
+        return {
+          ...prev,
+          [barangayId]: {
+            ...prevRow,
+            total_population: numValue,
+            male_count: 0,
+            female_count: 0,
+          },
+        };
+      }
+      return {
+        ...prev,
+        [barangayId]: {
+          ...prevRow,
+          [field]: numValue,
+          ...(field.startsWith('household_heads') ? { [keyTotal]: null } : {}),
+          ...(field === 'male_count' || field === 'female_count' ? { total_population: null } : {}),
+        },
+      };
+    });
+  };
+
+  const handleTotalChange = (barangayId: string, prefix: string, value: string) => {
+    const numValue = value === '' ? null : parseInt(value, 10);
+    const keyTotal = `${prefix}_total` as keyof PopStat;
+    const keyM = `${prefix}_m` as keyof PopStat;
+    const keyF = `${prefix}_f` as keyof PopStat;
+
     setPopStats((prev) => ({
       ...prev,
       [barangayId]: {
         ...prev[barangayId],
-        [field]: numValue,
+        [keyTotal]: numValue,
+        [keyM]: 0,
+        [keyF]: 0,
       },
     }));
+  };
+
+  const renderIndicatorCells = (barangayId: string, row: any, prefix: string, isLastInGroup: boolean) => {
+    const kM = prefix + '_m';
+    const kF = prefix + '_f';
+    const kTot = prefix + '_total';
+
+    const mM = Number(row[kM] || 0);
+    const fF = Number(row[kF] || 0);
+    const rawTot = row[kTot];
+
+    const hasMF = mM > 0 || fF > 0;
+    const borderRight = isLastInGroup ? 'border-r dark:border-gray-800' : '';
+
+    return (
+      <>
+        <td className="px-0 py-0 border-l dark:border-gray-800 bg-blue-50/30 dark:bg-blue-900/10">
+          <input 
+            type="number" min="0" 
+            value={row[kM] || ''} 
+            onChange={(e) => handlePopChange(barangayId, kM as any, e.target.value)} 
+            disabled={!canWrite || isLocked} 
+            className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" 
+          />
+        </td>
+        <td className="px-0 py-0 bg-blue-50/30 dark:bg-blue-900/10">
+          <input 
+            type="number" min="0" 
+            value={row[kF] || ''} 
+            onChange={(e) => handlePopChange(barangayId, kF as any, e.target.value)} 
+            disabled={!canWrite || isLocked} 
+            className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" 
+          />
+        </td>
+        {hasMF ? (
+          <td className={`px-4 py-3 text-center font-medium bg-gray-100 dark:bg-gray-800/50 ${borderRight}`}>
+            {mM + fF}
+          </td>
+        ) : (
+          <td className={`px-0 py-0 text-center font-medium bg-amber-50/40 dark:bg-amber-900/10 ${borderRight}`}>
+            <input 
+              type="number" min="0" 
+              placeholder="Total"
+              value={rawTot ?? ''} 
+              onChange={(e) => handleTotalChange(barangayId, prefix, e.target.value)} 
+              disabled={!canWrite || isLocked} 
+              className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center text-brand-600 dark:text-brand-400 font-semibold outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 placeholder:text-gray-400 placeholder:font-normal" 
+            />
+          </td>
+        )}
+      </>
+    );
   };
 
   const handleImport = (importedData: any[]) => {
@@ -77,7 +165,7 @@ export default function DemographicsDataEntry() {
       if (b) {
         Object.keys(row).forEach(key => {
           if (key !== 'barangay_name') {
-            if (['male_count', 'female_count', 'household_heads_m', 'household_heads_f'].includes(key)) {
+            if (['male_count', 'female_count', 'total_population', 'household_heads_m', 'household_heads_f', 'household_heads_total'].includes(key)) {
               handlePopChange(b.id, key as keyof PopStat, String(row[key]));
             }
           }
@@ -95,15 +183,16 @@ export default function DemographicsDataEntry() {
            Object.keys(changedData[bId]).forEach(k => {
              rowChanges[k] = changedData[bId][k].new;
            });
-           // Derive total_population from male + female counts so dashboards show correct totals
            const maleCount = rowChanges.male_count ?? (popStats[bId]?.male_count || 0);
            const femaleCount = rowChanges.female_count ?? (popStats[bId]?.female_count || 0);
+           const hasMF = (maleCount > 0) || (femaleCount > 0);
+           const finalTotPop = hasMF ? (maleCount + femaleCount) : (rowChanges.total_population ?? popStats[bId]?.total_population ?? null);
            return {
              barangay_id: bId,
              year,
              month_updated: new Date().getMonth() + 1,
              ...rowChanges,
-             total_population: (maleCount || 0) + (femaleCount || 0),
+             total_population: finalTotPop,
            };
         });
         
@@ -119,7 +208,6 @@ export default function DemographicsDataEntry() {
       toast.success(isSuperAdmin ? `Demographics & Population data saved directly!` : `Changes submitted for approval!`);
       queryClient.invalidateQueries({ queryKey: ['native_data', 'Demographics', year] });
       queryClient.invalidateQueries({ queryKey: ['latest_approval', 'Demographics & Population', tabLabel, year] });
-      // Also refresh the dashboard caches so charts update immediately
       queryClient.invalidateQueries({ queryKey: ['demographics_stats', year] });
       queryClient.invalidateQueries({ queryKey: ['main_dashboard_stats'] });
       setShowConfirmModal(false);
@@ -131,7 +219,7 @@ export default function DemographicsDataEntry() {
 
   const handleSaveAll = () => {
     const changedData: Record<string, any> = {};
-    const fields = ['male_count', 'female_count', 'household_heads_m', 'household_heads_f'];
+    const fields = ['male_count', 'female_count', 'total_population', 'household_heads_m', 'household_heads_f', 'household_heads_total'];
 
     barangays.forEach(b => {
       const row = popStats[b.id] || {};
@@ -142,8 +230,8 @@ export default function DemographicsDataEntry() {
       
       fields.forEach(f => {
         const key = f as any;
-        const oldVal = (originalRow as any)[key] || 0;
-        const newVal = (row as any)[key] || 0;
+        const oldVal = (originalRow as any)[key] ?? null;
+        const newVal = (row as any)[key] ?? null;
         if (newVal !== oldVal) {
           hasChanges = true;
         }
@@ -177,8 +265,10 @@ export default function DemographicsDataEntry() {
   const columns: ExportColumn[] = [
     { header: 'Total Population (M)', key: 'male_count' },
     { header: 'Total Population (F)', key: 'female_count' },
+    { header: 'Total Population (Total)', key: 'total_population' },
     { header: 'Household Heads (M)', key: 'household_heads_m' },
     { header: 'Household Heads (F)', key: 'household_heads_f' },
+    { header: 'Household Heads (Total)', key: 'household_heads_total' },
   ];
 
   return (
@@ -233,7 +323,11 @@ export default function DemographicsDataEntry() {
         <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
           {barangays.map((b) => {
             const pRow = popStats[b.id] || {};
-            
+            const mM = Number(pRow.male_count || 0);
+            const fF = Number(pRow.female_count || 0);
+            const totPop = pRow.total_population;
+            const hasMF = mM > 0 || fF > 0;
+
             return (
               <tr key={b.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                 <td className="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white ">
@@ -249,7 +343,7 @@ export default function DemographicsDataEntry() {
                     className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" 
                   />
                 </td>
-                <td className="px-0 py-0  bg-blue-50/30 dark:bg-blue-900/10">
+                <td className="px-0 py-0 bg-blue-50/30 dark:bg-blue-900/10">
                   <input 
                     type="number" min="0" 
                     value={pRow['female_count'] || ''} 
@@ -258,31 +352,24 @@ export default function DemographicsDataEntry() {
                     className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" 
                   />
                 </td>
-                <td className="px-4 py-3 border-r dark:border-gray-800 text-center font-medium bg-gray-100 dark:bg-gray-800/50">
-                  {(pRow.male_count || 0) + (pRow.female_count || 0)}
-                </td>
+                {hasMF ? (
+                  <td className="px-4 py-3 border-r dark:border-gray-800 text-center font-medium bg-gray-100 dark:bg-gray-800/50">
+                    {mM + fF}
+                  </td>
+                ) : (
+                  <td className="px-0 py-0 text-center font-medium bg-amber-50/40 dark:bg-amber-900/10 border-r dark:border-gray-800">
+                    <input 
+                      type="number" min="0" 
+                      placeholder="Total"
+                      value={totPop ?? ''} 
+                      onChange={(e) => handlePopChange(b.id, 'total_population', e.target.value)} 
+                      disabled={!canWrite || isLocked} 
+                      className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center text-brand-600 dark:text-brand-400 font-semibold outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 placeholder:text-gray-400 placeholder:font-normal" 
+                    />
+                  </td>
+                )}
 
-                <td className="px-0 py-0  bg-indigo-50/30 dark:bg-indigo-900/10">
-                  <input 
-                    type="number" min="0" 
-                    value={pRow.household_heads_m || ''} 
-                    onChange={(e) => handlePopChange(b.id, 'household_heads_m', e.target.value)} 
-                    disabled={!canWrite || isLocked} 
-                    className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" 
-                  />
-                </td>
-                <td className="px-0 py-0  bg-indigo-50/30 dark:bg-indigo-900/10">
-                  <input 
-                    type="number" min="0" 
-                    value={pRow.household_heads_f || ''} 
-                    onChange={(e) => handlePopChange(b.id, 'household_heads_f', e.target.value)} 
-                    disabled={!canWrite || isLocked} 
-                    className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" 
-                  />
-                </td>
-                <td className="px-4 py-3  text-center font-medium bg-gray-100 dark:bg-gray-800/50 border-r dark:border-gray-800">
-                  {(pRow.household_heads_m || 0) + (pRow.household_heads_f || 0)}
-                </td>
+                {renderIndicatorCells(b.id, pRow, 'household_heads', true)}
               </tr>
             );
           })}

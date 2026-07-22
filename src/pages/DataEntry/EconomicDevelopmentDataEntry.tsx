@@ -70,11 +70,32 @@ export default function EconomicDevelopmentDataEntry() {
 
   const handleChange = (barangayId: string, field: keyof EconStat, value: string) => {
     const numValue = value === '' ? 0 : parseInt(value, 10);
+    const prefix = field.toString().replace(/_[mf]$/, '');
+    const keyTotal = `${prefix}_total` as keyof EconStat;
+
     setStats((prev) => ({
       ...prev,
       [barangayId]: {
         ...prev[barangayId],
         [field]: numValue,
+        [keyTotal]: null,
+      },
+    }));
+  };
+
+  const handleTotalChange = (barangayId: string, prefix: string, value: string) => {
+    const numValue = value === '' ? null : parseInt(value, 10);
+    const keyTotal = `${prefix}_total` as keyof EconStat;
+    const keyM = `${prefix}_m` as keyof EconStat;
+    const keyF = `${prefix}_f` as keyof EconStat;
+
+    setStats((prev) => ({
+      ...prev,
+      [barangayId]: {
+        ...prev[barangayId],
+        [keyTotal]: numValue,
+        [keyM]: 0,
+        [keyF]: 0,
       },
     }));
   };
@@ -83,21 +104,79 @@ export default function EconomicDevelopmentDataEntry() {
     if (activeTab === 'labor') return [
       { header: 'Employed (M)', key: 'employed_m' },
       { header: 'Employed (F)', key: 'employed_f' },
+      { header: 'Employed (Total)', key: 'employed_total' },
       { header: 'Unemployed (M)', key: 'unemployed_m' },
       { header: 'Unemployed (F)', key: 'unemployed_f' },
+      { header: 'Unemployed (Total)', key: 'unemployed_total' },
     ];
     if (activeTab === 'agriculture') return [
       { header: 'Farmers (M)', key: 'farmers_m' },
       { header: 'Farmers (F)', key: 'farmers_f' },
+      { header: 'Farmers (Total)', key: 'farmers_total' },
       { header: 'Fisherfolks (M)', key: 'fisherfolks_m' },
       { header: 'Fisherfolks (F)', key: 'fisherfolks_f' },
+      { header: 'Fisherfolks (Total)', key: 'fisherfolks_total' },
     ];
     return [
       { header: 'Business Owners (M)', key: 'business_owners_m' },
       { header: 'Business Owners (F)', key: 'business_owners_f' },
+      { header: 'Business Owners (Total)', key: 'business_owners_total' },
       { header: 'Ambulant Vendors (M)', key: 'ambulant_vendors_m' },
       { header: 'Ambulant Vendors (F)', key: 'ambulant_vendors_f' },
+      { header: 'Ambulant Vendors (Total)', key: 'ambulant_vendors_total' },
     ];
+  };
+
+  const renderIndicatorCells = (barangayId: string, row: any, prefix: string, isLastInGroup: boolean) => {
+    const kM = prefix + '_m';
+    const kF = prefix + '_f';
+    const kTot = prefix + '_total';
+
+    const mM = Number(row[kM] || 0);
+    const fF = Number(row[kF] || 0);
+    const rawTot = row[kTot];
+
+    const hasMF = mM > 0 || fF > 0;
+    const borderRight = isLastInGroup ? 'border-r dark:border-gray-800' : '';
+
+    return (
+      <>
+        <td className="px-0 py-0 border-l dark:border-gray-800 bg-blue-50/30 dark:bg-blue-900/10">
+          <input 
+            type="number" min="0" 
+            value={row[kM] || ''} 
+            onChange={(e) => handleChange(barangayId, kM as any, e.target.value)} 
+            disabled={!canWrite || isLocked} 
+            className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" 
+          />
+        </td>
+        <td className="px-0 py-0 bg-blue-50/30 dark:bg-blue-900/10">
+          <input 
+            type="number" min="0" 
+            value={row[kF] || ''} 
+            onChange={(e) => handleChange(barangayId, kF as any, e.target.value)} 
+            disabled={!canWrite || isLocked} 
+            className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" 
+          />
+        </td>
+        {hasMF ? (
+          <td className={`px-4 py-3 text-center font-medium bg-gray-100 dark:bg-gray-800/50 ${borderRight}`}>
+            {mM + fF}
+          </td>
+        ) : (
+          <td className={`px-0 py-0 text-center font-medium bg-amber-50/40 dark:bg-amber-900/10 ${borderRight}`}>
+            <input 
+              type="number" min="0" 
+              placeholder="Total"
+              value={rawTot ?? ''} 
+              onChange={(e) => handleTotalChange(barangayId, prefix, e.target.value)} 
+              disabled={!canWrite || isLocked} 
+              className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center text-brand-600 dark:text-brand-400 font-semibold outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 placeholder:text-gray-400 placeholder:font-normal" 
+            />
+          </td>
+        )}
+      </>
+    );
   };
 
   const handleImport = (importedData: any[]) => {
@@ -165,8 +244,8 @@ export default function EconomicDevelopmentDataEntry() {
       
       fields.forEach(f => {
         const key = f as keyof EconStat;
-        const oldVal = (originalRow as any)[key] || 0;
-        const newVal = (row as any)[key] || 0;
+        const oldVal = (originalRow as any)[key] ?? null;
+        const newVal = (row as any)[key] ?? null;
         if (newVal !== oldVal) {
           hasChanges = true;
         }
@@ -259,17 +338,14 @@ export default function EconomicDevelopmentDataEntry() {
         <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
           {barangays.map((b) => {
             const row = stats[b.id] || {};
-            let f1_m = 0, f1_f = 0, f2_m = 0, f2_f = 0;
+            let p1 = '', p2 = '';
             
             if (activeTab === 'labor') {
-              f1_m = row.employed_m || 0; f1_f = row.employed_f || 0;
-              f2_m = row.unemployed_m || 0; f2_f = row.unemployed_f || 0;
+              p1 = 'employed'; p2 = 'unemployed';
             } else if (activeTab === 'agriculture') {
-              f1_m = row.farmers_m || 0; f1_f = row.farmers_f || 0;
-              f2_m = row.fisherfolks_m || 0; f2_f = row.fisherfolks_f || 0;
+              p1 = 'farmers'; p2 = 'fisherfolks';
             } else if (activeTab === 'commerce') {
-              f1_m = row.business_owners_m || 0; f1_f = row.business_owners_f || 0;
-              f2_m = row.ambulant_vendors_m || 0; f2_f = row.ambulant_vendors_f || 0;
+              p1 = 'business_owners'; p2 = 'ambulant_vendors';
             }
             
             return (
@@ -278,49 +354,8 @@ export default function EconomicDevelopmentDataEntry() {
                   {b.name}
                 </td>
                 
-                <td className="px-0 py-0 border-l dark:border-gray-800 bg-blue-50/30 dark:bg-blue-900/10">
-                  <input 
-                    type="number" min="0" 
-                    value={f1_m || ''} 
-                    onChange={(e) => handleChange(b.id, activeTab === 'labor' ? 'employed_m' : activeTab === 'agriculture' ? 'farmers_m' : 'business_owners_m', e.target.value)} 
-                    disabled={!canWrite || isLocked} 
-                    className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" 
-                  />
-                </td>
-                <td className="px-0 py-0  bg-blue-50/30 dark:bg-blue-900/10">
-                  <input 
-                    type="number" min="0" 
-                    value={f1_f || ''} 
-                    onChange={(e) => handleChange(b.id, activeTab === 'labor' ? 'employed_f' : activeTab === 'agriculture' ? 'farmers_f' : 'business_owners_f', e.target.value)} 
-                    disabled={!canWrite || isLocked} 
-                    className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" 
-                  />
-                </td>
-                <td className="px-4 py-3 border-r dark:border-gray-800 text-center font-medium bg-gray-100 dark:bg-gray-800/50">
-                  {f1_m + f1_f}
-                </td>
-
-                <td className="px-0 py-0  bg-indigo-50/30 dark:bg-indigo-900/10">
-                  <input 
-                    type="number" min="0" 
-                    value={f2_m || ''} 
-                    onChange={(e) => handleChange(b.id, activeTab === 'labor' ? 'unemployed_m' : activeTab === 'agriculture' ? 'fisherfolks_m' : 'ambulant_vendors_m', e.target.value)} 
-                    disabled={!canWrite || isLocked} 
-                    className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" 
-                  />
-                </td>
-                <td className="px-0 py-0  bg-indigo-50/30 dark:bg-indigo-900/10">
-                  <input 
-                    type="number" min="0" 
-                    value={f2_f || ''} 
-                    onChange={(e) => handleChange(b.id, activeTab === 'labor' ? 'unemployed_f' : activeTab === 'agriculture' ? 'fisherfolks_f' : 'ambulant_vendors_f', e.target.value)} 
-                    disabled={!canWrite || isLocked} 
-                    className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" 
-                  />
-                </td>
-                <td className="px-4 py-3  text-center font-medium bg-gray-100 dark:bg-gray-800/50 border-r dark:border-gray-800">
-                  {f2_m + f2_f}
-                </td>
+                {renderIndicatorCells(b.id, row, p1, false)}
+                {renderIndicatorCells(b.id, row, p2, true)}
               </tr>
             );
           })}

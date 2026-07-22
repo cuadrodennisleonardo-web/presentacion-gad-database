@@ -17,7 +17,13 @@ export default function SocialDevelopmentDashboard() {
   const { data: stats, isLoading } = useSocialDevStats(year);
 
   const statCards = [
-    { title: "Total Student Enrollment", value: (stats?.enrolledM || 0) + (stats?.enrolledF || 0), icon: "M: " + (stats?.enrolledM || 0) + " | F: " + (stats?.enrolledF || 0), bg: "bg-blue-50 dark:bg-blue-500/10", color: "text-blue-600" },
+    { 
+      title: "Total Student Enrollment", 
+      value: stats?.enrolledTotal || 0, 
+      icon: stats?.enrolledHasTotalOnly ? "" : `M: ${stats?.enrolledM || 0} | F: ${stats?.enrolledF || 0}`, 
+      bg: "bg-blue-50 dark:bg-blue-500/10", 
+      color: "text-blue-600" 
+    },
     { title: "School Drop-outs", value: stats?.dropOuts || 0, icon: "", bg: "bg-orange-50 dark:bg-orange-500/10", color: "text-orange-600" },
     { title: "Out-of-School Youth", value: stats?.osy || 0, icon: "", bg: "bg-red-50 dark:bg-red-500/10", color: "text-red-600" },
     { title: "Teenage Pregnancies", value: stats?.teenPregnancy || 0, icon: "", bg: "bg-pink-50 dark:bg-pink-500/10", color: "text-pink-600" },
@@ -62,27 +68,25 @@ export default function SocialDevelopmentDashboard() {
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <ErrorBoundary>
               <MultiSeriesChart 
-                title={`Student Enrollment by School (M vs F) (${year}-${year + 1})`}
+                title={stats?.enrolledHasTotalOnly 
+                  ? `Student Enrollment by School (Total) (${year}-${year + 1})` 
+                  : `Student Enrollment by School (M vs F) (${year}-${year + 1})`}
                 type="bar"
                 categories={stats?.schools || []}
-                series={[
-                  { name: "Male", data: stats?.enrolledM_series || [] },
-                  { name: "Female", data: stats?.enrolledF_series || [] }
-                ]}
-                colors={[CHART_COLORS.male, CHART_COLORS.female]}
+                series={stats?.enrolledSeries || []}
+                colors={stats?.enrolledHasTotalOnly ? ["#3b82f6"] : [CHART_COLORS.male, CHART_COLORS.female]}
               />
             </ErrorBoundary>
             
             <ErrorBoundary>
               <MultiSeriesChart 
-                title="Malnourished / Stunted by Barangay"
+                title={stats?.malHasTotalOnly 
+                  ? "Malnourished / Stunted by Barangay (Total)" 
+                  : "Malnourished / Stunted by Barangay (M vs F)"}
                 type="line"
                 categories={stats?.barangays || []}
-                series={[
-                  { name: "Male", data: stats?.malnourishedM_series || [] },
-                  { name: "Female", data: stats?.malnourishedF_series || [] }
-                ]}
-                colors={[CHART_COLORS.male, CHART_COLORS.female]}
+                series={stats?.malnourishedSeries || []}
+                colors={stats?.malHasTotalOnly ? ["#f97316"] : [CHART_COLORS.male, CHART_COLORS.female]}
               />
             </ErrorBoundary>
           </div>

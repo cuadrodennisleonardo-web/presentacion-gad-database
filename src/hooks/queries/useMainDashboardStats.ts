@@ -1,6 +1,20 @@
 import { useQuery } from "@tanstack/react-query";
 import { fetchBarangays, fetchStats } from "@/services/api";
 
+function extractStatField(st: any, prefix: string) {
+  const m = Number(st?.[`${prefix}_m`] || 0);
+  const f = Number(st?.[`${prefix}_f`] || 0);
+  const rawTotal = st?.[`${prefix}_total`];
+  
+  const isTotalOnly = rawTotal !== null && rawTotal !== undefined && rawTotal > 0 && !st?.[`${prefix}_m`] && !st?.[`${prefix}_f`];
+  
+  let total = m + f;
+  if (isTotalOnly || (rawTotal !== null && rawTotal !== undefined && rawTotal > 0 && (m + f) === 0)) {
+    total = Number(rawTotal);
+  }
+  return { m, f, total, isTotalOnly };
+}
+
 export function useMainDashboardStats() {
   return useQuery({
     queryKey: ['main_dashboard_stats'],
@@ -34,15 +48,17 @@ export function useMainDashboardStats() {
       const barangayPopArray: { barangay_name: string; count: number }[] = [];
 
       popStats.forEach(stat => {
-        totalPop += stat.total_population || 0;
-        totalHouseholds += (stat.household_heads_m || 0) + (stat.household_heads_f || 0);
+        const pop = stat.total_population || ((stat.male_count || 0) + (stat.female_count || 0));
+        const hh = extractStatField(stat, 'household_heads');
+        totalPop += pop;
+        totalHouseholds += hh.total;
         totalMale += stat.male_count || 0;
         totalFemale += stat.female_count || 0;
 
-        if (stat.total_population && stat.total_population > 0) {
+        if (pop > 0) {
           barangayPopArray.push({
             barangay_name: barangayMap.get(stat.barangay_id) || "Unknown",
-            count: stat.total_population,
+            count: pop,
           });
         }
       });
@@ -50,36 +66,36 @@ export function useMainDashboardStats() {
       let totalPWDs = 0;
       let total4Ps = 0;
       socStats.forEach(s => {
-        totalPWDs += (s.pwd_m || 0) + (s.pwd_f || 0);
-        total4Ps += (s.four_ps_m || 0) + (s.four_ps_f || 0);
+        totalPWDs += extractStatField(s, 'pwd').total;
+        total4Ps += extractStatField(s, 'four_ps').total;
       });
 
       let totalFarmers = 0, totalFisherfolks = 0, totalBusiness = 0, totalAmbulantVendors = 0;
       econStats.forEach(e => {
-        totalFarmers += (e.farmers_m || 0) + (e.farmers_f || 0);
-        totalFisherfolks += (e.fisherfolks_m || 0) + (e.fisherfolks_f || 0);
-        totalBusiness += (e.business_owners_m || 0) + (e.business_owners_f || 0);
-        totalAmbulantVendors += (e.ambulant_vendors_m || 0) + (e.ambulant_vendors_f || 0);
+        totalFarmers += extractStatField(e, 'farmers').total;
+        totalFisherfolks += extractStatField(e, 'fisherfolks').total;
+        totalBusiness += extractStatField(e, 'business_owners').total;
+        totalAmbulantVendors += extractStatField(e, 'ambulant_vendors').total;
       });
 
       let tVawc = 0, tCicl = 0, tAssault = 0;
       justiceStats.forEach(j => {
         tVawc += j.vawc_cases_reported || 0;
-        tCicl += (j.cicl_m || 0) + (j.cicl_f || 0);
-        tAssault += (j.sexual_assault_m || 0) + (j.sexual_assault_f || 0);
+        tCicl += extractStatField(j, 'cicl').total;
+        tAssault += extractStatField(j, 'sexual_assault').total;
       });
 
       let tWater = 0, tToilet = 0, tSettlers = 0;
       infraStats.forEach(i => {
-        tWater += (i.safe_water_m || 0) + (i.safe_water_f || 0);
-        tToilet += (i.sanitary_toilet_m || 0) + (i.sanitary_toilet_f || 0);
-        tSettlers += (i.informal_settlers_m || 0) + (i.informal_settlers_f || 0);
+        tWater += extractStatField(i, 'safe_water').total;
+        tToilet += extractStatField(i, 'sanitary_toilet').total;
+        tSettlers += extractStatField(i, 'informal_settlers').total;
       });
 
       let tElected = 0, tAppointed = 0;
       govStats.forEach(g => {
-        tElected += (g.elected_officials_m || 0) + (g.elected_officials_f || 0);
-        tAppointed += (g.appointed_heads_m || 0) + (g.appointed_heads_f || 0);
+        tElected += extractStatField(g, 'elected_officials').total;
+        tAppointed += extractStatField(g, 'appointed_heads').total;
       });
 
       const sortedBarangayPop = barangayPopArray.sort((a, b) => b.count - a.count);

@@ -65,13 +65,86 @@ export default function JusticeDataEntry() {
 
   const handleChange = (barangayId: string, field: keyof JusticeStat, value: string) => {
     const numValue = value === '' ? 0 : parseInt(value, 10);
+    const prefix = field.toString().replace(/_[mf]$/, '');
+    const keyTotal = `${prefix}_total` as keyof JusticeStat;
+
     setStats((prev) => ({
       ...prev,
       [barangayId]: {
         ...prev[barangayId],
         [field]: numValue,
+        [keyTotal]: null,
       },
     }));
+  };
+
+  const handleTotalChange = (barangayId: string, prefix: string, value: string) => {
+    const numValue = value === '' ? null : parseInt(value, 10);
+    const keyTotal = `${prefix}_total` as keyof JusticeStat;
+    const keyM = `${prefix}_m` as keyof JusticeStat;
+    const keyF = `${prefix}_f` as keyof JusticeStat;
+
+    setStats((prev) => ({
+      ...prev,
+      [barangayId]: {
+        ...prev[barangayId],
+        [keyTotal]: numValue,
+        [keyM]: 0,
+        [keyF]: 0,
+      },
+    }));
+  };
+
+  const renderIndicatorCells = (barangayId: string, row: any, prefix: string, isLastInGroup: boolean) => {
+    const kM = prefix + '_m';
+    const kF = prefix + '_f';
+    const kTot = prefix + '_total';
+
+    const mM = Number(row[kM] || 0);
+    const fF = Number(row[kF] || 0);
+    const rawTot = row[kTot];
+
+    const hasMF = mM > 0 || fF > 0;
+    const borderRight = isLastInGroup ? 'border-r dark:border-gray-800' : '';
+
+    return (
+      <>
+        <td className="px-0 py-0 border-l dark:border-gray-800 bg-blue-50/30 dark:bg-blue-900/10">
+          <input 
+            type="number" min="0" 
+            value={row[kM] || ''} 
+            onChange={(e) => handleChange(barangayId, kM as any, e.target.value)} 
+            disabled={!canWrite || isLocked} 
+            className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" 
+          />
+        </td>
+        <td className="px-0 py-0 bg-blue-50/30 dark:bg-blue-900/10">
+          <input 
+            type="number" min="0" 
+            value={row[kF] || ''} 
+            onChange={(e) => handleChange(barangayId, kF as any, e.target.value)} 
+            disabled={!canWrite || isLocked} 
+            className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" 
+          />
+        </td>
+        {hasMF ? (
+          <td className={`px-4 py-3 text-center font-medium bg-gray-100 dark:bg-gray-800/50 ${borderRight}`}>
+            {mM + fF}
+          </td>
+        ) : (
+          <td className={`px-0 py-0 text-center font-medium bg-amber-50/40 dark:bg-amber-900/10 ${borderRight}`}>
+            <input 
+              type="number" min="0" 
+              placeholder="Total"
+              value={rawTot ?? ''} 
+              onChange={(e) => handleTotalChange(barangayId, prefix, e.target.value)} 
+              disabled={!canWrite || isLocked} 
+              className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center text-brand-600 dark:text-brand-400 font-semibold outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 placeholder:text-gray-400 placeholder:font-normal" 
+            />
+          </td>
+        )}
+      </>
+    );
   };
 
   const handleImport = (importedData: any[]) => {
@@ -80,7 +153,7 @@ export default function JusticeDataEntry() {
       if (b) {
         Object.keys(row).forEach(key => {
           if (key !== 'barangay_name') {
-            if (['cicl_m', 'cicl_f', 'sexual_assault_m', 'sexual_assault_f', 'vawc_cases_reported'].includes(key)) {
+            if (['cicl_m', 'cicl_f', 'cicl_total', 'sexual_assault_m', 'sexual_assault_f', 'sexual_assault_total', 'vawc_cases_reported'].includes(key)) {
               handleChange(b.id, key as keyof JusticeStat, String(row[key]));
             }
           }
@@ -129,7 +202,7 @@ export default function JusticeDataEntry() {
 
   const handleSaveAll = () => {
     const changedData: Record<string, any> = {};
-    const fields = ['cicl_m', 'cicl_f', 'sexual_assault_m', 'sexual_assault_f', 'vawc_cases_reported'];
+    const fields = ['cicl_m', 'cicl_f', 'cicl_total', 'sexual_assault_m', 'sexual_assault_f', 'sexual_assault_total', 'vawc_cases_reported'];
     
     barangays.forEach(b => {
       const row = stats[b.id] || {};
@@ -140,8 +213,8 @@ export default function JusticeDataEntry() {
       
       fields.forEach(f => {
         const key = f as keyof JusticeStat;
-        const oldVal = (originalRow as any)[key] || 0;
-        const newVal = (row as any)[key] || 0;
+        const oldVal = (originalRow as any)[key] ?? null;
+        const newVal = (row as any)[key] ?? null;
         if (newVal !== oldVal) {
           hasChanges = true;
         }
@@ -175,8 +248,10 @@ export default function JusticeDataEntry() {
   const columns: ExportColumn[] = [
     { header: 'CICL (M)', key: 'cicl_m' },
     { header: 'CICL (F)', key: 'cicl_f' },
+    { header: 'CICL (Total)', key: 'cicl_total' },
     { header: 'Sexual Assault (M)', key: 'sexual_assault_m' },
     { header: 'Sexual Assault (F)', key: 'sexual_assault_f' },
+    { header: 'Sexual Assault (Total)', key: 'sexual_assault_total' },
     { header: 'VAWC Cases', key: 'vawc_cases_reported' }
   ];
 
@@ -240,54 +315,11 @@ export default function JusticeDataEntry() {
                   {b.name}
                 </td>
                 
-                {/* CICL */}
-                <td className="px-0 py-0 border-l dark:border-gray-800 bg-blue-50/30 dark:bg-blue-900/10">
-                  <input 
-                    type="number" min="0" 
-                    value={row['cicl_m'] || ''} 
-                    onChange={(e) => handleChange(b.id, 'cicl_m', e.target.value)} 
-                    disabled={!canWrite || isLocked} 
-                    className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" 
-                  />
-                </td>
-                <td className="px-0 py-0  bg-blue-50/30 dark:bg-blue-900/10">
-                  <input 
-                    type="number" min="0" 
-                    value={row['cicl_f'] || ''} 
-                    onChange={(e) => handleChange(b.id, 'cicl_f', e.target.value)} 
-                    disabled={!canWrite || isLocked} 
-                    className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" 
-                  />
-                </td>
-                <td className="px-4 py-3 border-r dark:border-gray-800 text-center font-medium bg-gray-100 dark:bg-gray-800/50">
-                  {(row.cicl_m || 0) + (row.cicl_f || 0)}
-                </td>
-
-                {/* Sexual Assault */}
-                <td className="px-0 py-0  bg-indigo-50/30 dark:bg-indigo-900/10">
-                  <input 
-                    type="number" min="0" 
-                    value={row['sexual_assault_m'] || ''} 
-                    onChange={(e) => handleChange(b.id, 'sexual_assault_m', e.target.value)} 
-                    disabled={!canWrite || isLocked} 
-                    className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" 
-                  />
-                </td>
-                <td className="px-0 py-0  bg-indigo-50/30 dark:bg-indigo-900/10">
-                  <input 
-                    type="number" min="0" 
-                    value={row['sexual_assault_f'] || ''} 
-                    onChange={(e) => handleChange(b.id, 'sexual_assault_f', e.target.value)} 
-                    disabled={!canWrite || isLocked} 
-                    className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" 
-                  />
-                </td>
-                <td className="px-4 py-3  text-center font-medium bg-gray-100 dark:bg-gray-800/50 border-r dark:border-gray-800">
-                  {(row.sexual_assault_m || 0) + (row.sexual_assault_f || 0)}
-                </td>
+                {renderIndicatorCells(b.id, row, 'cicl', false)}
+                {renderIndicatorCells(b.id, row, 'sexual_assault', true)}
                 
                 {/* VAWC */}
-                <td className="px-0 py-0  bg-rose-50/30 dark:bg-rose-900/10">
+                <td className="px-0 py-0 bg-rose-50/30 dark:bg-rose-900/10">
                   <input 
                     type="number" min="0" 
                     value={row['vawc_cases_reported'] || ''} 

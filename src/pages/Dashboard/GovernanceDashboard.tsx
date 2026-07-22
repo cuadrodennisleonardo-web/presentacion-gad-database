@@ -6,9 +6,9 @@ import PageBreadcrumb from "@/components/common/PageBreadcrumb";
 import MultiSeriesChart from "@/components/charts/MultiSeriesChart";
 import DynamicDashboardCharts from '@/components/common/DynamicDashboardCharts';
 import DynamicBudgetCharts from '@/components/common/DynamicBudgetCharts';
+import ErrorBoundary from "@/components/common/ErrorBoundary";
 import { CHART_COLORS } from "@/config/chartColors";
 import { useGovernanceStats } from "@/hooks/queries/useGovernanceStats";
-
 
 export default function GovernanceDashboard() {
   const [year, setYear] = useState(getDefaultYear('Governance_Dashboard'));
@@ -17,7 +17,7 @@ export default function GovernanceDashboard() {
 
   const statCards = [
     { title: "Total Elected Officials", value: stats?.elected || 0, icon: "Officials", bg: "bg-blue-50 dark:bg-blue-500/10", color: "text-blue-600" },
-    { title: "Total Appointed Heads", value: (stats?.appointedM || 0) + (stats?.appointedF || 0), icon: "Heads", bg: "bg-teal-50 dark:bg-teal-500/10", color: "text-teal-600" },
+    { title: "Total Appointed Heads", value: stats?.appointedTotal || 0, icon: "Heads", bg: "bg-teal-50 dark:bg-teal-500/10", color: "text-teal-600" },
   ];
 
   const pieIndex = selectedBarangay === "all" ? -1 : (stats?.barangayIds.indexOf(selectedBarangay) ?? -1);
@@ -48,7 +48,7 @@ export default function GovernanceDashboard() {
         </div>
       ) : (
         <>
-          <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
+          <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2">
             {statCards.map((card) => (
               <div key={card.title} className="rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-sm dark:border-gray-800 dark:bg-white/[0.02]">
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{card.title}</p>
@@ -58,6 +58,18 @@ export default function GovernanceDashboard() {
                 </div>
               </div>
             ))}
+          </div>
+
+          <div className="mb-8">
+            <ErrorBoundary>
+              <MultiSeriesChart 
+                title={stats?.electedHasTotalOnly ? "Elected Officials by Barangay (Total)" : "Elected Officials by Barangay (M vs F)"}
+                type="bar"
+                categories={stats?.barangays || []}
+                series={stats?.electedSeries || []}
+                colors={stats?.electedHasTotalOnly ? ["#3b82f6"] : [CHART_COLORS.male, CHART_COLORS.female]}
+              />
+            </ErrorBoundary>
           </div>
 
           <div className="mt-8 flex items-center justify-between">
@@ -105,4 +117,3 @@ export default function GovernanceDashboard() {
     </>
   );
 }
-

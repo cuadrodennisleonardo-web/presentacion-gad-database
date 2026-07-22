@@ -1,6 +1,20 @@
 import { useQuery } from "@tanstack/react-query";
 import { fetchBarangays, fetchStats } from "@/services/api";
 
+function extractStatField(st: any, prefix: string) {
+  const m = Number(st?.[`${prefix}_m`] || 0);
+  const f = Number(st?.[`${prefix}_f`] || 0);
+  const rawTotal = st?.[`${prefix}_total`];
+  
+  const isTotalOnly = rawTotal !== null && rawTotal !== undefined && rawTotal > 0 && !st?.[`${prefix}_m`] && !st?.[`${prefix}_f`];
+  
+  let total = m + f;
+  if (isTotalOnly || (rawTotal !== null && rawTotal !== undefined && rawTotal > 0 && (m + f) === 0)) {
+    total = Number(rawTotal);
+  }
+  return { m, f, total, isTotalOnly };
+}
+
 export function useEconomicDevStats(year: number) {
   return useQuery({
     queryKey: ['econ_dev_stats', year],
@@ -19,12 +33,16 @@ export function useEconomicDevStats(year: number) {
       const bIds: string[] = [];
       const empM: number[] = [];
       const empF: number[] = [];
+      const empTot: number[] = [];
       const unM: number[] = [];
       const unF: number[] = [];
+      const unTot: number[] = [];
       const rFarmers: number[] = [];
       const rFisherfolks: number[] = [];
       const rBusiness: number[] = [];
       const rAmbulantVendors: number[] = [];
+      let empHasTotalOnly = false;
+      let unempHasTotalOnly = false;
 
       bData.forEach(b => {
         bNames.push(b.name);
@@ -32,22 +50,34 @@ export function useEconomicDevStats(year: number) {
         
         const e = eMap.get(b.id) || {};
 
-        tEmployed += (e.employed_m || 0) + (e.employed_f || 0);
-        tUnemployed += (e.unemployed_m || 0) + (e.unemployed_f || 0);
-        tFarmers += (e.farmers_m || 0) + (e.farmers_f || 0);
-        tFisherfolks += (e.fisherfolks_m || 0) + (e.fisherfolks_f || 0);
-        tBusiness += (e.business_owners_m || 0) + (e.business_owners_f || 0);
-        tAmbulantVendors += (e.ambulant_vendors_m || 0) + (e.ambulant_vendors_f || 0);
+        const emp = extractStatField(e, 'employed');
+        const unemp = extractStatField(e, 'unemployed');
+        const farm = extractStatField(e, 'farmers');
+        const fish = extractStatField(e, 'fisherfolks');
+        const biz = extractStatField(e, 'business_owners');
+        const amb = extractStatField(e, 'ambulant_vendors');
 
-        rFarmers.push((e.farmers_m || 0) + (e.farmers_f || 0));
-        rFisherfolks.push((e.fisherfolks_m || 0) + (e.fisherfolks_f || 0));
-        rBusiness.push((e.business_owners_m || 0) + (e.business_owners_f || 0));
-        rAmbulantVendors.push((e.ambulant_vendors_m || 0) + (e.ambulant_vendors_f || 0));
+        if (emp.isTotalOnly) empHasTotalOnly = true;
+        if (unemp.isTotalOnly) unempHasTotalOnly = true;
 
-        empM.push(e.employed_m || 0);
-        empF.push(e.employed_f || 0);
-        unM.push(e.unemployed_m || 0);
-        unF.push(e.unemployed_f || 0);
+        tEmployed += emp.total;
+        tUnemployed += unemp.total;
+        tFarmers += farm.total;
+        tFisherfolks += fish.total;
+        tBusiness += biz.total;
+        tAmbulantVendors += amb.total;
+
+        rFarmers.push(farm.total);
+        rFisherfolks.push(fish.total);
+        rBusiness.push(biz.total);
+        rAmbulantVendors.push(amb.total);
+
+        empM.push(emp.m);
+        empF.push(emp.f);
+        empTot.push(emp.total);
+        unM.push(unemp.m);
+        unF.push(unemp.f);
+        unTot.push(unemp.total);
       });
 
       return {
@@ -55,6 +85,14 @@ export function useEconomicDevStats(year: number) {
         farmers: tFarmers, fisherfolks: tFisherfolks, business: tBusiness, ambulantVendors: tAmbulantVendors,
         barangays: bNames,
         barangayIds: bIds,
+        empHasTotalOnly,
+        employedSeries: empHasTotalOnly 
+          ? [{ name: "Total Employed", data: empTot }]
+          : [{ name: "Male", data: empM }, { name: "Female", data: empF }],
+        unempHasTotalOnly,
+        unemployedSeries: unempHasTotalOnly
+          ? [{ name: "Total Unemployed", data: unTot }]
+          : [{ name: "Male", data: unM }, { name: "Female", data: unF }],
         employedM_series: empM, employedF_series: empF,
         unemployedM_series: unM, unemployedF_series: unF,
         rawFarmers: rFarmers,

@@ -1,6 +1,20 @@
 import { useQuery } from "@tanstack/react-query";
 import { fetchBarangays, fetchSchools, fetchStats } from "@/services/api";
 
+function extractStatField(st: any, prefix: string) {
+  const m = Number(st?.[`${prefix}_m`] || 0);
+  const f = Number(st?.[`${prefix}_f`] || 0);
+  const rawTotal = st?.[`${prefix}_total`];
+  
+  const isTotalOnly = rawTotal !== null && rawTotal !== undefined && rawTotal > 0 && !st?.[`${prefix}_m`] && !st?.[`${prefix}_f`];
+  
+  let total = m + f;
+  if (isTotalOnly || (rawTotal !== null && rawTotal !== undefined && rawTotal > 0 && (m + f) === 0)) {
+    total = Number(rawTotal);
+  }
+  return { m, f, total, isTotalOnly };
+}
+
 export function useSocialDevStats(year: number) {
   return useQuery({
     queryKey: ['social_dev_stats', year],
@@ -14,22 +28,34 @@ export function useSocialDevStats(year: number) {
       const socMap = new Map(socData.map(d => [d.barangay_id, d]));
 
       // Education Stats -> from Schools
-      let tEnrolledM = 0, tEnrolledF = 0;
+      let tEnrolledM = 0, tEnrolledF = 0, tEnrolledTotal = 0;
       let tDropOuts = 0, tOsy = 0;
       const schoolNames: string[] = [];
       const eM: number[] = [];
       const eF: number[] = [];
+      const eTot: number[] = [];
+      let enrolledHasTotalOnly = false;
       
       sData.forEach(s => {
         schoolNames.push(s.name);
         const st = socMap.get(s.id) || {};
-        tEnrolledM += st.student_enrollment_m || 0;
-        tEnrolledF += st.student_enrollment_f || 0;
-        tDropOuts += (st.drop_out_m || 0) + (st.drop_out_f || 0);
-        tOsy += (st.osy_m || 0) + (st.osy_f || 0);
         
-        eM.push(st.student_enrollment_m || 0);
-        eF.push(st.student_enrollment_f || 0);
+        const enr = extractStatField(st, 'student_enrollment');
+        const drp = extractStatField(st, 'drop_out');
+        const osy = extractStatField(st, 'osy');
+
+        if (enr.isTotalOnly) enrolledHasTotalOnly = true;
+        
+        tEnrolledM += enr.m;
+        tEnrolledF += enr.f;
+        tEnrolledTotal += enr.total;
+        
+        tDropOuts += drp.total;
+        tOsy += osy.total;
+        
+        eM.push(enr.m);
+        eF.push(enr.f);
+        eTot.push(enr.total);
       });
 
       // Health & Welfare Stats -> from Barangays
@@ -39,25 +65,36 @@ export function useSocialDevStats(year: number) {
       const bIds: string[] = [];
       const mM: number[] = [];
       const mF: number[] = [];
+      const mTot: number[] = [];
+      let malHasTotalOnly = false;
       
       bData.forEach(b => {
         bNames.push(b.name);
         bIds.push(b.id);
         const st = socMap.get(b.id) || {};
+
+        const pwd = extractStatField(st, 'pwd');
+        const fps = extractStatField(st, 'four_ps');
+        const sen = extractStatField(st, 'senior_citizens');
+        const solo = extractStatField(st, 'solo_parents');
+        const mal = extractStatField(st, 'malnourished');
+
+        if (mal.isTotalOnly) malHasTotalOnly = true;
         
-        tPwds += (st.pwd_m || 0) + (st.pwd_f || 0);
-        tFourPs += (st.four_ps_m || 0) + (st.four_ps_f || 0);
-        tSeniors += (st.senior_citizens_m || 0) + (st.senior_citizens_f || 0);
-        tSolo += (st.solo_parents_m || 0) + (st.solo_parents_f || 0);
-        tTeen += st.teenage_pregnancy || 0;
-        tMaternal += st.maternal_mortality || 0;
+        tPwds += pwd.total;
+        tFourPs += fps.total;
+        tSeniors += sen.total;
+        tSolo += solo.total;
+        tTeen += Number(st.teenage_pregnancy || 0);
+        tMaternal += Number(st.maternal_mortality || 0);
         
-        mM.push(st.malnourished_m || 0);
-        mF.push(st.malnourished_f || 0);
+        mM.push(mal.m);
+        mF.push(mal.f);
+        mTot.push(mal.total);
       });
 
       return {
-        enrolledM: tEnrolledM, enrolledF: tEnrolledF,
+        enrolledM: tEnrolledM, enrolledF: tEnrolledF, enrolledTotal: tEnrolledTotal,
         dropOuts: tDropOuts, osy: tOsy, 
         
         pwds: tPwds, fourPs: tFourPs, seniorCitizens: tSeniors, soloParents: tSolo,
@@ -67,6 +104,16 @@ export function useSocialDevStats(year: number) {
         barangayIds: bIds,
         schools: schoolNames,
         
+        enrolledHasTotalOnly,
+        enrolledSeries: enrolledHasTotalOnly 
+          ? [{ name: "Total", data: eTot }] 
+          : [{ name: "Male", data: eM }, { name: "Female", data: eF }],
+          
+        malHasTotalOnly,
+        malnourishedSeries: malHasTotalOnly 
+          ? [{ name: "Total", data: mTot }] 
+          : [{ name: "Male", data: mM }, { name: "Female", data: mF }],
+
         enrolledM_series: eM, enrolledF_series: eF,
         malnourishedM_series: mM, malnourishedF_series: mF,
       };
