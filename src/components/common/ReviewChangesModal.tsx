@@ -14,6 +14,8 @@ const FIELD_LABELS: Record<string, string> = {
   male_count: 'Total Population (M)',
   female_count: 'Total Population (F)',
   total_population: 'Total Population',
+  total_households: 'Total Households',
+  household_heads_total: 'Total Households',
   household_heads_m: 'Household Heads (M)',
   household_heads_f: 'Household Heads (F)',
   solo_parents_m: 'Solo Parents (M)',
@@ -77,7 +79,7 @@ const FIELD_LABELS: Record<string, string> = {
 
 // Define the exact field order for each module+tab to match data entry layout
 const FIELD_ORDER: Record<string, string[]> = {
-  'Social Development|Demographics': ['male_count', 'female_count', 'total_population', 'household_heads_m', 'household_heads_f', 'solo_parents_m', 'solo_parents_f'],
+  'Social Development|Demographics': ['male_count', 'female_count', 'total_population', 'total_households', 'household_heads_total', 'solo_parents_m', 'solo_parents_f'],
   'Social Development|Education': ['student_enrollment_m', 'student_enrollment_f', 'drop_out_m', 'drop_out_f', 'osy_m', 'osy_f'],
   'Social Development|Health & Nutrition': ['malnourished_m', 'malnourished_f', 'teenage_pregnancy', 'maternal_mortality'],
   'Social Development|Social Welfare': ['pwd_m', 'pwd_f', 'four_ps_m', 'four_ps_f', 'senior_citizens_m', 'senior_citizens_f'],

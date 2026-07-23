@@ -54,7 +54,7 @@ export async function getBarangays(year?: number): Promise<{
     return {
       ...brgy,
       population_count: s?.total_population || ((s?.male_count || 0) + (s?.female_count || 0)),
-      household_count: s?.household_heads_total || ((s?.household_heads_m || 0) + (s?.household_heads_f || 0)),
+      household_count: s?.total_households || s?.household_heads_total || ((s?.household_heads_m || 0) + (s?.household_heads_f || 0)),
     };
   });
 
@@ -84,7 +84,7 @@ export async function getBarangayById(id: string, year?: number): Promise<{ data
     data: {
       ...brgy,
       population_count: stats?.total_population || ((stats?.male_count || 0) + (stats?.female_count || 0)),
-      household_count: stats?.household_heads_total || ((stats?.household_heads_m || 0) + (stats?.household_heads_f || 0)),
+      household_count: stats?.total_households || stats?.household_heads_total || ((stats?.household_heads_m || 0) + (stats?.household_heads_f || 0)),
     },
     error: null,
   };

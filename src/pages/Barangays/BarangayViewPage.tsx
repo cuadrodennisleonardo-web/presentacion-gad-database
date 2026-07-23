@@ -67,7 +67,7 @@ const BarangayViewPage: React.FC = () => {
 
         setStats({
           population: pData?.total_population || 0,
-          households: (pData?.household_heads_m || 0) + (pData?.household_heads_f || 0),
+          households: pData?.total_households || pData?.household_heads_total || ((pData?.household_heads_m || 0) + (pData?.household_heads_f || 0)),
           pwd: (pData?.pwd_m || 0) + (pData?.pwd_f || 0),
           four_ps: (pData?.four_ps_m || 0) + (pData?.four_ps_f || 0),
           male: pData?.male_count || 0,

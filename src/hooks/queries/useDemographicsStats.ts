@@ -44,7 +44,7 @@ export function useDemographicsStats(year: number) {
         const hh = extractStatField(p, 'household_heads');
 
         totalPop += p.total_population || 0;
-        totalHouseholds += hh.total;
+        totalHouseholds += p.total_households ?? p.household_heads_total ?? hh.total;
         totalMale += p.male_count || 0;
         totalFemale += p.female_count || 0;
         

@@ -129,9 +129,9 @@ export default function AuditLogPage() {
     if (log.table_name === 'population_stats') {
       const mainTable = 'Population Stats';
       const hasPop = changedKeys.some(k => k.includes('male_count') || k.includes('female_count') || k === 'total_population');
-      const hasHH = changedKeys.some(k => k.startsWith('household_heads'));
-      if (hasPop && hasHH) return { mainTable, subTable: 'Total Population & Household Heads' };
-      if (hasHH) return { mainTable, subTable: 'Household Heads' };
+      const hasHH = changedKeys.some(k => k.startsWith('household_heads') || k.includes('households'));
+      if (hasPop && hasHH) return { mainTable, subTable: 'Total Population & Households' };
+      if (hasHH) return { mainTable, subTable: 'Total Households' };
       return { mainTable, subTable: 'Total Population' };
     }
 
@@ -202,7 +202,7 @@ export default function AuditLogPage() {
     const rowChanges = firstKey ? changes[firstKey] : {};
     const keys = Object.keys(rowChanges || {});
 
-    if (keys.some(k => k.startsWith('household_heads'))) return 'Household Heads';
+    if (keys.some(k => k.startsWith('household_heads') || k.includes('households'))) return 'Total Households';
     if (keys.some(k => k.includes('male_count') || k.includes('female_count') || k === 'total_population')) return 'Total Population';
     if (keys.some(k => k.includes('student_enrollment'))) return 'Student Enrollment';
     if (keys.some(k => k.includes('drop_out'))) return 'School Drop-outs';

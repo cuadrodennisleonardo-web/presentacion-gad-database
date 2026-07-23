@@ -54,7 +54,7 @@ const AppHeader: React.FC = () => {
       {
         name: "Demographics & Population",
         indicators: [
-          { name: "Total Population & Household Heads", keywords: "population household heads demographics residents census" }
+          { name: "Total Population & Total Households", keywords: "population total households demographics residents census" }
         ]
       },
       {

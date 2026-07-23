@@ -21,8 +21,8 @@ const NATIVE_SUB_TABLES: Record<string, NativeSubTable[]> = {
     },
     {
       key: 'household_heads',
-      label: 'Native: Household Heads',
-      columns: ['household_heads_m', 'household_heads_f', 'household_heads_total']
+      label: 'Native: Total Households',
+      columns: ['total_households', 'household_heads_total', 'household_heads_m', 'household_heads_f']
     }
   ],
   'Social Development': [

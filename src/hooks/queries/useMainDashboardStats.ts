@@ -51,7 +51,7 @@ export function useMainDashboardStats() {
         const pop = stat.total_population || ((stat.male_count || 0) + (stat.female_count || 0));
         const hh = extractStatField(stat, 'household_heads');
         totalPop += pop;
-        totalHouseholds += hh.total;
+        totalHouseholds += stat.total_households ?? stat.household_heads_total ?? hh.total;
         totalMale += stat.male_count || 0;
         totalFemale += stat.female_count || 0;
 

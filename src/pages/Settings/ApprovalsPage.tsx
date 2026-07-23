@@ -191,15 +191,20 @@ export default function ApprovalsPage() {
           }
 
           // Fields that are computed/virtual — must NOT be sent to the DB
-          const EXCLUDED_FIELDS = ['total_population'];
+          const EXCLUDED_FIELDS = ['total_population', 'total_households'];
 
           const upsertData = Object.keys(changes).map(barangayId => {
             const rowChanges: any = {};
             // Ensure we extract the 'new' value from the { old, new } structure if it exists, otherwise fallback to raw value
             Object.keys(changes[barangayId]).forEach(k => {
-              if (EXCLUDED_FIELDS.includes(k)) return; // Skip computed fields
               const val = changes[barangayId][k];
-              rowChanges[k] = (val && typeof val === 'object' && 'new' in val) ? val.new : val;
+              const newVal = (val && typeof val === 'object' && 'new' in val) ? val.new : val;
+              if (k === 'total_households') {
+                rowChanges['household_heads_total'] = newVal;
+                return;
+              }
+              if (EXCLUDED_FIELDS.includes(k)) return; // Skip computed fields
+              rowChanges[k] = newVal;
             });
 
             if (barangayId === 'municipal') {
