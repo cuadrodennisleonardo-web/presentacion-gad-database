@@ -351,17 +351,17 @@ export default function InfrastructureDataEntry() {
             return (
               <tr>
                 <td className="whitespace-nowrap px-4 py-3 font-extrabold text-brand-700 dark:text-brand-300">Total</td>
-                <td className="px-2 py-3 text-center border-l dark:border-gray-800 text-blue-700 dark:text-blue-300 font-bold">{w.mSum}</td>
-                <td className="px-2 py-3 text-center text-blue-700 dark:text-blue-300 font-bold">{w.fSum}</td>
-                <td className="px-4 py-3 text-center font-extrabold bg-amber-100/80 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200">{w.totSum}</td>
+                <td className="px-2 py-3 text-center border-l dark:border-gray-800 text-blue-700 dark:text-blue-300 font-bold">{w.mSum.toLocaleString()}</td>
+                <td className="px-2 py-3 text-center text-blue-700 dark:text-blue-300 font-bold">{w.fSum.toLocaleString()}</td>
+                <td className="px-4 py-3 text-center font-extrabold bg-amber-100/80 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200">{w.totSum.toLocaleString()}</td>
 
-                <td className="px-2 py-3 text-center border-l dark:border-gray-800 text-blue-700 dark:text-blue-300 font-bold">{s.mSum}</td>
-                <td className="px-2 py-3 text-center text-blue-700 dark:text-blue-300 font-bold">{s.fSum}</td>
-                <td className="px-4 py-3 text-center font-extrabold bg-amber-100/80 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200">{s.totSum}</td>
+                <td className="px-2 py-3 text-center border-l dark:border-gray-800 text-blue-700 dark:text-blue-300 font-bold">{s.mSum.toLocaleString()}</td>
+                <td className="px-2 py-3 text-center text-blue-700 dark:text-blue-300 font-bold">{s.fSum.toLocaleString()}</td>
+                <td className="px-4 py-3 text-center font-extrabold bg-amber-100/80 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200">{s.totSum.toLocaleString()}</td>
 
-                <td className="px-2 py-3 text-center border-l dark:border-gray-800 text-blue-700 dark:text-blue-300 font-bold">{i.mSum}</td>
-                <td className="px-2 py-3 text-center text-blue-700 dark:text-blue-300 font-bold">{i.fSum}</td>
-                <td className="px-4 py-3 text-center font-extrabold bg-amber-100/80 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 border-r dark:border-gray-800">{i.totSum}</td>
+                <td className="px-2 py-3 text-center border-l dark:border-gray-800 text-blue-700 dark:text-blue-300 font-bold">{i.mSum.toLocaleString()}</td>
+                <td className="px-2 py-3 text-center text-blue-700 dark:text-blue-300 font-bold">{i.fSum.toLocaleString()}</td>
+                <td className="px-4 py-3 text-center font-extrabold bg-amber-100/80 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 border-r dark:border-gray-800">{i.totSum.toLocaleString()}</td>
               </tr>
             );
           })()}

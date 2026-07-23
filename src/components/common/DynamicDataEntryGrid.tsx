@@ -386,10 +386,10 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
                     });
                     return (
                       <React.Fragment key={f.id + '_tot'}>
-                        <td className="px-2 py-3 text-center border-l dark:border-gray-800 text-blue-700 dark:text-blue-300 font-bold">{mSum}</td>
-                        <td className="px-2 py-3 text-center text-blue-700 dark:text-blue-300 font-bold">{fSum}</td>
+                        <td className="px-2 py-3 text-center border-l dark:border-gray-800 text-blue-700 dark:text-blue-300 font-bold">{mSum.toLocaleString()}</td>
+                        <td className="px-2 py-3 text-center text-blue-700 dark:text-blue-300 font-bold">{fSum.toLocaleString()}</td>
                         <td className={`px-4 py-3 text-center font-extrabold bg-amber-100/80 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 ${f === fields[fields.length - 1] ? 'border-r dark:border-gray-800' : ''}`}>
-                          {mSum + fSum}
+                          {(mSum + fSum).toLocaleString()}
                         </td>
                       </React.Fragment>
                     );
@@ -402,7 +402,7 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
                     });
                     return (
                       <td key={f.id + '_tot'} className={`px-4 py-3 border-l dark:border-gray-800 font-extrabold text-gray-900 dark:text-white ${sData?.isBudget ? 'text-left pl-8' : 'text-center'} ${f === fields[fields.length - 1] ? 'border-r dark:border-gray-800' : ''}`}>
-                        {sData?.isBudget ? `₱${vSum.toLocaleString()}` : vSum}
+                        {sData?.isBudget ? `₱${vSum.toLocaleString()}` : vSum.toLocaleString()}
                       </td>
                     );
                   }

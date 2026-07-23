@@ -339,13 +339,13 @@ export default function GovernanceDataEntry() {
             return (
               <tr>
                 <td className="whitespace-nowrap px-4 py-3 font-extrabold text-brand-700 dark:text-brand-300">Total</td>
-                <td className="px-2 py-3 text-center border-l dark:border-gray-800 text-blue-700 dark:text-blue-300 font-bold">{e.mSum}</td>
-                <td className="px-2 py-3 text-center text-blue-700 dark:text-blue-300 font-bold">{e.fSum}</td>
-                <td className="px-4 py-3 text-center font-extrabold bg-amber-100/80 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200">{e.totSum}</td>
+                <td className="px-2 py-3 text-center border-l dark:border-gray-800 text-blue-700 dark:text-blue-300 font-bold">{e.mSum.toLocaleString()}</td>
+                <td className="px-2 py-3 text-center text-blue-700 dark:text-blue-300 font-bold">{e.fSum.toLocaleString()}</td>
+                <td className="px-4 py-3 text-center font-extrabold bg-amber-100/80 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200">{e.totSum.toLocaleString()}</td>
 
-                <td className="px-2 py-3 text-center border-l dark:border-gray-800 text-indigo-700 dark:text-indigo-300 font-bold">{a.mSum}</td>
-                <td className="px-2 py-3 text-center text-indigo-700 dark:text-indigo-300 font-bold">{a.fSum}</td>
-                <td className="px-4 py-3 text-center font-extrabold bg-amber-100/80 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 border-r dark:border-gray-800">{a.totSum}</td>
+                <td className="px-2 py-3 text-center border-l dark:border-gray-800 text-indigo-700 dark:text-indigo-300 font-bold">{a.mSum.toLocaleString()}</td>
+                <td className="px-2 py-3 text-center text-indigo-700 dark:text-indigo-300 font-bold">{a.fSum.toLocaleString()}</td>
+                <td className="px-4 py-3 text-center font-extrabold bg-amber-100/80 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 border-r dark:border-gray-800">{a.totSum.toLocaleString()}</td>
               </tr>
             );
           })()}

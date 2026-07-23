@@ -20,7 +20,7 @@ export default function SocialDevelopmentDashboard() {
     { 
       title: "Total Student Enrollment", 
       value: stats?.enrolledTotal || 0, 
-      icon: stats?.enrolledHasTotalOnly ? "" : `M: ${stats?.enrolledM || 0} | F: ${stats?.enrolledF || 0}`, 
+      icon: stats?.enrolledHasTotalOnly ? "" : `M: ${(stats?.enrolledM || 0).toLocaleString()} | F: ${(stats?.enrolledF || 0).toLocaleString()}`, 
       bg: "bg-blue-50 dark:bg-blue-500/10", 
       color: "text-blue-600" 
     },

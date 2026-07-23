@@ -476,10 +476,10 @@ export default function SocialDevelopmentDataEntry() {
                     const { mSum, fSum, totalSum } = calculateTotals(prefix);
                     return (
                       <React.Fragment key={prefix}>
-                        <td className="px-2 py-3 text-center border-l dark:border-gray-800 text-blue-700 dark:text-blue-300 font-bold">{mSum}</td>
-                        <td className="px-2 py-3 text-center text-blue-700 dark:text-blue-300 font-bold">{fSum}</td>
+                        <td className="px-2 py-3 text-center border-l dark:border-gray-800 text-blue-700 dark:text-blue-300 font-bold">{mSum.toLocaleString()}</td>
+                        <td className="px-2 py-3 text-center text-blue-700 dark:text-blue-300 font-bold">{fSum.toLocaleString()}</td>
                         <td className={`px-4 py-3 text-center font-extrabold bg-amber-100/80 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 ${idx === 2 ? 'border-r dark:border-gray-800' : ''}`}>
-                          {totalSum}
+                          {totalSum.toLocaleString()}
                         </td>
                       </React.Fragment>
                     );
@@ -496,10 +496,10 @@ export default function SocialDevelopmentDataEntry() {
                     const { mSum, fSum, totalSum } = calculateTotals(prefix);
                     return (
                       <React.Fragment key={prefix}>
-                        <td className="px-2 py-3 text-center border-l dark:border-gray-800 text-blue-700 dark:text-blue-300 font-bold">{mSum}</td>
-                        <td className="px-2 py-3 text-center text-blue-700 dark:text-blue-300 font-bold">{fSum}</td>
+                        <td className="px-2 py-3 text-center border-l dark:border-gray-800 text-blue-700 dark:text-blue-300 font-bold">{mSum.toLocaleString()}</td>
+                        <td className="px-2 py-3 text-center text-blue-700 dark:text-blue-300 font-bold">{fSum.toLocaleString()}</td>
                         <td className={`px-4 py-3 text-center font-extrabold bg-amber-100/80 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 ${idx === 3 ? 'border-r dark:border-gray-800' : ''}`}>
-                          {totalSum}
+                          {totalSum.toLocaleString()}
                         </td>
                       </React.Fragment>
                     );
@@ -515,11 +515,11 @@ export default function SocialDevelopmentDataEntry() {
               return (
                 <tr>
                   <td className="whitespace-nowrap px-4 py-3 font-extrabold text-brand-700 dark:text-brand-300">Total</td>
-                  <td className="px-2 py-3 text-center border-l dark:border-gray-800 text-blue-700 dark:text-blue-300 font-bold">{mSum}</td>
-                  <td className="px-2 py-3 text-center text-blue-700 dark:text-blue-300 font-bold">{fSum}</td>
-                  <td className="px-4 py-3 text-center font-extrabold bg-amber-100/80 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 border-r dark:border-gray-800">{totalSum}</td>
-                  <td className="px-4 py-3 text-center font-extrabold text-gray-900 dark:text-white border-r dark:border-gray-800">{tpSum}</td>
-                  <td className="px-4 py-3 text-center font-extrabold text-gray-900 dark:text-white border-r dark:border-gray-800">{mmSum}</td>
+                  <td className="px-2 py-3 text-center border-l dark:border-gray-800 text-blue-700 dark:text-blue-300 font-bold">{mSum.toLocaleString()}</td>
+                  <td className="px-2 py-3 text-center text-blue-700 dark:text-blue-300 font-bold">{fSum.toLocaleString()}</td>
+                  <td className="px-4 py-3 text-center font-extrabold bg-amber-100/80 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 border-r dark:border-gray-800">{totalSum.toLocaleString()}</td>
+                  <td className="px-4 py-3 text-center font-extrabold text-gray-900 dark:text-white border-r dark:border-gray-800">{tpSum.toLocaleString()}</td>
+                  <td className="px-4 py-3 text-center font-extrabold text-gray-900 dark:text-white border-r dark:border-gray-800">{mmSum.toLocaleString()}</td>
                 </tr>
               );
             }

@@ -399,12 +399,12 @@ export default function DemographicsDataEntry() {
             return (
               <tr>
                 <td className="whitespace-nowrap px-4 py-3 font-extrabold text-brand-700 dark:text-brand-300">Total</td>
-                <td className="px-2 py-3 text-center border-l dark:border-gray-800 text-blue-700 dark:text-blue-300 font-bold">{popM}</td>
-                <td className="px-2 py-3 text-center text-blue-700 dark:text-blue-300 font-bold">{popF}</td>
-                <td className="px-4 py-3 text-center font-extrabold bg-amber-100/80 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 border-r dark:border-gray-800">{popTot}</td>
-                <td className="px-2 py-3 text-center border-l dark:border-gray-800 text-indigo-700 dark:text-indigo-300 font-bold">{hhM}</td>
-                <td className="px-2 py-3 text-center text-indigo-700 dark:text-indigo-300 font-bold">{hhF}</td>
-                <td className="px-4 py-3 text-center font-extrabold bg-amber-100/80 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 border-r dark:border-gray-800">{hhTot}</td>
+                <td className="px-2 py-3 text-center border-l dark:border-gray-800 text-blue-700 dark:text-blue-300 font-bold">{popM.toLocaleString()}</td>
+                <td className="px-2 py-3 text-center text-blue-700 dark:text-blue-300 font-bold">{popF.toLocaleString()}</td>
+                <td className="px-4 py-3 text-center font-extrabold bg-amber-100/80 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 border-r dark:border-gray-800">{popTot.toLocaleString()}</td>
+                <td className="px-2 py-3 text-center border-l dark:border-gray-800 text-indigo-700 dark:text-indigo-300 font-bold">{hhM.toLocaleString()}</td>
+                <td className="px-2 py-3 text-center text-indigo-700 dark:text-indigo-300 font-bold">{hhF.toLocaleString()}</td>
+                <td className="px-4 py-3 text-center font-extrabold bg-amber-100/80 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 border-r dark:border-gray-800">{hhTot.toLocaleString()}</td>
               </tr>
             );
           })()}
