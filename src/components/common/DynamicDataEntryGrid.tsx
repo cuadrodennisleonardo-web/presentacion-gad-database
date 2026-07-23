@@ -371,7 +371,45 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
                 );
               })}
             </tbody>
-          </table>
+            <tfoot className="bg-amber-50/80 dark:bg-amber-950/30 font-bold border-t-2 border-amber-300 dark:border-amber-800 text-gray-900 dark:text-white">
+              <tr>
+                <td className="whitespace-nowrap px-4 py-3 font-extrabold text-brand-700 dark:text-brand-300">Total</td>
+                {fields.map(f => {
+                  if (f.type === 'gender_split') {
+                    let mSum = 0;
+                    let fSum = 0;
+                    barangays.forEach(b => {
+                      const bData = data[b.id] || {};
+                      const fData = bData[f.id] || {};
+                      mSum += Number(fData.m || 0);
+                      fSum += Number(fData.f || 0);
+                    });
+                    return (
+                      <React.Fragment key={f.id + '_tot'}>
+                        <td className="px-2 py-3 text-center border-l dark:border-gray-800 text-blue-700 dark:text-blue-300 font-bold">{mSum}</td>
+                        <td className="px-2 py-3 text-center text-blue-700 dark:text-blue-300 font-bold">{fSum}</td>
+                        <td className={`px-4 py-3 text-center font-extrabold bg-amber-100/80 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 ${f === fields[fields.length - 1] ? 'border-r dark:border-gray-800' : ''}`}>
+                          {mSum + fSum}
+                        </td>
+                      </React.Fragment>
+                    );
+                  } else {
+                    let vSum = 0;
+                    barangays.forEach(b => {
+                      const bData = data[b.id] || {};
+                      const fData = bData[f.id] || {};
+                      vSum += Number(fData.value || 0);
+                    });
+                    return (
+                      <td key={f.id + '_tot'} className={`px-4 py-3 border-l dark:border-gray-800 font-extrabold text-gray-900 dark:text-white ${sData?.isBudget ? 'text-left pl-8' : 'text-center'} ${f === fields[fields.length - 1] ? 'border-r dark:border-gray-800' : ''}`}>
+                        {sData?.isBudget ? `₱${vSum.toLocaleString()}` : vSum}
+                      </td>
+                    );
+                  }
+                })}
+              </tr>
+            </tfoot>
+            </table>
         </div>
         <div className="block lg:hidden mt-2">
           {barangays.map((b) => {

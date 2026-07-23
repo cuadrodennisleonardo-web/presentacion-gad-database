@@ -441,7 +441,92 @@ export default function SocialDevelopmentDataEntry() {
             return null;
           })}
         </tbody>
-      
+        <tfoot className="bg-amber-50/80 dark:bg-amber-950/30 font-bold border-t-2 border-amber-300 dark:border-amber-800 text-gray-900 dark:text-white">
+          {(() => {
+            const calculateTotals = (prefix: string) => {
+              let mSum = 0;
+              let fSum = 0;
+              let totalSum = 0;
+              entities.forEach(b => {
+                const row = stats[b.id] || {};
+                const m = Number(row[`${prefix}m` as keyof SocialStat] || 0);
+                const f = Number(row[`${prefix}f` as keyof SocialStat] || 0);
+                const tot = row[`${prefix}total` as keyof SocialStat] != null ? Number(row[`${prefix}total` as keyof SocialStat]) : null;
+                mSum += m;
+                fSum += f;
+                totalSum += (tot ?? (m + f));
+              });
+              return { mSum, fSum, totalSum };
+            };
+
+            const calculateSingleTotal = (field: keyof SocialStat) => {
+              let sum = 0;
+              entities.forEach(b => {
+                const row = stats[b.id] || {};
+                sum += Number(row[field] || 0);
+              });
+              return sum;
+            };
+
+            if (activeTab === 'education') {
+              return (
+                <tr>
+                  <td className="whitespace-nowrap px-4 py-3 font-extrabold text-brand-700 dark:text-brand-300">Total</td>
+                  {['student_enrollment_', 'drop_out_', 'osy_'].map((prefix, idx) => {
+                    const { mSum, fSum, totalSum } = calculateTotals(prefix);
+                    return (
+                      <React.Fragment key={prefix}>
+                        <td className="px-2 py-3 text-center border-l dark:border-gray-800 text-blue-700 dark:text-blue-300 font-bold">{mSum}</td>
+                        <td className="px-2 py-3 text-center text-blue-700 dark:text-blue-300 font-bold">{fSum}</td>
+                        <td className={`px-4 py-3 text-center font-extrabold bg-amber-100/80 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 ${idx === 2 ? 'border-r dark:border-gray-800' : ''}`}>
+                          {totalSum}
+                        </td>
+                      </React.Fragment>
+                    );
+                  })}
+                </tr>
+              );
+            }
+
+            if (activeTab === 'welfare') {
+              return (
+                <tr>
+                  <td className="whitespace-nowrap px-4 py-3 font-extrabold text-brand-700 dark:text-brand-300">Total</td>
+                  {['pwd_', 'four_ps_', 'senior_citizens_', 'solo_parents_'].map((prefix, idx) => {
+                    const { mSum, fSum, totalSum } = calculateTotals(prefix);
+                    return (
+                      <React.Fragment key={prefix}>
+                        <td className="px-2 py-3 text-center border-l dark:border-gray-800 text-blue-700 dark:text-blue-300 font-bold">{mSum}</td>
+                        <td className="px-2 py-3 text-center text-blue-700 dark:text-blue-300 font-bold">{fSum}</td>
+                        <td className={`px-4 py-3 text-center font-extrabold bg-amber-100/80 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 ${idx === 3 ? 'border-r dark:border-gray-800' : ''}`}>
+                          {totalSum}
+                        </td>
+                      </React.Fragment>
+                    );
+                  })}
+                </tr>
+              );
+            }
+
+            if (activeTab === 'health') {
+              const { mSum, fSum, totalSum } = calculateTotals('malnourished_');
+              const tpSum = calculateSingleTotal('teenage_pregnancy');
+              const mmSum = calculateSingleTotal('maternal_mortality');
+              return (
+                <tr>
+                  <td className="whitespace-nowrap px-4 py-3 font-extrabold text-brand-700 dark:text-brand-300">Total</td>
+                  <td className="px-2 py-3 text-center border-l dark:border-gray-800 text-blue-700 dark:text-blue-300 font-bold">{mSum}</td>
+                  <td className="px-2 py-3 text-center text-blue-700 dark:text-blue-300 font-bold">{fSum}</td>
+                  <td className="px-4 py-3 text-center font-extrabold bg-amber-100/80 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 border-r dark:border-gray-800">{totalSum}</td>
+                  <td className="px-4 py-3 text-center font-extrabold text-gray-900 dark:text-white border-r dark:border-gray-800">{tpSum}</td>
+                  <td className="px-4 py-3 text-center font-extrabold text-gray-900 dark:text-white border-r dark:border-gray-800">{mmSum}</td>
+                </tr>
+              );
+            }
+
+            return null;
+          })()}
+        </tfoot>
         </table>
       </div>
         <div className="block lg:hidden mt-2">

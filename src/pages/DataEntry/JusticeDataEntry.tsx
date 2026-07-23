@@ -332,7 +332,44 @@ export default function JusticeDataEntry() {
             );
           })}
         </tbody>
-      
+        <tfoot className="bg-amber-50/80 dark:bg-amber-950/30 font-bold border-t-2 border-amber-300 dark:border-amber-800 text-gray-900 dark:text-white">
+          {(() => {
+            const calc = (prefix: string) => {
+              let mSum = 0, fSum = 0, totSum = 0;
+              barangays.forEach(b => {
+                const r = stats[b.id] || {};
+                const m = Number((r as any)[`${prefix}_m`] || 0);
+                const f = Number((r as any)[`${prefix}_f`] || 0);
+                const t = (r as any)[`${prefix}_total`] != null ? Number((r as any)[`${prefix}_total`]) : null;
+                mSum += m; fSum += f; totSum += (t ?? (m + f));
+              });
+              return { mSum, fSum, totSum };
+            };
+
+            const c = calc('cicl');
+            const sa = calc('sexual_assault');
+            let vawcSum = 0;
+            barangays.forEach(b => {
+              const r = stats[b.id] || {};
+              vawcSum += Number(r.vawc_cases_reported || 0);
+            });
+
+            return (
+              <tr>
+                <td className="whitespace-nowrap px-4 py-3 font-extrabold text-brand-700 dark:text-brand-300">Total</td>
+                <td className="px-2 py-3 text-center border-l dark:border-gray-800 text-blue-700 dark:text-blue-300 font-bold">{c.mSum}</td>
+                <td className="px-2 py-3 text-center text-blue-700 dark:text-blue-300 font-bold">{c.fSum}</td>
+                <td className="px-4 py-3 text-center font-extrabold bg-amber-100/80 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200">{c.totSum}</td>
+
+                <td className="px-2 py-3 text-center border-l dark:border-gray-800 text-indigo-700 dark:text-indigo-300 font-bold">{sa.mSum}</td>
+                <td className="px-2 py-3 text-center text-indigo-700 dark:text-indigo-300 font-bold">{sa.fSum}</td>
+                <td className="px-4 py-3 text-center font-extrabold bg-amber-100/80 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 border-r dark:border-gray-800">{sa.totSum}</td>
+
+                <td className="px-4 py-3 text-center font-extrabold text-rose-700 dark:text-rose-300">{vawcSum}</td>
+              </tr>
+            );
+          })()}
+        </tfoot>
         </table>
       </div>
       <div className="block lg:hidden mt-2">

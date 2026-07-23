@@ -360,7 +360,46 @@ export default function EconomicDevelopmentDataEntry() {
             );
           })}
         </tbody>
-      
+        <tfoot className="bg-amber-50/80 dark:bg-amber-950/30 font-bold border-t-2 border-amber-300 dark:border-amber-800 text-gray-900 dark:text-white">
+          {(() => {
+            let p1 = '', p2 = '';
+            if (activeTab === 'labor') {
+              p1 = 'employed'; p2 = 'unemployed';
+            } else if (activeTab === 'agriculture') {
+              p1 = 'farmers'; p2 = 'fisherfolks';
+            } else if (activeTab === 'commerce') {
+              p1 = 'business_owners'; p2 = 'ambulant_vendors';
+            }
+
+            const calc = (prefix: string) => {
+              let mSum = 0, fSum = 0, totSum = 0;
+              barangays.forEach(b => {
+                const r = stats[b.id] || {};
+                const m = Number((r as any)[`${prefix}_m`] || 0);
+                const f = Number((r as any)[`${prefix}_f`] || 0);
+                const t = (r as any)[`${prefix}_total`] != null ? Number((r as any)[`${prefix}_total`]) : null;
+                mSum += m; fSum += f; totSum += (t ?? (m + f));
+              });
+              return { mSum, fSum, totSum };
+            };
+
+            const t1 = calc(p1);
+            const t2 = calc(p2);
+
+            return (
+              <tr>
+                <td className="whitespace-nowrap px-4 py-3 font-extrabold text-brand-700 dark:text-brand-300">Total</td>
+                <td className="px-2 py-3 text-center border-l dark:border-gray-800 text-blue-700 dark:text-blue-300 font-bold">{t1.mSum}</td>
+                <td className="px-2 py-3 text-center text-blue-700 dark:text-blue-300 font-bold">{t1.fSum}</td>
+                <td className="px-4 py-3 text-center font-extrabold bg-amber-100/80 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200">{t1.totSum}</td>
+
+                <td className="px-2 py-3 text-center border-l dark:border-gray-800 text-blue-700 dark:text-blue-300 font-bold">{t2.mSum}</td>
+                <td className="px-2 py-3 text-center text-blue-700 dark:text-blue-300 font-bold">{t2.fSum}</td>
+                <td className="px-4 py-3 text-center font-extrabold bg-amber-100/80 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 border-r dark:border-gray-800">{t2.totSum}</td>
+              </tr>
+            );
+          })()}
+        </tfoot>
         </table>
       </div>
       <div className="block lg:hidden mt-2">

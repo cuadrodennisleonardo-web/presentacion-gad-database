@@ -374,7 +374,41 @@ export default function DemographicsDataEntry() {
             );
           })}
         </tbody>
-      
+        <tfoot className="bg-amber-50/80 dark:bg-amber-950/30 font-bold border-t-2 border-amber-300 dark:border-amber-800 text-gray-900 dark:text-white">
+          {(() => {
+            let popM = 0; let popF = 0; let popTot = 0;
+            let hhM = 0; let hhF = 0; let hhTot = 0;
+
+            barangays.forEach(b => {
+              const pRow = popStats[b.id] || {};
+              const mM = Number(pRow.male_count || 0);
+              const fF = Number(pRow.female_count || 0);
+              const totP = pRow.total_population != null ? Number(pRow.total_population) : null;
+              popM += mM;
+              popF += fF;
+              popTot += (totP ?? (mM + fF));
+
+              const hM = Number(pRow.household_heads_m || 0);
+              const hF = Number(pRow.household_heads_f || 0);
+              const totH = pRow.household_heads_total != null ? Number(pRow.household_heads_total) : null;
+              hhM += hM;
+              hhF += hF;
+              hhTot += (totH ?? (hM + hF));
+            });
+
+            return (
+              <tr>
+                <td className="whitespace-nowrap px-4 py-3 font-extrabold text-brand-700 dark:text-brand-300">Total</td>
+                <td className="px-2 py-3 text-center border-l dark:border-gray-800 text-blue-700 dark:text-blue-300 font-bold">{popM}</td>
+                <td className="px-2 py-3 text-center text-blue-700 dark:text-blue-300 font-bold">{popF}</td>
+                <td className="px-4 py-3 text-center font-extrabold bg-amber-100/80 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 border-r dark:border-gray-800">{popTot}</td>
+                <td className="px-2 py-3 text-center border-l dark:border-gray-800 text-indigo-700 dark:text-indigo-300 font-bold">{hhM}</td>
+                <td className="px-2 py-3 text-center text-indigo-700 dark:text-indigo-300 font-bold">{hhF}</td>
+                <td className="px-4 py-3 text-center font-extrabold bg-amber-100/80 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 border-r dark:border-gray-800">{hhTot}</td>
+              </tr>
+            );
+          })()}
+        </tfoot>
         </table>
       </div>
       <div className="block lg:hidden mt-2">
