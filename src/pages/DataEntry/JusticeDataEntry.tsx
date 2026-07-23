@@ -148,17 +148,23 @@ export default function JusticeDataEntry() {
   };
 
   const handleImport = (importedData: any[]) => {
-    importedData.forEach((row) => {
-      const b = barangays.find(b => b.name.toLowerCase() === row.barangay_name?.toLowerCase());
-      if (b) {
-        Object.keys(row).forEach(key => {
-          if (key !== 'barangay_name') {
-            if (['cicl_m', 'cicl_f', 'cicl_total', 'sexual_assault_m', 'sexual_assault_f', 'sexual_assault_total', 'vawc_cases_reported'].includes(key)) {
-              handleChange(b.id, key as keyof JusticeStat, String(row[key]));
+    const fields = columns.map(c => c.key);
+    setStats(prev => {
+      const updated = { ...prev };
+      importedData.forEach((row) => {
+        const bName = (row.barangay_name || '').trim().toLowerCase();
+        const b = barangays.find(b => b.name.trim().toLowerCase() === bName);
+        if (b) {
+          const currentBStats: any = { ...(updated[b.id] || {}) };
+          fields.forEach((f: string) => {
+            if (row[f] !== undefined) {
+              currentBStats[f] = Number(row[f]) || 0;
             }
-          }
-        });
-      }
+          });
+          updated[b.id] = currentBStats;
+        }
+      });
+      return updated;
     });
     toast.success('Data imported successfully!');
   };

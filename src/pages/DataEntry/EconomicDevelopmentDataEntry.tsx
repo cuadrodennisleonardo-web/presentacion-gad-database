@@ -181,15 +181,22 @@ export default function EconomicDevelopmentDataEntry() {
 
   const handleImport = (importedData: any[]) => {
     const fields = getExportColumns().map(c => c.key);
-    importedData.forEach((row) => {
-      const b = barangays.find(b => b.name.toLowerCase() === row.barangay_name?.toLowerCase());
-      if (b) {
-        Object.keys(row).forEach(key => {
-          if (key !== 'barangay_name' && fields.includes(key)) {
-            handleChange(b.id, key as keyof EconStat, String(row[key]));
-          }
-        });
-      }
+    setStats(prev => {
+      const updated = { ...prev };
+      importedData.forEach((row) => {
+        const bName = (row.barangay_name || '').trim().toLowerCase();
+        const b = barangays.find(b => b.name.trim().toLowerCase() === bName);
+        if (b) {
+          const currentBStats: any = { ...(updated[b.id] || {}) };
+          fields.forEach((f: string) => {
+            if (row[f] !== undefined) {
+              currentBStats[f] = Number(row[f]) || 0;
+            }
+          });
+          updated[b.id] = currentBStats;
+        }
+      });
+      return updated;
     });
     toast.success('Data imported successfully!');
   };

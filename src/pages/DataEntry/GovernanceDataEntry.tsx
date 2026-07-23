@@ -148,17 +148,23 @@ export default function GovernanceDataEntry() {
   };
 
   const handleImport = (importedData: any[]) => {
-    importedData.forEach((row) => {
-      const b = barangays.find(b => b.name.toLowerCase() === row.barangay_name?.toLowerCase());
-      if (b) {
-        Object.keys(row).forEach(key => {
-          if (key !== 'barangay_name') {
-            if (['elected_officials_m', 'elected_officials_f', 'elected_officials_total', 'appointed_heads_m', 'appointed_heads_f', 'appointed_heads_total'].includes(key)) {
-              handleChange(b.id, key as keyof GovStat, String(row[key]));
+    const fields = columns.map(c => c.key);
+    setStats(prev => {
+      const updated = { ...prev };
+      importedData.forEach((row) => {
+        const bName = (row.barangay_name || '').trim().toLowerCase();
+        const b = barangays.find(b => b.name.trim().toLowerCase() === bName);
+        if (b) {
+          const currentBStats: any = { ...(updated[b.id] || {}) };
+          fields.forEach((f: string) => {
+            if (row[f] !== undefined) {
+              currentBStats[f] = Number(row[f]) || 0;
             }
-          }
-        });
-      }
+          });
+          updated[b.id] = currentBStats;
+        }
+      });
+      return updated;
     });
     toast.success('Data imported successfully!');
   };

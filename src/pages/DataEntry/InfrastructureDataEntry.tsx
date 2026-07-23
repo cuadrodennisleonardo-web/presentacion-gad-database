@@ -148,17 +148,23 @@ export default function InfrastructureDataEntry() {
   };
 
   const handleImport = (importedData: any[]) => {
-    importedData.forEach((row) => {
-      const b = barangays.find(b => b.name.toLowerCase() === row.barangay_name?.toLowerCase());
-      if (b) {
-        Object.keys(row).forEach(key => {
-          if (key !== 'barangay_name') {
-            if (['safe_water_m', 'safe_water_f', 'safe_water_total', 'sanitary_toilet_m', 'sanitary_toilet_f', 'sanitary_toilet_total', 'informal_settlers_m', 'informal_settlers_f', 'informal_settlers_total'].includes(key)) {
-              handleChange(b.id, key as keyof InfraStat, String(row[key]));
+    const fields = columns.map(c => c.key);
+    setStats(prev => {
+      const updated = { ...prev };
+      importedData.forEach((row) => {
+        const bName = (row.barangay_name || '').trim().toLowerCase();
+        const b = barangays.find(b => b.name.trim().toLowerCase() === bName);
+        if (b) {
+          const currentBStats: any = { ...(updated[b.id] || {}) };
+          fields.forEach((f: string) => {
+            if (row[f] !== undefined) {
+              currentBStats[f] = Number(row[f]) || 0;
             }
-          }
-        });
-      }
+          });
+          updated[b.id] = currentBStats;
+        }
+      });
+      return updated;
     });
     toast.success('Data imported successfully!');
   };

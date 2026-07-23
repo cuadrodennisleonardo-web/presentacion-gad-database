@@ -229,7 +229,8 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
   const handleImport = (importedData: any[]) => {
     const newData = { ...data };
     importedData.forEach(row => {
-      const b = barangays.find(b => b.name === row.barangay_name);
+      const bName = (row.barangay_name || '').trim().toLowerCase();
+      const b = barangays.find(b => b.name.trim().toLowerCase() === bName);
       if (b) {
         newData[b.id] = { ...(newData[b.id] || {}) };
         fields.forEach(f => {

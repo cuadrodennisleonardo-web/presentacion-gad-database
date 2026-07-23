@@ -77,7 +77,6 @@ export default function SocialDevelopmentDataEntry() {
   }, [fetchedData]);
 
   const entities = isEducation ? fetchedData?.schools || [] : fetchedData?.barangays || [];
-  const barangays = fetchedData?.barangays || [];
 
   const handleChange = (barangayId: string, field: keyof SocialStat, value: string) => {
     const numValue = value === '' ? 0 : parseInt(value, 10);
@@ -206,15 +205,22 @@ export default function SocialDevelopmentDataEntry() {
 
   const handleImport = (importedData: any[]) => {
     const fields = getExportColumns().map(c => c.key);
-    importedData.forEach((row) => {
-      const b = barangays.find(b => b.name.toLowerCase() === row.barangay_name?.toLowerCase());
-      if (b) {
-        Object.keys(row).forEach(key => {
-          if (key !== 'barangay_name' && fields.includes(key)) {
-            handleChange(b.id, key as keyof SocialStat, String(row[key]));
-          }
-        });
-      }
+    setStats(prev => {
+      const updated = { ...prev };
+      importedData.forEach((row) => {
+        const rawName = (row.barangay_name || '').replace(/\(Private\)/i, '').trim().toLowerCase();
+        const entity = entities.find(e => e.name.replace(/\(Private\)/i, '').trim().toLowerCase() === rawName);
+        if (entity) {
+          const currentEntityStats: any = { ...(updated[entity.id] || {}) };
+          fields.forEach((f: string) => {
+            if (row[f] !== undefined) {
+              currentEntityStats[f] = Number(row[f]) || 0;
+            }
+          });
+          updated[entity.id] = currentEntityStats;
+        }
+      });
+      return updated;
     });
     toast.success('Data imported successfully!');
   };

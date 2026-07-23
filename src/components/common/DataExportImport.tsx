@@ -121,21 +121,29 @@ export const DataExportImport: React.FC<DataExportImportProps> = ({ data, column
       complete: (results) => {
         try {
           const importedData = results.data.map((row: any) => {
-             // Find the barangay column key, as it might have BOM or different casing
-             const barangayKey = Object.keys(row).find(k => k.trim().toLowerCase() === 'barangay');
-             if (!barangayKey) throw new Error("Missing Barangay column in CSV");
+             // Find the barangay / school column key (handles BOM, whitespace, casing, or fallback to first column)
+             const barangayKey = Object.keys(row).find(k => {
+               const cleanK = k.replace(/^\ufeff/, '').trim().toLowerCase();
+               return cleanK === 'barangay' || cleanK === 'school' || cleanK === 'name';
+             }) || Object.keys(row)[0];
              
-             const parsedRow: any = { barangay_name: row[barangayKey] || '' };
+             if (!barangayKey) throw new Error("Missing entity column in CSV");
+             
+             const parsedRow: any = { barangay_name: (row[barangayKey] || '').toString().trim() };
              columns.forEach(col => {
-               const matchingKey = Object.keys(row).find(k => k.trim().toLowerCase() === col.header.trim().toLowerCase());
+               const matchingKey = Object.keys(row).find(k => {
+                 const cleanK = k.replace(/^\ufeff/, '').trim().toLowerCase();
+                 const cleanHeader = col.header.replace(/^\ufeff/, '').trim().toLowerCase();
+                 return cleanK === cleanHeader;
+               });
                if (matchingKey) {
                  const val = row[matchingKey];
                  if (val !== undefined && val !== null && val !== '') {
                    if (col.key === 'barangay_name') {
                      parsedRow[col.key] = val.toString().trim();
                    } else {
-                     const cleanVal = typeof val === 'string' ? val.replace(/,/g, '') : val;
-                     parsedRow[col.key] = parseInt(cleanVal) || 0;
+                     const cleanVal = typeof val === 'string' ? val.replace(/,/g, '').trim() : val;
+                     parsedRow[col.key] = isNaN(Number(cleanVal)) ? 0 : Number(cleanVal);
                    }
                  }
                }

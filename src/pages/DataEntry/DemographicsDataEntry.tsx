@@ -98,17 +98,29 @@ export default function DemographicsDataEntry() {
   };
 
   const handleImport = (importedData: any[]) => {
-    importedData.forEach((row) => {
-      const b = barangays.find(b => b.name.toLowerCase() === row.barangay_name?.toLowerCase());
-      if (b) {
-        Object.keys(row).forEach(key => {
-          if (key !== 'barangay_name') {
-            if (['male_count', 'female_count', 'total_population', 'total_households', 'household_heads_total'].includes(key)) {
-              handlePopChange(b.id, key as keyof PopStat, String(row[key]));
-            }
-          }
-        });
-      }
+    setPopStats(prev => {
+      const updated = { ...prev };
+      importedData.forEach((row) => {
+        const bName = (row.barangay_name || '').trim().toLowerCase();
+        const b = barangays.find(b => b.name.trim().toLowerCase() === bName);
+        if (b) {
+          const m = Number(row.male_count || 0);
+          const f = Number(row.female_count || 0);
+          const totPop = row.total_population != null && row.total_population !== '' ? Number(row.total_population) : null;
+          const totHh = row.total_households != null && row.total_households !== '' ? Number(row.total_households) : (row.household_heads_total != null ? Number(row.household_heads_total) : null);
+
+          const hasMF = m > 0 || f > 0;
+          updated[b.id] = {
+            ...updated[b.id],
+            male_count: m,
+            female_count: f,
+            total_population: hasMF ? null : totPop,
+            total_households: totHh,
+            household_heads_total: totHh,
+          };
+        }
+      });
+      return updated;
     });
     toast.success('Data imported successfully!');
   };
@@ -233,7 +245,20 @@ export default function DemographicsDataEntry() {
       latestApproval={latestApproval}
       isSuperAdmin={isSuperAdmin}
       canWrite={canWrite}
-      exportData={barangays.map(b => ({ barangay_name: b.name, ...popStats[b.id] }))}
+      exportData={barangays.map(b => {
+        const pRow = popStats[b.id] || {};
+        const mM = pRow.male_count != null ? Number(pRow.male_count) : 0;
+        const fF = pRow.female_count != null ? Number(pRow.female_count) : 0;
+        const totP = pRow.total_population ?? ((mM + fF) || 0);
+        const totHh = pRow.total_households ?? pRow.household_heads_total ?? 0;
+        return {
+          barangay_name: b.name,
+          male_count: mM,
+          female_count: fF,
+          total_population: totP,
+          total_households: totHh,
+        };
+      })}
       exportColumns={columns}
       exportTitle={`Demographics & Population (${year})`}
       onImport={handleImport}
