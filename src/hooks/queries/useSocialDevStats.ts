@@ -36,8 +36,23 @@ export function useSocialDevStats(year: number) {
       const eTot: number[] = [];
       let enrolledHasTotalOnly = false;
       
+      const primarySchools: string[] = [];
+      const primaryEM: number[] = [];
+      const primaryEF: number[] = [];
+      const primaryETot: number[] = [];
+      let primaryHasTotalOnly = false;
+
+      const secondarySchools: string[] = [];
+      const secondaryEM: number[] = [];
+      const secondaryEF: number[] = [];
+      const secondaryETot: number[] = [];
+      let secondaryHasTotalOnly = false;
+
       sData.forEach(s => {
-        schoolNames.push(s.name);
+        const isPrivate = s.name.includes('Holy Angel') || s.name.includes('Moises D. Fernandez') || s.district === 'School-Private';
+        const displayName = isPrivate ? `${s.name} (Private)` : s.name;
+        
+        schoolNames.push(displayName);
         const st = socMap.get(s.id) || {};
         
         const enr = extractStatField(st, 'student_enrollment');
@@ -56,6 +71,20 @@ export function useSocialDevStats(year: number) {
         eM.push(enr.m);
         eF.push(enr.f);
         eTot.push(enr.total);
+
+        if (s.district === 'School-Secondary') {
+          secondarySchools.push(displayName);
+          if (enr.isTotalOnly) secondaryHasTotalOnly = true;
+          secondaryEM.push(enr.m);
+          secondaryEF.push(enr.f);
+          secondaryETot.push(enr.total);
+        } else {
+          primarySchools.push(displayName);
+          if (enr.isTotalOnly) primaryHasTotalOnly = true;
+          primaryEM.push(enr.m);
+          primaryEF.push(enr.f);
+          primaryETot.push(enr.total);
+        }
       });
 
       // Health & Welfare Stats -> from Barangays
@@ -104,6 +133,18 @@ export function useSocialDevStats(year: number) {
         barangayIds: bIds,
         schools: schoolNames,
         
+        primarySchools,
+        primaryHasTotalOnly,
+        primaryEnrolledSeries: primaryHasTotalOnly
+          ? [{ name: "Total", data: primaryETot }]
+          : [{ name: "Male", data: primaryEM }, { name: "Female", data: primaryEF }],
+
+        secondarySchools,
+        secondaryHasTotalOnly,
+        secondaryEnrolledSeries: secondaryHasTotalOnly
+          ? [{ name: "Total", data: secondaryETot }]
+          : [{ name: "Male", data: secondaryEM }, { name: "Female", data: secondaryEF }],
+
         enrolledHasTotalOnly,
         enrolledSeries: enrolledHasTotalOnly 
           ? [{ name: "Total", data: eTot }] 

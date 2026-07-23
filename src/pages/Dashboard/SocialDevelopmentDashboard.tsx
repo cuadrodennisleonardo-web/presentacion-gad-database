@@ -68,16 +68,30 @@ export default function SocialDevelopmentDashboard() {
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <ErrorBoundary>
               <MultiSeriesChart 
-                title={stats?.enrolledHasTotalOnly 
-                  ? `Student Enrollment by School (Total) (${year}-${year + 1})` 
-                  : `Student Enrollment by School (M vs F) (${year}-${year + 1})`}
+                title={stats?.primaryHasTotalOnly 
+                  ? `Primary & Elementary School Enrollment (Total) (${year}-${year + 1})` 
+                  : `Primary & Elementary School Enrollment (M vs F) (${year}-${year + 1})`}
                 type="bar"
-                categories={stats?.schools || []}
-                series={stats?.enrolledSeries || []}
-                colors={stats?.enrolledHasTotalOnly ? ["#3b82f6"] : [CHART_COLORS.male, CHART_COLORS.female]}
+                categories={stats?.primarySchools || []}
+                series={stats?.primaryEnrolledSeries || []}
+                colors={stats?.primaryHasTotalOnly ? ["#3b82f6"] : [CHART_COLORS.male, CHART_COLORS.female]}
               />
             </ErrorBoundary>
             
+            <ErrorBoundary>
+              <MultiSeriesChart 
+                title={stats?.secondaryHasTotalOnly 
+                  ? `Secondary School Enrollment (Total) (${year}-${year + 1})` 
+                  : `Secondary School Enrollment (M vs F) (${year}-${year + 1})`}
+                type="bar"
+                categories={stats?.secondarySchools || []}
+                series={stats?.secondaryEnrolledSeries || []}
+                colors={stats?.secondaryHasTotalOnly ? ["#6366f1"] : [CHART_COLORS.male, CHART_COLORS.female]}
+              />
+            </ErrorBoundary>
+          </div>
+
+          <div className="mt-6">
             <ErrorBoundary>
               <MultiSeriesChart 
                 title={stats?.malHasTotalOnly 

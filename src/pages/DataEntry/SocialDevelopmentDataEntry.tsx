@@ -389,57 +389,107 @@ export default function SocialDevelopmentDataEntry() {
              </tr>
         </thead>
         <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
-          {entities.map((b, index) => {
-            const row = stats[b.id] || {};
-            const prevDistrict = index > 0 ? entities[index - 1].district : null;
-            const showCategoryHeader = isEducation && b.district !== prevDistrict;
-            const categoryLabel = b.district === 'School-Primary' ? 'PRIMARY & ELEMENTARY SCHOOLS' : b.district === 'School-Secondary' ? 'SECONDARY SCHOOLS' : b.district === 'School-Private' ? 'PRIVATE SCHOOLS' : '';
-            
-            if (activeTab === 'education') {
-              return (
-                <React.Fragment key={b.id}>
-                  {showCategoryHeader && (
-                    <tr>
-                      <td colSpan={10} className="px-4 py-2.5 text-xs font-bold tracking-wider text-white bg-brand-500 dark:bg-brand-600 border-y-2 border-brand-600 dark:border-brand-700">
-                        {categoryLabel}
-                      </td>
-                    </tr>
-                  )}
-                <tr className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                  <td className="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white ">{b.name}</td>
-                  {['student_enrollment_', 'drop_out_', 'osy_'].map((prefix, idx) => 
-                    renderIndicatorCells(b.id, row, prefix, idx === 2)
-                  )}
-                </tr>
-                </React.Fragment>
-              );
-            }
-            
-            if (activeTab === 'welfare') {
-              return (
-                <tr key={b.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                  <td className="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white ">{b.name}</td>
-                  {['pwd_', 'four_ps_', 'senior_citizens_', 'solo_parents_'].map((prefix, idx) => 
-                    renderIndicatorCells(b.id, row, prefix, idx === 3)
-                  )}
-                </tr>
-              );
-            }
+          {(() => {
+            const calculateCategoryTotals = (districtKey: string, prefix: string) => {
+              let mSum = 0;
+              let fSum = 0;
+              let totalSum = 0;
+              entities.filter(sch => sch.district === districtKey).forEach(sch => {
+                const r = stats[sch.id] || {};
+                const m = Number(r[`${prefix}m` as keyof SocialStat] || 0);
+                const f = Number(r[`${prefix}f` as keyof SocialStat] || 0);
+                const tot = r[`${prefix}total` as keyof SocialStat] != null ? Number(r[`${prefix}total` as keyof SocialStat]) : null;
+                mSum += m;
+                fSum += f;
+                totalSum += (tot ?? (m + f));
+              });
+              return { mSum, fSum, totalSum };
+            };
 
-            if (activeTab === 'health') {
+            const renderSubtotalRow = (dist: string) => {
+              const distLabel = dist === 'School-Primary' ? 'Subtotal Primary & Elementary' : dist === 'School-Secondary' ? 'Subtotal Secondary' : 'Subtotal';
               return (
-                <tr key={b.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                  <td className="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white ">{b.name}</td>
-                  {renderIndicatorCells(b.id, row, 'malnourished_', false)}
-                  
-                  <td className="px-0 py-0 border-l border-r dark:border-gray-800 "><input type="number" min="0" value={row['teenage_pregnancy'] || ''} onChange={(e) => handleChange(b.id, 'teenage_pregnancy', e.target.value)} disabled={!canWrite || isLocked} className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" /></td>
-                  <td className="px-0 py-0 border-r dark:border-gray-800 "><input type="number" min="0" value={row['maternal_mortality'] || ''} onChange={(e) => handleChange(b.id, 'maternal_mortality', e.target.value)} disabled={!canWrite || isLocked} className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" /></td>
+                <tr key={`subtotal-${dist}`} className="bg-blue-50/80 dark:bg-blue-950/40 font-bold border-t-2 border-b-2 border-blue-200 dark:border-blue-800/60">
+                  <td className="whitespace-nowrap px-4 py-2.5 font-bold text-blue-900 dark:text-blue-200 text-xs uppercase tracking-wider">{distLabel}</td>
+                  {['student_enrollment_', 'drop_out_', 'osy_'].map((prefix, idx) => {
+                    const { mSum, fSum, totalSum } = calculateCategoryTotals(dist, prefix);
+                    return (
+                      <React.Fragment key={prefix}>
+                        <td className="px-2 py-2.5 text-center border-l dark:border-gray-800 text-blue-800 dark:text-blue-300 text-xs font-bold">{mSum.toLocaleString()}</td>
+                        <td className="px-2 py-2.5 text-center text-blue-800 dark:text-blue-300 text-xs font-bold">{fSum.toLocaleString()}</td>
+                        <td className={`px-4 py-2.5 text-center font-extrabold bg-blue-100/70 dark:bg-blue-900/50 text-blue-950 dark:text-blue-100 text-xs ${idx === 2 ? 'border-r dark:border-gray-800' : ''}`}>
+                          {totalSum.toLocaleString()}
+                        </td>
+                      </React.Fragment>
+                    );
+                  })}
                 </tr>
               );
-            }
-            
-            return null;
-          })}
+            };
+
+            return entities.map((b, index) => {
+              const row = stats[b.id] || {};
+              const prevDistrict = index > 0 ? entities[index - 1].district : null;
+              const isCategoryHeader = isEducation && b.district !== prevDistrict;
+              const isLastItem = isEducation && index === entities.length - 1;
+              const categoryLabel = b.district === 'School-Primary' ? 'PRIMARY & ELEMENTARY SCHOOLS' : b.district === 'School-Secondary' ? 'SECONDARY SCHOOLS' : b.district === 'School-Private' ? 'PRIVATE SCHOOLS' : '';
+              const isPrivate = b.name.includes('Holy Angel') || b.name.includes('Moises D. Fernandez') || b.district === 'School-Private';
+              
+              if (activeTab === 'education') {
+                return (
+                  <React.Fragment key={b.id}>
+                    {index > 0 && isCategoryHeader && prevDistrict && renderSubtotalRow(prevDistrict)}
+                    {isCategoryHeader && (
+                      <tr>
+                        <td colSpan={10} className="px-4 py-2.5 text-xs font-bold tracking-wider text-white bg-brand-500 dark:bg-brand-600 border-y-2 border-brand-600 dark:border-brand-700 uppercase">
+                          {categoryLabel}
+                        </td>
+                      </tr>
+                    )}
+                    <tr className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                      <td className="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white flex items-center justify-between gap-2">
+                        <span>{b.name}</span>
+                        {isPrivate && (
+                          <span className="inline-flex items-center rounded-md bg-purple-100 dark:bg-purple-900/40 px-2 py-0.5 text-xs font-semibold text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+                            (Private)
+                          </span>
+                        )}
+                      </td>
+                      {['student_enrollment_', 'drop_out_', 'osy_'].map((prefix, idx) => 
+                        renderIndicatorCells(b.id, row, prefix, idx === 2)
+                      )}
+                    </tr>
+                    {isLastItem && b.district && renderSubtotalRow(b.district)}
+                  </React.Fragment>
+                );
+              }
+              
+              if (activeTab === 'welfare') {
+                return (
+                  <tr key={b.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                    <td className="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white ">{b.name}</td>
+                    {['pwd_', 'four_ps_', 'senior_citizens_', 'solo_parents_'].map((prefix, idx) => 
+                      renderIndicatorCells(b.id, row, prefix, idx === 3)
+                    )}
+                  </tr>
+                );
+              }
+
+              if (activeTab === 'health') {
+                return (
+                  <tr key={b.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                    <td className="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white ">{b.name}</td>
+                    {renderIndicatorCells(b.id, row, 'malnourished_', false)}
+                    
+                    <td className="px-0 py-0 border-l border-r dark:border-gray-800 "><input type="number" min="0" value={row['teenage_pregnancy'] || ''} onChange={(e) => handleChange(b.id, 'teenage_pregnancy', e.target.value)} disabled={!canWrite || isLocked} className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" /></td>
+                    <td className="px-0 py-0 border-r dark:border-gray-800 "><input type="number" min="0" value={row['maternal_mortality'] || ''} onChange={(e) => handleChange(b.id, 'maternal_mortality', e.target.value)} disabled={!canWrite || isLocked} className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" /></td>
+                  </tr>
+                );
+              }
+              
+              return null;
+            });
+          })()}
         </tbody>
         <tfoot className="bg-amber-50/80 dark:bg-amber-950/30 font-bold border-t-2 border-amber-300 dark:border-amber-800 text-gray-900 dark:text-white">
           {(() => {

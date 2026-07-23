@@ -17,7 +17,21 @@ export async function fetchSchools() {
     .order('name');
   if (error) throw error;
   
-  return (data || []).filter(b => b.district && b.district.startsWith('School-'));
+  const rawSchools = (data || []).filter(b => b.district && b.district.startsWith('School-'));
+  
+  const schools = rawSchools.map(b => {
+    let district = b.district;
+    if (b.name.includes('Holy Angel')) district = 'School-Primary';
+    if (b.name.includes('Moises D. Fernandez')) district = 'School-Secondary';
+    return { ...b, district };
+  });
+
+  return schools.sort((a, b) => {
+    if (a.district !== b.district) {
+      return a.district.localeCompare(b.district);
+    }
+    return a.name.localeCompare(b.name);
+  });
 }
 
 export async function fetchBarangayOptions() {
