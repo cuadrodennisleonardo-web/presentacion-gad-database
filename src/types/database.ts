@@ -146,6 +146,9 @@ export interface Database {
           four_ps_m: number | null
           four_ps_f: number | null
           four_ps_total: number | null
+          four_ps_children_m: number | null
+          four_ps_children_f: number | null
+          four_ps_children_total: number | null
           senior_citizens_m: number | null
           senior_citizens_f: number | null
           senior_citizens_total: number | null
@@ -180,6 +183,9 @@ export interface Database {
           four_ps_m?: number | null
           four_ps_f?: number | null
           four_ps_total?: number | null
+          four_ps_children_m?: number | null
+          four_ps_children_f?: number | null
+          four_ps_children_total?: number | null
           senior_citizens_m?: number | null
           senior_citizens_f?: number | null
           senior_citizens_total?: number | null
@@ -214,6 +220,9 @@ export interface Database {
           four_ps_m?: number | null
           four_ps_f?: number | null
           four_ps_total?: number | null
+          four_ps_children_m?: number | null
+          four_ps_children_f?: number | null
+          four_ps_children_total?: number | null
           senior_citizens_m?: number | null
           senior_citizens_f?: number | null
           senior_citizens_total?: number | null

@@ -88,7 +88,7 @@ export function useSocialDevStats(year: number) {
       });
 
       // Health & Welfare Stats -> from Barangays
-      let tPwds = 0, tFourPs = 0, tSeniors = 0, tSolo = 0;
+      let tPwds = 0, tFourPs = 0, tFourPsChildren = 0, tSeniors = 0, tSolo = 0;
       let tTeen = 0, tMaternal = 0;
       const bNames: string[] = [];
       const bIds: string[] = [];
@@ -104,6 +104,7 @@ export function useSocialDevStats(year: number) {
 
         const pwd = extractStatField(st, 'pwd');
         const fps = extractStatField(st, 'four_ps');
+        const fpsCh = extractStatField(st, 'four_ps_children');
         const sen = extractStatField(st, 'senior_citizens');
         const solo = extractStatField(st, 'solo_parents');
         const mal = extractStatField(st, 'malnourished');
@@ -112,6 +113,7 @@ export function useSocialDevStats(year: number) {
         
         tPwds += pwd.total;
         tFourPs += fps.total;
+        tFourPsChildren += fpsCh.total;
         tSeniors += sen.total;
         tSolo += solo.total;
         tTeen += Number(st.teenage_pregnancy || 0);
@@ -126,7 +128,7 @@ export function useSocialDevStats(year: number) {
         enrolledM: tEnrolledM, enrolledF: tEnrolledF, enrolledTotal: tEnrolledTotal,
         dropOuts: tDropOuts, osy: tOsy, 
         
-        pwds: tPwds, fourPs: tFourPs, seniorCitizens: tSeniors, soloParents: tSolo,
+        pwds: tPwds, fourPs: tFourPs, fourPsChildren: tFourPsChildren, seniorCitizens: tSeniors, soloParents: tSolo,
         teenPregnancy: tTeen, maternalMortality: tMaternal,
         
         barangays: bNames,

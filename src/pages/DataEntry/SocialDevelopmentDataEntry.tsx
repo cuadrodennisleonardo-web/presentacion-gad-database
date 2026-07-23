@@ -35,7 +35,7 @@ export default function SocialDevelopmentDataEntry() {
 
   const nativeTabs = [
     { key: 'education', label: 'Education' },
-    { key: 'health', label: 'Health & Nutrition (1st Quarter)' },
+    { key: 'health', label: 'Health & Nutrition' },
     { key: 'welfare', label: 'Social Welfare' },
   ];
 
@@ -140,6 +140,9 @@ export default function SocialDevelopmentDataEntry() {
           { header: '4Ps Beneficiaries (M)', key: 'four_ps_m' },
           { header: '4Ps Beneficiaries (F)', key: 'four_ps_f' },
           { header: '4Ps Beneficiaries (Total)', key: 'four_ps_total' },
+          { header: '4Ps Children in Education (M)', key: 'four_ps_children_m' },
+          { header: '4Ps Children in Education (F)', key: 'four_ps_children_f' },
+          { header: '4Ps Children in Education (Total)', key: 'four_ps_children_total' },
           { header: 'Senior Citizens (M)', key: 'senior_citizens_m' },
           { header: 'Senior Citizens (F)', key: 'senior_citizens_f' },
           { header: 'Senior Citizens (Total)', key: 'senior_citizens_total' },
@@ -366,6 +369,7 @@ export default function SocialDevelopmentDataEntry() {
                  <th className="whitespace-nowrap px-4 py-3 font-medium border-b dark:border-gray-800" rowSpan={2}>Barangay</th>
                  <th className="whitespace-nowrap px-4 py-2 font-medium text-center border-l dark:border-gray-800 text-purple-600 dark:text-purple-400" colSpan={3}>Persons with Disability (PWD)</th>
                  <th className="whitespace-nowrap px-4 py-2 font-medium text-center border-l dark:border-gray-800 text-emerald-600 dark:text-emerald-400" colSpan={3}>4Ps Beneficiaries</th>
+                 <th className="whitespace-nowrap px-4 py-2 font-medium text-center border-l dark:border-gray-800 text-teal-600 dark:text-teal-400" colSpan={3}>4Ps Children in Education</th>
                  <th className="whitespace-nowrap px-4 py-2 font-medium text-center border-l dark:border-gray-800 text-amber-600 dark:text-amber-400" colSpan={3}>Senior Citizens</th>
                  <th className="whitespace-nowrap px-4 py-2 font-medium text-center border-l border-r dark:border-gray-800 text-blue-600 dark:text-blue-400" colSpan={3}>Solo Parents</th>
                </tr>
@@ -385,11 +389,11 @@ export default function SocialDevelopmentDataEntry() {
                    <th className="px-2 py-2 text-center bg-gray-100 dark:bg-gray-800/50">Total</th>
                  </React.Fragment>
                )}
-               {activeTab === 'welfare' && Array.from({ length: 4 }).map((_, i) => (
+               {activeTab === 'welfare' && Array.from({ length: 5 }).map((_, i) => (
                  <React.Fragment key={i}>
                    <th className="px-2 py-2 text-center border-l dark:border-gray-800">M</th>
                    <th className="px-2 py-2 text-center">F</th>
-                   <th className={`px-2 py-2 text-center bg-gray-100 dark:bg-gray-800/50 ${i === 3 ? 'border-r dark:border-gray-800' : ''}`}>Total</th>
+                   <th className={`px-2 py-2 text-center bg-gray-100 dark:bg-gray-800/50 ${i === 4 ? 'border-r dark:border-gray-800' : ''}`}>Total</th>
                  </React.Fragment>
                ))}
              </tr>
@@ -474,8 +478,8 @@ export default function SocialDevelopmentDataEntry() {
                 return (
                   <tr key={b.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                     <td className="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white ">{b.name}</td>
-                    {['pwd_', 'four_ps_', 'senior_citizens_', 'solo_parents_'].map((prefix, idx) => 
-                      renderIndicatorCells(b.id, row, prefix, idx === 3)
+                    {['pwd_', 'four_ps_', 'four_ps_children_', 'senior_citizens_', 'solo_parents_'].map((prefix, idx) => 
+                      renderIndicatorCells(b.id, row, prefix, idx === 4)
                     )}
                   </tr>
                 );
@@ -548,13 +552,13 @@ export default function SocialDevelopmentDataEntry() {
               return (
                 <tr>
                   <td className="whitespace-nowrap px-4 py-3 font-extrabold text-brand-700 dark:text-brand-300">Total</td>
-                  {['pwd_', 'four_ps_', 'senior_citizens_', 'solo_parents_'].map((prefix, idx) => {
+                  {['pwd_', 'four_ps_', 'four_ps_children_', 'senior_citizens_', 'solo_parents_'].map((prefix, idx) => {
                     const { mSum, fSum, totalSum } = calculateTotals(prefix);
                     return (
                       <React.Fragment key={prefix}>
                         <td className="px-2 py-3 text-center border-l dark:border-gray-800 text-blue-700 dark:text-blue-300 font-bold">{mSum.toLocaleString()}</td>
                         <td className="px-2 py-3 text-center text-blue-700 dark:text-blue-300 font-bold">{fSum.toLocaleString()}</td>
-                        <td className={`px-4 py-3 text-center font-extrabold bg-amber-100/80 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 ${idx === 3 ? 'border-r dark:border-gray-800' : ''}`}>
+                        <td className={`px-4 py-3 text-center font-extrabold bg-amber-100/80 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 ${idx === 4 ? 'border-r dark:border-gray-800' : ''}`}>
                           {totalSum.toLocaleString()}
                         </td>
                       </React.Fragment>
@@ -625,8 +629,8 @@ export default function SocialDevelopmentDataEntry() {
             if (activeTab === 'welfare') {
               return (
                 <MobileDataCard key={b.id} title={b.name}>
-                  {['Persons with Disability (PWD)', '4Ps Beneficiaries', 'Senior Citizens', 'Solo Parents'].map((label, idx) => {
-                    const prefix = ['pwd_', 'four_ps_', 'senior_citizens_', 'solo_parents_'][idx];
+                  {['Persons with Disability (PWD)', '4Ps Beneficiaries', '4Ps Children in Education', 'Senior Citizens', 'Solo Parents'].map((label, idx) => {
+                    const prefix = ['pwd_', 'four_ps_', 'four_ps_children_', 'senior_citizens_', 'solo_parents_'][idx];
                     const kM = prefix + 'm';
                     const kF = prefix + 'f';
                     const m = (row as any)[kM] || 0;

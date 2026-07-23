@@ -25,6 +25,8 @@ const FIELD_LABELS: Record<string, string> = {
   pwd_f: 'PWD (F)',
   four_ps_m: '4Ps Beneficiaries (M)',
   four_ps_f: '4Ps Beneficiaries (F)',
+  four_ps_children_m: '4Ps Children in Education (M)',
+  four_ps_children_f: '4Ps Children in Education (F)',
   senior_citizens_m: 'Senior Citizens (M)',
   senior_citizens_f: 'Senior Citizens (F)',
   // Education (social_dev_stats)
@@ -82,7 +84,7 @@ const FIELD_ORDER: Record<string, string[]> = {
   'Social Development|Demographics': ['male_count', 'female_count', 'total_population', 'total_households', 'household_heads_total', 'solo_parents_m', 'solo_parents_f'],
   'Social Development|Education': ['student_enrollment_m', 'student_enrollment_f', 'drop_out_m', 'drop_out_f', 'osy_m', 'osy_f'],
   'Social Development|Health & Nutrition': ['malnourished_m', 'malnourished_f', 'teenage_pregnancy', 'maternal_mortality'],
-  'Social Development|Social Welfare': ['pwd_m', 'pwd_f', 'four_ps_m', 'four_ps_f', 'senior_citizens_m', 'senior_citizens_f'],
+  'Social Development|Social Welfare': ['pwd_m', 'pwd_f', 'four_ps_m', 'four_ps_f', 'four_ps_children_m', 'four_ps_children_f', 'senior_citizens_m', 'senior_citizens_f', 'solo_parents_m', 'solo_parents_f'],
   'Economic Development|Labor Force': ['employed_m', 'employed_f', 'unemployed_m', 'unemployed_f'],
   'Economic Development|Agriculture & Fisheries': ['farmers_m', 'farmers_f', 'fisherfolks_m', 'fisherfolks_f'],
   'Economic Development|Commerce & Trade': ['business_owners_m', 'business_owners_f', 'ambulant_vendors_m', 'ambulant_vendors_f'],
