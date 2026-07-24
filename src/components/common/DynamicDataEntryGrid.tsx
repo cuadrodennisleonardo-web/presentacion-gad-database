@@ -44,6 +44,8 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
   });
 
   const sData = schema.schema as any;
+  const isPercentage = sData?.isPercentage || sData?.tableType === 'percentage';
+  const percentageGroups = (sData?.groups || []) as { id: string; totalTitle: string; fields: { id: string; name: string }[] }[];
   const fields = (Array.isArray(sData) ? sData : (sData?.fields || [])) as FieldDef[];
   const isLocked = latestApproval && latestApproval.status === 'pending' && !isSuperAdmin;
 
@@ -160,16 +162,28 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
         
         let hasChanges = false;
         const currentChanges: any = {};
-        
-        fields.forEach(f => {
-          const oldVal = originalRow[f.id] || {};
-          const newVal = row[f.id] || {};
-          
-          if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
-            hasChanges = true;
-          }
-          currentChanges[f.id] = { old: oldVal, new: newVal };
-        });
+
+        if (isPercentage) {
+          percentageGroups.forEach(g => {
+            const oldVal = originalRow[g.id] || {};
+            const newVal = row[g.id] || {};
+            
+            if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
+              hasChanges = true;
+            }
+            currentChanges[g.id] = { old: oldVal, new: newVal };
+          });
+        } else {
+          fields.forEach(f => {
+            const oldVal = originalRow[f.id] || {};
+            const newVal = row[f.id] || {};
+            
+            if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
+              hasChanges = true;
+            }
+            currentChanges[f.id] = { old: oldVal, new: newVal };
+          });
+        }
 
         if (hasChanges) {
           changedData[b.id] = currentChanges;
@@ -198,31 +212,57 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
     }
   };
 
-  const exportColumns = [
-    { header: 'Barangay', key: 'barangay_name' },
-    ...fields.flatMap(f => {
-      if (f.type === 'gender_split') {
-        return [
-          { header: `${f.name} (M)`, key: `${f.id}_m` },
-          { header: `${f.name} (F)`, key: `${f.id}_f` }
-        ];
-      } else {
-        return [{ header: f.name, key: f.id }];
-      }
-    })
-  ];
+  const exportColumns = isPercentage
+    ? [
+        { header: 'Barangay', key: 'barangay_name' },
+        ...percentageGroups.flatMap(g => [
+          { header: `${g.totalTitle}`, key: `${g.id}_total` },
+          ...g.fields.flatMap(sf => [
+            { header: `${sf.name}`, key: `${g.id}_${sf.id}` },
+            { header: `% ${sf.name}`, key: `${g.id}_${sf.id}_pct` }
+          ])
+        ])
+      ]
+    : [
+        { header: 'Barangay', key: 'barangay_name' },
+        ...fields.flatMap(f => {
+          if (f.type === 'gender_split') {
+            return [
+              { header: `${f.name} (M)`, key: `${f.id}_m` },
+              { header: `${f.name} (F)`, key: `${f.id}_f` }
+            ];
+          } else {
+            return [{ header: f.name, key: f.id }];
+          }
+        })
+      ];
 
   const exportData = barangays.map(b => {
     const bData = data[b.id] || {};
     const row: any = { barangay_name: b.name };
-    fields.forEach(f => {
-       if (f.type === 'gender_split') {
-         row[`${f.id}_m`] = bData[f.id]?.m;
-         row[`${f.id}_f`] = bData[f.id]?.f;
-       } else {
-         row[f.id] = bData[f.id]?.value;
-       }
-    });
+
+    if (isPercentage) {
+      percentageGroups.forEach(g => {
+        const gData = bData[g.id] || {};
+        const total = Number(gData.total || 0);
+        row[`${g.id}_total`] = gData.total;
+        
+        g.fields.forEach(sf => {
+          const count = Number(gData[sf.id] || 0);
+          row[`${g.id}_${sf.id}`] = gData[sf.id];
+          row[`${g.id}_${sf.id}_pct`] = total > 0 ? `${((count / total) * 100).toFixed(1)}%` : '--';
+        });
+      });
+    } else {
+      fields.forEach(f => {
+         if (f.type === 'gender_split') {
+           row[`${f.id}_m`] = bData[f.id]?.m;
+           row[`${f.id}_f`] = bData[f.id]?.f;
+         } else {
+           row[f.id] = bData[f.id]?.value;
+         }
+      });
+    }
     return row;
   });
 
@@ -233,28 +273,51 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
       const b = barangays.find(b => b.name.trim().toLowerCase() === bName);
       if (b) {
         newData[b.id] = { ...(newData[b.id] || {}) };
-        fields.forEach(f => {
-          if (f.type === 'gender_split') {
-            const m = row[`${f.id}_m`];
-            const fVal = row[`${f.id}_f`];
-            if (m !== undefined && m !== null && m !== '') {
-               newData[b.id][f.id] = { ...(newData[b.id][f.id] || {}), m: Number(m) };
+
+        if (isPercentage) {
+          percentageGroups.forEach(g => {
+            const totVal = row[`${g.id}_total`] ?? headKeyMatch(row, g.totalTitle);
+            if (totVal !== undefined && totVal !== null && totVal !== '') {
+              newData[b.id][g.id] = { ...(newData[b.id][g.id] || {}), total: Number(totVal) };
             }
-            if (fVal !== undefined && fVal !== null && fVal !== '') {
-               newData[b.id][f.id] = { ...(newData[b.id][f.id] || {}), f: Number(fVal) };
+            g.fields.forEach(sf => {
+              const val = row[`${g.id}_${sf.id}`] ?? headKeyMatch(row, sf.name);
+              if (val !== undefined && val !== null && val !== '') {
+                newData[b.id][g.id] = { ...(newData[b.id][g.id] || {}), [sf.id]: Number(val) };
+              }
+            });
+          });
+        } else {
+          fields.forEach(f => {
+            if (f.type === 'gender_split') {
+              const m = row[`${f.id}_m`];
+              const fVal = row[`${f.id}_f`];
+              if (m !== undefined && m !== null && m !== '') {
+                 newData[b.id][f.id] = { ...(newData[b.id][f.id] || {}), m: Number(m) };
+              }
+              if (fVal !== undefined && fVal !== null && fVal !== '') {
+                 newData[b.id][f.id] = { ...(newData[b.id][f.id] || {}), f: Number(fVal) };
+              }
+            } else {
+              const val = row[f.id];
+              if (val !== undefined && val !== null && val !== '') {
+                 newData[b.id][f.id] = { ...(newData[b.id][f.id] || {}), value: Number(val) };
+              }
             }
-          } else {
-            const val = row[f.id];
-            if (val !== undefined && val !== null && val !== '') {
-               newData[b.id][f.id] = { ...(newData[b.id][f.id] || {}), value: Number(val) };
-            }
-          }
-        });
+          });
+        }
       }
     });
     setData(newData);
     toast.success('Data imported successfully. Review and save changes.');
   };
+
+  const headKeyMatch = (row: any, name: string) => {
+    const key = Object.keys(row).find(k => k.toLowerCase() === name.toLowerCase());
+    return key ? row[key] : undefined;
+  };
+
+  const hasNoFields = isPercentage ? percentageGroups.length === 0 : fields.length === 0;
 
   return (
     <div className="space-y-4">
@@ -281,9 +344,195 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
 
       {loading ? (
         <div className="py-10 text-center text-sm text-gray-500">Loading grid...</div>
-      ) : fields.length === 0 ? (
+      ) : hasNoFields ? (
         <div className="py-10 text-center text-sm text-gray-500">No fields defined for this table.</div>
+      ) : isPercentage ? (
+        /* Percentage Table Render */
+        <>
+          <div className="hidden lg:block overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
+            <table className="w-full text-left text-sm text-gray-600 dark:text-gray-300">
+              <thead className="bg-gray-50 text-xs uppercase text-gray-500 dark:bg-gray-800/50 dark:text-gray-400">
+                <tr>
+                  <th className="whitespace-nowrap px-4 py-3 font-medium border-b dark:border-gray-800" rowSpan={2}>{entityName}</th>
+                  {percentageGroups.map((g, gIdx) => (
+                    <th 
+                      key={g.id} 
+                      className={`whitespace-nowrap px-4 py-2 font-bold text-center border-b border-l ${gIdx === percentageGroups.length - 1 ? 'border-r' : ''} dark:border-gray-800 bg-brand-50/50 dark:bg-brand-950/20 text-brand-700 dark:text-brand-300`} 
+                      colSpan={1 + g.fields.length * 2}
+                    >
+                      {g.totalTitle}
+                    </th>
+                  ))}
+                </tr>
+                <tr>
+                  {percentageGroups.map((g) => (
+                    <React.Fragment key={g.id + '_subcols'}>
+                      <th className="px-3 py-2 text-center font-semibold border-l dark:border-gray-800 bg-gray-100/70 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300">
+                        {g.totalTitle} (Count)
+                      </th>
+                      {g.fields.map(sf => (
+                        <React.Fragment key={sf.id}>
+                          <th className="px-3 py-2 text-center font-medium border-l dark:border-gray-800">
+                            {sf.name}
+                          </th>
+                          <th className="px-3 py-2 text-center font-bold bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 border-l dark:border-gray-800">
+                            % {sf.name}
+                          </th>
+                        </React.Fragment>
+                      ))}
+                    </React.Fragment>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
+                {barangays.map((b) => {
+                  const bData = data[b.id] || {};
+
+                  return (
+                    <tr key={b.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                      <td className="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">{b.name}</td>
+                      {percentageGroups.map((g) => {
+                        const gData = bData[g.id] || {};
+                        const totalVal = gData.total !== undefined && gData.total !== null ? Number(gData.total) : 0;
+
+                        return (
+                          <React.Fragment key={g.id}>
+                            <td className="border-l dark:border-gray-800 bg-gray-50/30 dark:bg-gray-900/10">
+                              <input
+                                type="number"
+                                min="0"
+                                placeholder="0"
+                                value={gData.total !== undefined && gData.total !== null ? gData.total : ''}
+                                onChange={(e) => handleChange(b.id, g.id, 'total', e.target.value)}
+                                disabled={!canWrite || isLocked}
+                                className="w-full min-w-[70px] bg-transparent px-2 py-2 text-center font-semibold text-gray-900 dark:text-white outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100"
+                              />
+                            </td>
+                            {g.fields.map(sf => {
+                              const fieldVal = gData[sf.id] !== undefined && gData[sf.id] !== null ? Number(gData[sf.id]) : null;
+                              const pct = totalVal > 0 && fieldVal !== null ? ((fieldVal / totalVal) * 100).toFixed(1) : null;
+
+                              return (
+                                <React.Fragment key={sf.id}>
+                                  <td className="border-l dark:border-gray-800">
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      placeholder="0"
+                                      value={gData[sf.id] !== undefined && gData[sf.id] !== null ? gData[sf.id] : ''}
+                                      onChange={(e) => handleChange(b.id, g.id, sf.id, e.target.value)}
+                                      disabled={!canWrite || isLocked}
+                                      className="w-full min-w-[65px] bg-transparent px-2 py-2 text-center text-gray-900 dark:text-white outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-100"
+                                    />
+                                  </td>
+                                  <td className="border-l dark:border-gray-800 bg-amber-50/40 dark:bg-amber-950/20 text-center font-bold text-amber-700 dark:text-amber-300 px-2 py-2">
+                                    {pct !== null ? `${pct}%` : '--'}
+                                  </td>
+                                </React.Fragment>
+                              );
+                            })}
+                          </React.Fragment>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
+              </tbody>
+              <tfoot className="bg-amber-50/80 dark:bg-amber-950/30 font-bold border-t-2 border-amber-300 dark:border-amber-800 text-gray-900 dark:text-white">
+                <tr>
+                  <td className="whitespace-nowrap px-4 py-3 font-extrabold text-brand-700 dark:text-brand-300">Municipal Total</td>
+                  {percentageGroups.map(g => {
+                    let totalSum = 0;
+                    barangays.forEach(b => {
+                      totalSum += Number(data[b.id]?.[g.id]?.total || 0);
+                    });
+
+                    return (
+                      <React.Fragment key={g.id + '_foot'}>
+                        <td className="px-3 py-3 text-center border-l dark:border-gray-800 font-extrabold text-brand-800 dark:text-brand-200">
+                          {totalSum.toLocaleString()}
+                        </td>
+                        {g.fields.map(sf => {
+                          let subSum = 0;
+                          barangays.forEach(b => {
+                            subSum += Number(data[b.id]?.[g.id]?.[sf.id] || 0);
+                          });
+                          const overallPct = totalSum > 0 ? ((subSum / totalSum) * 100).toFixed(1) : '0.0';
+
+                          return (
+                            <React.Fragment key={sf.id + '_foot'}>
+                              <td className="px-3 py-3 text-center border-l dark:border-gray-800 font-bold text-gray-900 dark:text-white">
+                                {subSum.toLocaleString()}
+                              </td>
+                              <td className="px-3 py-3 text-center border-l dark:border-gray-800 font-extrabold text-amber-800 dark:text-amber-200 bg-amber-100/70 dark:bg-amber-900/40">
+                                {overallPct}%
+                              </td>
+                            </React.Fragment>
+                          );
+                        })}
+                      </React.Fragment>
+                    );
+                  })}
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <div className="block lg:hidden mt-2">
+            {barangays.map(b => {
+              const bData = data[b.id] || {};
+              return (
+                <MobileDataCard key={b.id} title={b.name}>
+                  {percentageGroups.map(g => {
+                    const gData = bData[g.id] || {};
+                    const totalVal = Number(gData.total || 0);
+
+                    return (
+                      <div key={g.id} className="space-y-3 pb-3 border-b border-gray-100 dark:border-gray-800 last:border-0 last:pb-0">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold uppercase text-brand-600 dark:text-brand-400">{g.totalTitle}</span>
+                        </div>
+                        <MobileDataInput label={`${g.totalTitle} (Count)`}>
+                          <input
+                            type="number" min="0" placeholder="0"
+                            value={gData.total !== undefined && gData.total !== null ? gData.total : ''}
+                            onChange={(e) => handleChange(b.id, g.id, 'total', e.target.value)}
+                            disabled={!canWrite || isLocked}
+                            className="w-full px-2 py-2 rounded-lg border border-gray-300 dark:border-gray-800 bg-white dark:bg-gray-900 text-sm text-center font-semibold text-gray-900 dark:text-white outline-none focus:border-brand-500"
+                          />
+                        </MobileDataInput>
+
+                        {g.fields.map(sf => {
+                          const val = gData[sf.id] !== undefined && gData[sf.id] !== null ? Number(gData[sf.id]) : null;
+                          const pct = totalVal > 0 && val !== null ? ((val / totalVal) * 100).toFixed(1) : null;
+
+                          return (
+                            <MobileDataInput key={sf.id} label={sf.name}>
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="number" min="0" placeholder="0"
+                                  value={gData[sf.id] !== undefined && gData[sf.id] !== null ? gData[sf.id] : ''}
+                                  onChange={(e) => handleChange(b.id, g.id, sf.id, e.target.value)}
+                                  disabled={!canWrite || isLocked}
+                                  className="w-full px-2 py-2 rounded-lg border border-gray-300 dark:border-gray-800 bg-white dark:bg-gray-900 text-sm text-center text-gray-900 dark:text-white outline-none focus:border-brand-500"
+                                />
+                                <div className="min-w-[65px] px-2 py-1.5 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 rounded-lg text-xs font-bold text-center border border-amber-200 dark:border-amber-800/40">
+                                  {pct !== null ? `${pct}%` : '--'}
+                                </div>
+                              </div>
+                            </MobileDataInput>
+                          );
+                        })}
+                      </div>
+                    );
+                  })}
+                </MobileDataCard>
+              );
+            })}
+          </div>
+        </>
       ) : (
+        /* Standard / Budget Table Render */
         <>
         <div className="hidden lg:block overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
           <table className="w-full text-left text-sm text-gray-600 dark:text-gray-300">

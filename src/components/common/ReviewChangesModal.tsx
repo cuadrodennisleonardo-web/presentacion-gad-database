@@ -114,12 +114,32 @@ export default function ReviewChangesModal({ isOpen, onClose, approval }: Review
         if (data) {
           const labels: Record<string, string> = {};
           data.forEach(row => {
-            if (Array.isArray(row.schema)) {
-              row.schema.forEach((field: any) => {
+            const sData = row.schema as any;
+            if (Array.isArray(sData)) {
+              sData.forEach((field: any) => {
                 if (field.id && field.name) {
                   labels[field.id.toLowerCase()] = field.name;
                 }
               });
+            } else if (sData) {
+              if (sData.isPercentage || sData.tableType === 'percentage') {
+                (sData.groups || []).forEach((g: any) => {
+                  if (g.id && g.totalTitle) {
+                    labels[g.id.toLowerCase()] = g.totalTitle;
+                  }
+                  (g.fields || []).forEach((sf: any) => {
+                    if (sf.id && sf.name) {
+                      labels[sf.id.toLowerCase()] = sf.name;
+                    }
+                  });
+                });
+              } else if (Array.isArray(sData.fields)) {
+                sData.fields.forEach((field: any) => {
+                  if (field.id && field.name) {
+                    labels[field.id.toLowerCase()] = field.name;
+                  }
+                });
+              }
             }
           });
           setDynamicFieldLabels(labels);
