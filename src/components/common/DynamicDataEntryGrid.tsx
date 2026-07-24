@@ -45,7 +45,7 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
 
   const sData = schema.schema as any;
   const isPercentage = sData?.isPercentage || sData?.tableType === 'percentage';
-  const percentageGroups = (sData?.groups || []) as { id: string; totalTitle: string; fields: { id: string; name: string }[] }[];
+  const percentageGroups = (sData?.groups || []) as { id: string; groupTitle?: string; totalTitle: string; fields: { id: string; name: string }[] }[];
   const fields = (Array.isArray(sData) ? sData : (sData?.fields || [])) as FieldDef[];
   const isLocked = latestApproval && latestApproval.status === 'pending' && !isSuperAdmin;
 
@@ -360,7 +360,7 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
                       className={`whitespace-nowrap px-4 py-2 font-bold text-center border-b border-l ${gIdx === percentageGroups.length - 1 ? 'border-r' : ''} dark:border-gray-800 bg-brand-50/50 dark:bg-brand-950/20 text-brand-700 dark:text-brand-300`} 
                       colSpan={1 + g.fields.length * 2}
                     >
-                      {g.totalTitle}
+                      {g.groupTitle || g.totalTitle}
                     </th>
                   ))}
                 </tr>
@@ -490,7 +490,7 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
                     return (
                       <div key={g.id} className="space-y-3 pb-3 border-b border-gray-100 dark:border-gray-800 last:border-0 last:pb-0">
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold uppercase text-brand-600 dark:text-brand-400">{g.totalTitle}</span>
+                          <span className="text-xs font-bold uppercase text-brand-600 dark:text-brand-400">{g.groupTitle || g.totalTitle}</span>
                         </div>
                         <MobileDataInput label={`${g.totalTitle} (Count)`}>
                           <input

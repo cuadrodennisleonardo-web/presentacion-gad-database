@@ -22,6 +22,7 @@ export interface PercentageSubField {
 
 export interface PercentageGroupDef {
   id: string;
+  groupTitle?: string;
   totalTitle: string;
   fields: PercentageSubField[];
 }
@@ -85,6 +86,7 @@ export default function DynamicTablesPage() {
     setPercentageGroups([
       {
         id: crypto.randomUUID(),
+        groupTitle: '',
         totalTitle: 'Total Households',
         fields: [{ id: crypto.randomUUID(), name: '' }]
       }
@@ -139,6 +141,7 @@ export default function DynamicTablesPage() {
       ...percentageGroups,
       {
         id: crypto.randomUUID(),
+        groupTitle: '',
         totalTitle: '',
         fields: [{ id: crypto.randomUUID(), name: '' }]
       }
@@ -148,6 +151,12 @@ export default function DynamicTablesPage() {
   const removePercentageGroup = (gIdx: number) => {
     const updated = [...percentageGroups];
     updated.splice(gIdx, 1);
+    setPercentageGroups(updated);
+  };
+
+  const updatePercentageSubTableTitle = (gIdx: number, title: string) => {
+    const updated = [...percentageGroups];
+    updated[gIdx] = { ...updated[gIdx], groupTitle: title };
     setPercentageGroups(updated);
   };
 
@@ -356,7 +365,7 @@ export default function DynamicTablesPage() {
                           {isP ? (
                             (sData?.groups || []).map((g: PercentageGroupDef) => (
                               <span key={g.id} className="px-2 py-1 bg-amber-50 dark:bg-amber-950/40 rounded-md text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/50 font-medium">
-                                {g.totalTitle} ({g.fields.map(f => f.name).join(', ')})
+                                {g.groupTitle || g.totalTitle} ({g.fields.map(f => f.name).join(', ')})
                               </span>
                             ))
                           ) : (
@@ -441,23 +450,37 @@ export default function DynamicTablesPage() {
 
                     {percentageGroups.map((group, gIdx) => (
                       <div key={group.id} className="p-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-800/40 space-y-4">
-                        <div className="flex items-center justify-between gap-3">
-                          <div className="flex-1">
-                            <label className="mb-1 block text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
-                              Name of Total (Denominator)
-                            </label>
-                            <input
-                              type="text"
-                              placeholder="e.g. Total Households"
-                              value={group.totalTitle}
-                              onChange={e => updatePercentageGroupTitle(gIdx, e.target.value)}
-                              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-900 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-                            />
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-1">
+                            <div>
+                              <label className="mb-1 block text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
+                                Sub-Table / Section Header Title
+                              </label>
+                              <input
+                                type="text"
+                                placeholder="e.g. Toilet Facility Status"
+                                value={group.groupTitle || ''}
+                                onChange={e => updatePercentageSubTableTitle(gIdx, e.target.value)}
+                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-900 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                              />
+                            </div>
+                            <div>
+                              <label className="mb-1 block text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
+                                Name of Total (Denominator)
+                              </label>
+                              <input
+                                type="text"
+                                placeholder="e.g. Total Households"
+                                value={group.totalTitle}
+                                onChange={e => updatePercentageGroupTitle(gIdx, e.target.value)}
+                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-900 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                              />
+                            </div>
                           </div>
                           {percentageGroups.length > 1 && (
                             <button
                               onClick={() => removePercentageGroup(gIdx)}
-                              className="text-xs text-error-500 hover:text-error-600 font-medium pt-5"
+                              className="text-xs text-error-500 hover:text-error-600 font-medium pt-7"
                             >
                               Remove Group
                             </button>

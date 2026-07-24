@@ -25,7 +25,7 @@ function DynamicSchemaSection({ schema, barangays, department }: { schema: any, 
   
   const sData = schema.schema as any;
   const isPercentage = sData?.isPercentage || sData?.tableType === 'percentage';
-  const percentageGroups = (sData?.groups || []) as { id: string; totalTitle: string; fields: { id: string; name: string }[] }[];
+  const percentageGroups = (sData?.groups || []) as { id: string; groupTitle?: string; totalTitle: string; fields: { id: string; name: string }[] }[];
   const fields = (Array.isArray(sData) ? sData : (sData?.fields || [])) as FieldDef[];
   
   const statFields = fields.filter(f => f.chartType === 'stat_card');
@@ -38,10 +38,11 @@ function DynamicSchemaSection({ schema, barangays, department }: { schema: any, 
   const allPercentageIndicators = percentageGroups.flatMap(g => 
     g.fields.map(f => ({
       groupId: g.id,
-      groupTitle: g.totalTitle,
+      groupTitle: g.groupTitle || g.totalTitle,
+      totalTitle: g.totalTitle,
       fieldId: f.id,
       fieldName: f.name,
-      fullTitle: `${f.name} (${g.totalTitle})`
+      fullTitle: `${f.name} (${g.groupTitle || g.totalTitle})`
     }))
   );
 
