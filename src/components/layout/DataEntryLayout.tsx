@@ -107,8 +107,8 @@ export default function DataEntryLayout({
       <PageMeta title={pageTitle} description={pageDescription} />
       <PageBreadcrumb pageTitle={breadcrumbTitle} rootLabel="Menu" rootPath={null} />
       
-      <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
-        <div className="flex border-b border-gray-200 dark:border-gray-800 overflow-x-auto no-scrollbar">
+      <div className="w-full max-w-full min-w-0 overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+        <div className="flex border-b border-gray-200 dark:border-gray-800 overflow-x-auto no-scrollbar w-full min-w-0">
           {tabs.map(t => (
             <button
               key={t.key}
@@ -124,9 +124,9 @@ export default function DataEntryLayout({
           ))}
         </div>
 
-        <div className="p-5 lg:p-6 space-y-4">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div>
+        <div className="p-5 lg:p-6 space-y-4 w-full min-w-0">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between w-full min-w-0">
+            <div className="min-w-0">
               <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
                 {displayTitle}
               </h3>
@@ -135,12 +135,14 @@ export default function DataEntryLayout({
               </p>
             </div>
             
-            <YearSelector 
-              year={year} 
-              setYear={setYear} 
-              yearOptions={yearOptions} 
-              scopeKey={`${moduleName}_${activeTab}`}
-            />
+            <div className="shrink-0">
+              <YearSelector 
+                year={year} 
+                setYear={setYear} 
+                yearOptions={yearOptions} 
+                scopeKey={`${moduleName}_${activeTab}`}
+              />
+            </div>
           </div>
           
           {latestApproval?.status === 'rejected' && (
@@ -181,7 +183,7 @@ export default function DataEntryLayout({
             </ErrorBoundary>
           ) : (
             <>
-              <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-1 w-full min-w-0">
                 {exportData && exportColumns && exportTitle && (
                   <DataExportImport 
                     data={exportData} 
@@ -194,7 +196,7 @@ export default function DataEntryLayout({
                   <button
                     onClick={onSave}
                     disabled={isSaving || isLoading || !canWrite || isLocked}
-                    className="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-brand-600 disabled:opacity-50 ml-auto"
+                    className="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-brand-600 disabled:opacity-50 ml-auto shrink-0"
                   >
                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
@@ -204,12 +206,12 @@ export default function DataEntryLayout({
                 )}
               </div>
 
-              <div className="pt-4 border-t border-gray-100 dark:border-gray-800">
+              <div className="pt-4 border-t border-gray-100 dark:border-gray-800 w-full min-w-0">
                 {isLoading ? (
                   <div className="py-10 text-center text-sm text-gray-500">Loading grid...</div>
                 ) : (
                   <ErrorBoundary>
-                    <div className="overflow-x-auto">
+                    <div className="w-full max-w-full min-w-0 overflow-x-auto">
                       {children}
                     </div>
                   </ErrorBoundary>

@@ -320,8 +320,8 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
   const hasNoFields = isPercentage ? percentageGroups.length === 0 : fields.length === 0;
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3 pt-1 mb-4">
+    <div className="space-y-4 w-full min-w-0">
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-1 mb-4 w-full min-w-0">
         {canWrite && exportData && exportColumns && (
           <DataExportImport 
             data={exportData} 
@@ -334,7 +334,7 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
           <button
             onClick={handleSaveAll}
             disabled={mutation.isPending || loading || !canWrite || isLocked}
-            className="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-brand-600 disabled:opacity-50 ml-auto"
+            className="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-brand-600 disabled:opacity-50 ml-auto shrink-0"
           >
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
             {mutation.isPending ? 'Saving...' : 'Save Changes'}
@@ -349,8 +349,8 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
       ) : isPercentage ? (
         /* Percentage Table Render */
         <>
-          <div className="hidden lg:block overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
-            <table className="w-full text-left text-sm text-gray-600 dark:text-gray-300">
+          <div className="hidden lg:block w-full max-w-full min-w-0 overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
+            <table className="w-full min-w-[750px] text-left text-sm text-gray-600 dark:text-gray-300">
               <thead className="bg-gray-50 text-xs uppercase text-gray-500 dark:bg-gray-800/50 dark:text-gray-400">
                 <tr>
                   <th className="whitespace-nowrap px-4 py-3 font-medium border-b dark:border-gray-800" rowSpan={2}>{entityName}</th>
@@ -534,8 +534,8 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
       ) : (
         /* Standard / Budget Table Render */
         <>
-        <div className="hidden lg:block overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
-          <table className="w-full text-left text-sm text-gray-600 dark:text-gray-300">
+        <div className="hidden lg:block w-full max-w-full min-w-0 overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
+          <table className="w-full min-w-[750px] text-left text-sm text-gray-600 dark:text-gray-300">
             <thead className="bg-gray-50 text-xs uppercase text-gray-500 dark:bg-gray-800/50 dark:text-gray-400">
               <tr>
                 <th className="whitespace-nowrap px-4 py-3 font-medium border-b dark:border-gray-800" rowSpan={2}>{entityName}</th>

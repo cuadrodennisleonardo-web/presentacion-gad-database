@@ -141,13 +141,20 @@ const DashboardPage: React.FC = () => {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Population by Barangay */}
         <div className="lg:col-span-2 rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-sm dark:border-gray-800 dark:bg-white/[0.02]">
-          <div className="mb-4">
-            <h2 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-              Population by Barangay
-            </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Distribution of population across barangays
-            </p>
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-800 dark:text-white/90">
+                Population by Barangay
+              </h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Distribution of population across barangays
+              </p>
+            </div>
+            {stats?.years?.demographics && (
+              <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300 border border-brand-200 dark:border-brand-800/40">
+                Default Year: {stats.years.demographics}
+              </span>
+            )}
           </div>
           <ErrorBoundary>
             <PopulationByBarangayChart data={stats?.barangayPop || []} />
@@ -156,13 +163,20 @@ const DashboardPage: React.FC = () => {
 
         {/* Sex Distribution */}
         <div className="lg:col-span-1 rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-sm dark:border-gray-800 dark:bg-white/[0.02]">
-          <div className="mb-4">
-            <h2 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-              Sex Distribution
-            </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Overall male to female ratio
-            </p>
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-800 dark:text-white/90">
+                Sex Distribution
+              </h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Overall male to female ratio
+              </p>
+            </div>
+            {stats?.years?.demographics && (
+              <span className="text-xs font-semibold px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
+                {stats.years.demographics}
+              </span>
+            )}
           </div>
           <div className="flex items-center justify-center">
             <ErrorBoundary>
@@ -180,7 +194,7 @@ const DashboardPage: React.FC = () => {
          <div className="lg:col-span-1">
             <ErrorBoundary>
               <MultiSeriesChart 
-                title="Municipal Livelihood Distribution"
+                title={`Livelihood (${stats?.years?.econDev || ''})`}
                 type="pie"
                 categories={["Farmers", "Fisherfolks", "MSME Owners", "Ambulant Vendors"]}
                 series={[stats?.livelihood.farmers || 0, stats?.livelihood.fisherfolks || 0, stats?.livelihood.business || 0, stats?.livelihood.ambulantVendors || 0]}
@@ -191,7 +205,7 @@ const DashboardPage: React.FC = () => {
          <div className="lg:col-span-1">
             <ErrorBoundary>
               <MultiSeriesChart 
-                title="Justice & Safety Cases"
+                title={`Justice & Safety (${stats?.years?.justice || ''})`}
                 type="pie"
                 categories={["VAWC", "CICL", "Sexual Assault"]}
                 series={[stats?.justice.vawc || 0, stats?.justice.cicl || 0, stats?.justice.assault || 0]}
@@ -202,7 +216,7 @@ const DashboardPage: React.FC = () => {
          <div className="lg:col-span-1">
             <ErrorBoundary>
               <MultiSeriesChart 
-                title="Infrastructure Access"
+                title={`Infrastructure (${stats?.years?.infrastructure || ''})`}
                 type="pie"
                 categories={["Safe Water", "Sanitary Toilets", "Informal Settlers"]}
                 series={[stats?.infrastructure.safeWater || 0, stats?.infrastructure.sanitaryToilet || 0, stats?.infrastructure.informalSettlers || 0]}
@@ -213,7 +227,7 @@ const DashboardPage: React.FC = () => {
          <div className="lg:col-span-1">
             <ErrorBoundary>
               <MultiSeriesChart 
-                title="Local Governance Officials"
+                title={`Governance (${stats?.years?.governance || ''})`}
                 type="pie"
                 categories={["Elected Officials", "Appointed Heads"]}
                 series={[stats?.governance.elected || 0, stats?.governance.appointed || 0]}

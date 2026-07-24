@@ -316,8 +316,8 @@ export default function EconomicDevelopmentDataEntry() {
       onConfirmSave={() => { if(pendingChanges) mutation.mutate(pendingChanges) }}
     >
       <>
-      <div className="hidden lg:block overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
-        <table className="w-full text-left text-sm text-gray-600 dark:text-gray-300">
+      <div className="hidden lg:block w-full max-w-full min-w-0 overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
+        <table className="w-full min-w-[750px] text-left text-sm text-gray-600 dark:text-gray-300">
         <thead className="bg-gray-50 text-xs uppercase text-gray-500 dark:bg-gray-800/50 dark:text-gray-400">
                <tr>
                  <th className="whitespace-nowrap px-4 py-3 font-medium border-b dark:border-gray-800" rowSpan={2}>Barangay</th>

@@ -1,5 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { fetchBarangays, fetchStats } from "@/services/api";
+import { getDepartmentDefaultYear } from "@/utils/yearUtils";
+import { supabase } from "@/config/supabase";
 
 function extractStatField(st: any, prefix: string) {
   const m = Number(st?.[`${prefix}_m`] || 0);
@@ -15,29 +17,99 @@ function extractStatField(st: any, prefix: string) {
   return { m, f, total, isTotalOnly };
 }
 
+async function fetchStatsWithFallback(table: string, primaryYear: number) {
+  let stats = await fetchStats(table, primaryYear);
+  let year = primaryYear;
+
+  if (!stats || stats.length === 0) {
+    const { data } = await supabase
+      .from(table)
+      .select('*')
+      .order('year', { ascending: false });
+    
+    if (data && data.length > 0) {
+      const latestYear = data[0].year;
+      stats = data.filter(d => d.year === latestYear);
+      year = latestYear;
+    }
+  }
+
+  return { stats, year };
+}
+
 export function useMainDashboardStats() {
   return useQuery({
     queryKey: ['main_dashboard_stats'],
     queryFn: async () => {
-      const year = new Date().getFullYear();
-      
+      // Resolve department default year independently
+      const popDefaultYear = getDepartmentDefaultYear([
+        "Demographics & Population_main",
+        "Demographics & Population_age",
+        "Demographics & Population_housing",
+        "Demographics_Dashboard",
+        "Demographics & Population"
+      ]);
+
+      const socDefaultYear = getDepartmentDefaultYear([
+        "Social Development_health",
+        "Social Development_education",
+        "Social Development_welfare",
+        "SocialDevelopment_Dashboard",
+        "Social Development"
+      ]);
+
+      const econDefaultYear = getDepartmentDefaultYear([
+        "Economic Development_labor",
+        "Economic Development_agriculture",
+        "Economic Development_business",
+        "EconomicDevelopment_Dashboard",
+        "Economic Development"
+      ]);
+
+      const justiceDefaultYear = getDepartmentDefaultYear([
+        "Justice & Safety_main",
+        "Justice_Dashboard",
+        "Justice & Safety"
+      ]);
+
+      const infraDefaultYear = getDepartmentDefaultYear([
+        "Infrastructure_main",
+        "Infrastructure_water",
+        "Infrastructure_Dashboard",
+        "Infrastructure"
+      ]);
+
+      const govDefaultYear = getDepartmentDefaultYear([
+        "Local Governance_main",
+        "Local Governance_officials",
+        "Governance_Dashboard",
+        "Local Governance"
+      ]);
+
       const [
         barangays,
-        popStats,
-        socStats,
-        econStats,
-        justiceStats,
-        infraStats,
-        govStats
+        popRes,
+        socRes,
+        econRes,
+        justiceRes,
+        infraRes,
+        govRes
       ] = await Promise.all([
         fetchBarangays(),
-        fetchStats("population_stats", year),
-        fetchStats("social_dev_stats", year),
-        fetchStats("econ_dev_stats", year),
-        fetchStats("justice_stats", year),
-        fetchStats("infra_stats", year),
-        fetchStats("governance_stats", year)
+        fetchStatsWithFallback("population_stats", popDefaultYear),
+        fetchStatsWithFallback("social_dev_stats", socDefaultYear),
+        fetchStatsWithFallback("econ_dev_stats", econDefaultYear),
+        fetchStatsWithFallback("justice_stats", justiceDefaultYear),
+        fetchStatsWithFallback("infra_stats", infraDefaultYear),
+        fetchStatsWithFallback("governance_stats", govDefaultYear)
       ]);
+
+      const popStats = popRes.stats;
+      const socStats = socRes.stats;
+      const econStats = econRes.stats;
+      const justiceStats = justiceRes.stats;
+      const infraStats = infraRes.stats;
+      const govStats = govRes.stats;
 
       let totalPop = 0;
       let totalHouseholds = 0;
@@ -101,6 +173,14 @@ export function useMainDashboardStats() {
       const sortedBarangayPop = barangayPopArray.sort((a, b) => b.count - a.count);
 
       return {
+        years: {
+          demographics: popRes.year,
+          socialDev: socRes.year,
+          econDev: econRes.year,
+          justice: justiceRes.year,
+          infrastructure: infraRes.year,
+          governance: govRes.year
+        },
         residents: totalPop,
         households: totalHouseholds,
         pwds: totalPWDs,
