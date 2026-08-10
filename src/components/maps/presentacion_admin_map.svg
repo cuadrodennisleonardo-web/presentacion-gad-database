@@ -1,0 +1,159 @@
+<svg viewBox="0 0 1024 724" xmlns="http://www.w3.org/2000/svg" font-family="Arial, Helvetica, sans-serif">
+<rect x="0" y="0" width="1024" height="724" fill="#ffffff"/>
+<rect x="4" y="4" width="1016" height="716" fill="none" stroke="#000000" stroke-width="2"/>
+<path d="M 16.0 620.0 L 997.0 621.0 L 971.0 567.0 L 903.0 608.0 L 830.0 612.0 L 810.0 595.0 L 742.0 590.0 L 721.0 569.0 L 616.0 526.0 L 562.0 534.0 L 522.0 515.0 L 425.0 514.0 L 382.0 494.0 L 374.0 478.0 L 345.0 471.0 L 268.0 473.0 L 214.0 525.0 L 105.0 476.0 L 85.0 476.0 L 26.0 581.0 Z" fill="rgb(156,196,221)" stroke="none"/>
+<g stroke="#1a1a1a" stroke-width="1.4" stroke-linejoin="round">
+<path d="M 410.0 390.0 L 413.0 421.0 L 404.0 440.0 L 402.0 454.0 L 399.0 455.0 L 396.0 461.0 L 425.0 476.0 L 429.0 472.0 L 427.0 468.0 L 428.0 463.0 L 451.0 463.0 L 479.0 409.0 L 432.0 395.0 L 428.0 395.0 L 415.0 390.0 Z" fill="rgb(216,23,31)"/>
+<path d="M 226.0 172.0 L 167.0 499.0 L 179.0 511.0 L 198.0 517.0 L 187.0 476.0 L 282.0 249.0 Z" fill="rgb(223,61,41)"/>
+<path d="M 797.0 421.0 L 786.0 554.0 L 779.0 588.0 L 795.0 595.0 L 811.0 592.0 L 819.0 602.0 L 838.0 611.0 L 850.0 606.0 L 865.0 482.0 Z" fill="rgb(230,97,55)"/>
+<path d="M 448.0 49.0 L 423.0 65.0 L 408.0 97.0 L 283.0 247.0 L 408.0 384.0 L 513.0 249.0 L 502.0 152.0 L 538.0 109.0 Z" fill="rgb(238,133,82)"/>
+<path d="M 503.0 152.0 L 514.0 247.0 L 562.0 226.0 L 652.0 227.0 L 539.0 110.0 Z" fill="rgb(254,165,94)"/>
+<path d="M 925.0 515.0 L 921.0 515.0 L 920.0 521.0 L 918.0 523.0 L 892.0 585.0 L 892.0 591.0 L 894.0 593.0 L 896.0 601.0 L 901.0 605.0 L 910.0 601.0 L 914.0 596.0 L 919.0 593.0 L 933.0 592.0 L 940.0 585.0 L 942.0 576.0 L 947.0 571.0 L 958.0 572.0 L 962.0 565.0 L 972.0 565.0 L 967.0 556.0 L 966.0 550.0 L 959.0 534.0 L 945.0 525.0 L 928.0 518.0 Z" fill="rgb(255,188,116)"/>
+<path d="M 190.0 147.0 L 118.0 207.0 L 118.0 215.0 L 98.0 236.0 L 85.0 239.0 L 77.0 258.0 L 84.0 288.0 L 104.0 323.0 L 139.0 344.0 L 128.0 382.0 L 133.0 390.0 L 122.0 396.0 L 123.0 423.0 L 119.0 427.0 L 130.0 430.0 L 133.0 449.0 L 114.0 446.0 L 108.0 457.0 L 87.0 471.0 L 106.0 473.0 L 128.0 486.0 L 143.0 424.0 Z" fill="rgb(253,210,136)"/>
+<path d="M 709.0 343.0 L 697.0 462.0 L 677.0 552.0 L 703.0 564.0 L 722.0 566.0 L 745.0 588.0 L 776.0 589.0 L 784.0 554.0 L 795.0 420.0 L 801.0 421.0 L 781.0 405.0 L 770.0 405.0 L 769.0 395.0 Z" fill="rgb(255,228,159)"/>
+<path d="M 480.0 411.0 L 453.0 465.0 L 429.0 465.0 L 430.0 471.0 L 437.0 470.0 L 437.0 466.0 L 456.0 468.0 L 454.0 473.0 L 470.0 507.0 L 471.0 513.0 L 468.0 516.0 L 472.0 519.0 L 497.0 511.0 L 520.0 512.0 L 513.0 492.0 L 506.0 482.0 L 507.0 476.0 L 502.0 469.0 L 498.0 455.0 L 497.0 460.0 L 492.0 464.0 L 494.0 470.0 L 485.0 494.0 L 478.0 497.0 L 472.0 494.0 L 486.0 453.0 L 489.0 450.0 L 496.0 452.0 Z" fill="rgb(255,246,180)"/>
+<path d="M 376.0 476.0 L 383.0 491.0 L 390.0 493.0 L 393.0 498.0 L 400.0 500.0 L 404.0 504.0 L 418.0 506.0 L 425.0 511.0 L 433.0 511.0 L 437.0 513.0 L 459.0 513.0 L 465.0 518.0 L 477.0 519.0 L 469.0 517.0 L 470.0 513.0 L 476.0 512.0 L 471.0 512.0 L 469.0 510.0 L 469.0 507.0 L 462.0 494.0 L 462.0 490.0 L 459.0 487.0 L 458.0 479.0 L 454.0 474.0 L 455.0 468.0 L 431.0 467.0 L 430.0 472.0 L 434.0 476.0 L 434.0 481.0 L 431.0 483.0 L 427.0 483.0 L 426.0 478.0 L 420.0 477.0 L 415.0 473.0 L 411.0 473.0 L 407.0 469.0 L 399.0 467.0 L 395.0 463.0 L 391.0 463.0 L 384.0 467.0 Z" fill="rgb(245,251,186)"/>
+<path d="M 448.0 46.0 L 438.0 32.0 L 385.0 55.0 L 386.0 68.0 L 352.0 72.0 L 345.0 83.0 L 328.0 67.0 L 315.0 82.0 L 280.0 70.0 L 249.0 96.0 L 196.0 84.0 L 195.0 76.0 L 171.0 59.0 L 154.0 78.0 L 100.0 78.0 L 94.0 91.0 L 115.0 207.0 L 195.0 143.0 L 229.0 170.0 L 285.0 244.0 L 407.0 95.0 L 420.0 64.0 Z" fill="rgb(227,242,185)"/>
+<path d="M 868.0 483.0 L 866.0 496.0 L 868.0 499.0 L 864.0 506.0 L 865.0 511.0 L 861.0 529.0 L 852.0 608.0 L 887.0 608.0 L 901.0 606.0 L 895.0 604.0 L 894.0 599.0 L 891.0 596.0 L 890.0 584.0 L 907.0 546.0 L 907.0 541.0 L 910.0 538.0 L 915.0 523.0 L 921.0 513.0 L 905.0 506.0 L 902.0 502.0 L 884.0 494.0 Z" fill="rgb(207,235,174)"/>
+<path d="M 285.0 250.0 L 190.0 476.0 L 203.0 526.0 L 212.0 525.0 L 245.0 487.0 L 267.0 471.0 L 317.0 472.0 L 305.0 451.0 L 312.0 421.0 L 341.0 397.0 L 358.0 396.0 L 388.0 376.0 L 398.0 374.0 Z" fill="rgb(187,226,167)"/>
+<path d="M 703.0 241.0 L 659.0 231.0 L 657.0 228.0 L 561.0 229.0 L 516.0 249.0 L 581.0 418.0 Z" fill="rgb(166,216,167)"/>
+<path d="M 196.0 146.0 L 133.0 487.0 L 163.0 501.0 L 171.0 477.0 L 225.0 169.0 Z" fill="rgb(132,196,171)"/>
+<path d="M 702.0 245.0 L 580.0 420.0 L 588.0 433.0 L 571.0 435.0 L 571.0 469.0 L 583.0 490.0 L 595.0 490.0 L 605.0 497.0 L 611.0 523.0 L 583.0 524.0 L 567.0 534.0 L 545.0 529.0 L 543.0 523.0 L 536.0 524.0 L 524.0 514.0 L 542.0 529.0 L 570.0 535.0 L 592.0 523.0 L 616.0 524.0 L 673.0 552.0 L 695.0 453.0 L 707.0 345.0 Z" fill="rgb(101,175,177)"/>
+<path d="M 409.0 386.0 L 484.0 409.0 L 524.0 513.0 L 534.0 522.0 L 569.0 534.0 L 589.0 522.0 L 610.0 523.0 L 604.0 497.0 L 595.0 491.0 L 583.0 491.0 L 569.0 466.0 L 570.0 435.0 L 575.0 433.0 L 583.0 436.0 L 587.0 433.0 L 577.0 414.0 L 577.0 420.0 L 486.0 409.0 L 413.0 388.0 L 413.0 382.0 Z" fill="rgb(72,152,177)"/>
+<path d="M 513.0 252.0 L 410.0 386.0 L 486.0 408.0 L 577.0 420.0 L 570.0 396.0 Z" fill="rgb(44,131,184)"/>
+</g>
+<path d="M 400.0 375.0 L 410.0 387.0 L 412.0 424.0 L 404.0 439.0 L 402.0 453.0 L 398.0 456.0 L 396.0 462.0 L 385.0 466.0 L 376.0 476.0 L 364.0 476.0 L 347.0 471.0 L 317.0 472.0 L 306.0 453.0 L 306.0 445.0 L 312.0 421.0 L 341.0 397.0 L 358.0 396.0 L 386.0 377.0 Z" fill="#ffffff" stroke="#000000" stroke-width="1.5" stroke-dasharray="4,3"/>
+<path d="M 100.0 78.0 L 94.0 93.0 L 117.0 216.0 L 98.0 236.0 L 85.0 239.0 L 77.0 260.0 L 103.0 322.0 L 137.0 343.0 L 119.0 427.0 L 130.0 431.0 L 131.0 446.0 L 114.0 446.0 L 87.0 471.0 L 25.0 583.0 L 16.0 620.0 L 997.0 621.0 L 958.0 533.0 L 866.0 483.0 L 799.0 419.0 L 771.0 405.0 L 766.0 392.0 L 707.0 342.0 L 703.0 241.0 L 653.0 228.0 L 537.0 108.0 L 449.0 50.0 L 438.0 32.0 L 385.0 55.0 L 381.0 69.0 L 340.0 78.0 L 328.0 67.0 L 317.0 80.0 L 280.0 70.0 L 251.0 94.0 L 199.0 85.0 L 171.0 59.0 L 154.0 78.0 Z" fill="none" stroke="#000000" stroke-width="2.6" stroke-dasharray="7,5" stroke-linejoin="round"/>
+<g font-weight="700">
+<text x="434.7" y="431.3" font-size="7.1" fill="#ffffff" stroke="#00000055" stroke-width="2.2" paint-order="stroke" text-anchor="middle" dominant-baseline="middle" letter-spacing="0.3" transform="rotate(-73.4 434.7 431.3)">Ayugao</text>
+<text x="221.9" y="324.6" font-size="12.7" fill="#ffffff" stroke="#00000055" stroke-width="2.2" paint-order="stroke" text-anchor="middle" dominant-baseline="middle" letter-spacing="0.3" transform="rotate(-79.8 221.9 324.6)">Bagongsirang</text>
+<text x="822.1" y="524.4" font-size="11.5" fill="#ffffff" stroke="#00000055" stroke-width="2.2" paint-order="stroke" text-anchor="middle" dominant-baseline="middle" letter-spacing="0.3" transform="rotate(-83.8 822.1 524.4)">Baliguian</text>
+<text x="419.0" y="213.8" font-size="13.0" fill="#16233d" text-anchor="middle" dominant-baseline="middle" letter-spacing="0.3" transform="rotate(-52.4 419.0 213.8)">Bantugan</text>
+<text x="558.1" y="186.2" font-size="11.3" fill="#16233d" text-anchor="middle" dominant-baseline="middle" letter-spacing="0.3" transform="rotate(-8.2 558.1 186.2)">Bicalen</text>
+<text x="928.5" y="559.8" font-size="7.0" fill="#16233d" text-anchor="middle" dominant-baseline="middle" letter-spacing="0.3" transform="rotate(-67.5 928.5 559.8)">Bitaogan</text>
+<text x="135.1" y="288.7" font-size="13.0" fill="#16233d" text-anchor="middle" dominant-baseline="middle" letter-spacing="0.3" transform="rotate(-80.4 135.1 288.7)">Buenavista</text>
+<text x="739.8" y="478.9" font-size="13.0" fill="#16233d" text-anchor="middle" dominant-baseline="middle" letter-spacing="0.3" transform="rotate(-81.3 739.8 478.9)">Bulalacao</text>
+<text x="481.6" y="474.3" font-size="7.0" fill="#16233d" text-anchor="middle" dominant-baseline="middle" letter-spacing="0.3" transform="rotate(67.4 481.6 474.3)">Cagnipa</text>
+<text x="425.4" y="489.6" font-size="7.0" fill="#16233d" text-anchor="middle" dominant-baseline="middle" letter-spacing="0.3" transform="rotate(9.9 425.4 489.6)">Lagha</text>
+<text x="255.1" y="128.8" font-size="13.0" fill="#16233d" text-anchor="middle" dominant-baseline="middle" letter-spacing="0.3" transform="rotate(-5.8 255.1 128.8)">Lidong</text>
+<text x="881.2" y="548.6" font-size="7.9" fill="#16233d" text-anchor="middle" dominant-baseline="middle" letter-spacing="0.3" transform="rotate(-80.1 881.2 548.6)">Liwacsa</text>
+<text x="282.0" y="388.9" font-size="13.0" fill="#16233d" text-anchor="middle" dominant-baseline="middle" letter-spacing="0.3" transform="rotate(-67.2 282.0 388.9)">Maangas</text>
+<text x="600.6" y="294.6" font-size="13.0" fill="#16233d" text-anchor="middle" dominant-baseline="middle" letter-spacing="0.3" transform="rotate(-55.4 600.6 294.6)">Pagsangaan</text>
+<text x="179.6" y="328.0" font-size="12.0" fill="#16233d" text-anchor="middle" dominant-baseline="middle" letter-spacing="0.3" transform="rotate(-79.5 179.6 328.0)">Patrocinio</text>
+<text x="649.7" y="418.5" font-size="13.0" fill="#16233d" text-anchor="middle" dominant-baseline="middle" letter-spacing="0.3" transform="rotate(-77.5 649.7 418.5)">Pili</text>
+<text x="545.7" y="469.7" font-size="10.3" fill="#ffffff" stroke="#00000055" stroke-width="2.2" paint-order="stroke" text-anchor="middle" dominant-baseline="middle" letter-spacing="0.3" transform="rotate(47.8 545.7 469.7)">Sta. Maria</text>
+<text x="500.3" y="354.8" font-size="12.9" fill="#ffffff" stroke="#00000055" stroke-width="2.2" paint-order="stroke" text-anchor="middle" dominant-baseline="middle" letter-spacing="0.3" transform="rotate(-52.5 500.3 354.8)">Tanawan</text>
+</g>
+<g font-size="11.5" font-weight="700" fill="#1a1a1a" font-style="italic">
+<text x="300" y="30" text-anchor="middle">MUNICIPALITY OF GARCHITORENA</text>
+<text x="35" y="290" text-anchor="middle" transform="rotate(-90 35 290)">MUNICIPALITY OF LAGONOY</text>
+<text x="700" y="240" text-anchor="middle" transform="rotate(38 700 240)">MUNICIPALITY OF CARAMOAN</text>
+</g>
+<text x="440" y="560" text-anchor="middle" font-size="14" font-weight="700" fill="#0b3550">LAGONOY GULF</text>
+<g font-size="8.5" fill="#000000">
+<text x="133" y="12" text-anchor="middle">123.64°E</text>
+<text x="133" y="712" text-anchor="middle">123.64°E</text>
+<text x="312" y="12" text-anchor="middle">123.68°E</text>
+<text x="312" y="712" text-anchor="middle">123.68°E</text>
+<text x="491" y="12" text-anchor="middle">123.72°E</text>
+<text x="491" y="712" text-anchor="middle">123.72°E</text>
+<text x="670" y="12" text-anchor="middle">123.76°E</text>
+<text x="670" y="712" text-anchor="middle">123.76°E</text>
+<text x="849" y="12" text-anchor="middle">123.80°E</text>
+<text x="849" y="712" text-anchor="middle">123.80°E</text>
+<text x="1000" y="12" text-anchor="middle">123.84°E</text>
+<text x="1000" y="712" text-anchor="middle">123.84°E</text>
+<text x="16" y="58" text-anchor="middle" transform="rotate(-90 16 58)">13.80°N</text>
+<text x="1010" y="58" text-anchor="middle" transform="rotate(-90 1010 58)">13.80°N</text>
+<text x="16" y="175" text-anchor="middle" transform="rotate(-90 16 175)">13.76°N</text>
+<text x="1010" y="175" text-anchor="middle" transform="rotate(-90 1010 175)">13.76°N</text>
+<text x="16" y="292" text-anchor="middle" transform="rotate(-90 16 292)">13.72°N</text>
+<text x="1010" y="292" text-anchor="middle" transform="rotate(-90 1010 292)">13.72°N</text>
+<text x="16" y="409" text-anchor="middle" transform="rotate(-90 16 409)">13.68°N</text>
+<text x="1010" y="409" text-anchor="middle" transform="rotate(-90 1010 409)">13.68°N</text>
+<text x="16" y="526" text-anchor="middle" transform="rotate(-90 16 526)">13.64°N</text>
+<text x="1010" y="526" text-anchor="middle" transform="rotate(-90 1010 526)">13.64°N</text>
+<text x="16" y="615" text-anchor="middle" transform="rotate(-90 16 615)">13.60°N</text>
+<text x="1010" y="615" text-anchor="middle" transform="rotate(-90 1010 615)">13.60°N</text>
+</g>
+<rect x="782" y="22" width="234" height="380" fill="#fdf9f2" stroke="#000000" stroke-width="1.3"/>
+<text x="790" y="38" font-size="12" font-weight="700" fill="#000000">LEGENDS:</text>
+<rect x="792" y="48" width="24" height="7" fill="rgb(156,196,221)"/>
+<text x="824" y="54" font-size="9.5" fill="#000000">Water Boundary</text>
+<line x1="792" y1="66" x2="816" y2="66" stroke="#cccccc" stroke-width="1"/>
+<text x="824" y="68" font-size="9.5" fill="#000000">Barangay Boundary</text>
+<line x1="792" y1="80" x2="816" y2="80" stroke="#000000" stroke-width="2.4" stroke-dasharray="4,3"/>
+<text x="824" y="82" font-size="9.5" fill="#000000">Municipal Boundary</text>
+<text x="792" y="104" font-size="10.5" font-weight="700" fill="#000000">Barangay</text>
+<rect x="792" y="110" width="20" height="9" fill="rgb(216,23,31)"/>
+<text x="820" y="117.5" font-size="9.5" fill="#000000">Ayugao</text>
+<rect x="792" y="125.19999999999999" width="20" height="9" fill="rgb(223,61,41)"/>
+<text x="820" y="132.7" font-size="9.5" fill="#000000">Bagongsirang</text>
+<rect x="792" y="140.39999999999998" width="20" height="9" fill="rgb(230,97,55)"/>
+<text x="820" y="147.89999999999998" font-size="9.5" fill="#000000">Baliguian</text>
+<rect x="792" y="155.59999999999997" width="20" height="9" fill="rgb(238,133,82)"/>
+<text x="820" y="163.09999999999997" font-size="9.5" fill="#000000">Bantugan</text>
+<rect x="792" y="170.79999999999995" width="20" height="9" fill="rgb(254,165,94)"/>
+<text x="820" y="178.29999999999995" font-size="9.5" fill="#000000">Bicalen</text>
+<rect x="792" y="185.99999999999994" width="20" height="9" fill="rgb(255,188,116)"/>
+<text x="820" y="193.49999999999994" font-size="9.5" fill="#000000">Bitaogan</text>
+<rect x="792" y="201.19999999999993" width="20" height="9" fill="rgb(253,210,136)"/>
+<text x="820" y="208.69999999999993" font-size="9.5" fill="#000000">Buenavista</text>
+<rect x="792" y="216.39999999999992" width="20" height="9" fill="rgb(255,228,159)"/>
+<text x="820" y="223.89999999999992" font-size="9.5" fill="#000000">Bulalacao</text>
+<rect x="792" y="231.5999999999999" width="20" height="9" fill="rgb(255,246,180)"/>
+<text x="820" y="239.0999999999999" font-size="9.5" fill="#000000">Cagnipa</text>
+<rect x="792" y="246.7999999999999" width="20" height="9" fill="rgb(245,251,186)"/>
+<text x="820" y="254.2999999999999" font-size="9.5" fill="#000000">Lagha</text>
+<rect x="792" y="261.9999999999999" width="20" height="9" fill="rgb(227,242,185)"/>
+<text x="820" y="269.4999999999999" font-size="9.5" fill="#000000">Lidong</text>
+<rect x="792" y="277.1999999999999" width="20" height="9" fill="rgb(207,235,174)"/>
+<text x="820" y="284.6999999999999" font-size="9.5" fill="#000000">Liwacsa</text>
+<rect x="792" y="292.39999999999986" width="20" height="9" fill="rgb(187,226,167)"/>
+<text x="820" y="299.89999999999986" font-size="9.5" fill="#000000">Maangas</text>
+<rect x="792" y="307.59999999999985" width="20" height="9" fill="rgb(166,216,167)"/>
+<text x="820" y="315.09999999999985" font-size="9.5" fill="#000000">Pagsangaan</text>
+<rect x="792" y="322.79999999999984" width="20" height="9" fill="rgb(132,196,171)"/>
+<text x="820" y="330.29999999999984" font-size="9.5" fill="#000000">Patrocinio</text>
+<rect x="792" y="337.99999999999983" width="20" height="9" fill="rgb(101,175,177)"/>
+<text x="820" y="345.49999999999983" font-size="9.5" fill="#000000">Pili</text>
+<rect x="792" y="353.1999999999998" width="20" height="9" fill="rgb(72,152,177)"/>
+<text x="820" y="360.6999999999998" font-size="9.5" fill="#000000">Sta. Maria</text>
+<rect x="792" y="368.3999999999998" width="20" height="9" fill="rgb(44,131,184)"/>
+<text x="820" y="375.8999999999998" font-size="9.5" fill="#000000">Tanawan</text>
+<rect x="6" y="628" width="1012" height="88" fill="#ffffff" stroke="#000000" stroke-width="1.6"/>
+<line x1="268" y1="628" x2="268" y2="716" stroke="#000000" stroke-width="1.2"/>
+<line x1="526" y1="628" x2="526" y2="716" stroke="#000000" stroke-width="1.2"/>
+<line x1="700" y1="628" x2="700" y2="716" stroke="#000000" stroke-width="1.2"/>
+<line x1="872" y1="628" x2="872" y2="716" stroke="#000000" stroke-width="1.2"/>
+<circle cx="40" cy="672" r="26" fill="#eef3f0" stroke="#0b3d91" stroke-width="1.6"/>
+<circle cx="40" cy="672" r="21" fill="none" stroke="#0b3d91" stroke-width="0.8"/>
+<text x="40" y="676" font-size="9" text-anchor="middle" fill="#0b3d91" font-weight="700">MP</text>
+<text x="76" y="662" font-size="13" font-weight="800" fill="#0b3d91">MUNICIPALITY OF</text>
+<text x="76" y="678" font-size="15.5" font-weight="800" fill="#0b3d91">PRESENTACION</text>
+<text x="76" y="694" font-size="9" fill="#000000">PROVINCE OF CAMARINES SUR</text>
+<text x="76" y="705" font-size="9" fill="#000000">REGION V</text>
+<text x="397" y="666" font-size="21" font-weight="800" text-anchor="middle" fill="#000000">ADMINISTRATIVE</text>
+<text x="397" y="692" font-size="21" font-weight="800" text-anchor="middle" fill="#000000">MAP</text>
+<polygon points="613,642 605,660 613,655 621,660" fill="#000000"/>
+<circle cx="613" cy="668" r="9" fill="none" stroke="#000000" stroke-width="1.3"/>
+<text x="613" y="671.5" font-size="9" font-weight="700" text-anchor="middle">N</text>
+<rect x="715" y="668" width="18" height="6" fill="#000000" stroke="#000000" stroke-width="0.8"/>
+<rect x="733" y="668" width="18" height="6" fill="#ffffff" stroke="#000000" stroke-width="0.8"/>
+<rect x="751" y="668" width="18" height="6" fill="#000000" stroke="#000000" stroke-width="0.8"/>
+<rect x="769" y="668" width="18" height="6" fill="#ffffff" stroke="#000000" stroke-width="0.8"/>
+<rect x="787" y="668" width="18" height="6" fill="#000000" stroke="#000000" stroke-width="0.8"/>
+<text x="715" y="664" font-size="7.5" text-anchor="middle">0</text>
+<text x="733" y="664" font-size="7.5" text-anchor="middle">1</text>
+<text x="751" y="664" font-size="7.5" text-anchor="middle">2</text>
+<text x="769" y="664" font-size="7.5" text-anchor="middle">3</text>
+<text x="787" y="664" font-size="7.5" text-anchor="middle">4</text>
+<text x="805" y="664" font-size="7.5" text-anchor="middle">5 km</text>
+<text x="760" y="686" font-size="9" text-anchor="middle">Scale: 1:75000</text>
+<text x="880" y="642" font-size="8" fill="#000000">Source:</text>
+<text x="880" y="652" font-size="8" fill="#000000">Municipal Planning and Development Office (MPDO)</text>
+<text x="880" y="668" font-size="8" fill="#000000">Prepared From:</text>
+<text x="880" y="678" font-size="8" fill="#000000">Municipal Planning and Development Office (MPDO)</text>
+<line x1="6" y1="686" x2="1018" y2="686" stroke="#000000" stroke-width="0.8"/>
+<text x="880" y="700" font-size="8" fill="#000000">WGS 84 : ESPG 4326</text>
+</svg>

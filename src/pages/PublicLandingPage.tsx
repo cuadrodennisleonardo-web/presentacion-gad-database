@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import PageMeta from '@/components/common/PageMeta';
 import { ThemeToggleButton } from '@/components/common/ThemeToggleButton';
 import { BARANGAYS } from '@/lib/constants';
+import { PresentacionAdminMap } from '@/components/maps/PresentacionAdminMap';
+import { getBarangays, type BarangayWithStats } from '@/services/barangayService';
 
 const SECTORS = [
   {
@@ -73,6 +75,26 @@ const SECTORS = [
 const PublicLandingPage: React.FC = () => {
   const navigate = useNavigate();
   const [selectedBarangay, setSelectedBarangay] = useState<string | null>(null);
+  const [barangayList, setBarangayList] = useState<BarangayWithStats[]>([]);
+  const [barangayStatsMap, setBarangayStatsMap] = useState<Record<string, { population: number; households: number }>>({});
+
+  useEffect(() => {
+    async function loadBarangayData() {
+      const { data } = await getBarangays();
+      if (data && data.length > 0) {
+        setBarangayList(data);
+        const map: Record<string, { population: number; households: number }> = {};
+        data.forEach(b => {
+          map[b.name] = {
+            population: b.population_count,
+            households: b.household_count
+          };
+        });
+        setBarangayStatsMap(map);
+      }
+    }
+    loadBarangayData();
+  }, []);
 
   const handleBarangayClick = (brgyName: string) => {
     setSelectedBarangay(brgyName);
@@ -80,13 +102,6 @@ const PublicLandingPage: React.FC = () => {
     if (mapElement) {
       mapElement.scrollIntoView({ behavior: "smooth", block: "start" });
     }
-  };
-
-  const getMapSrc = () => {
-    if (selectedBarangay) {
-      return `https://www.google.com/maps?q=${encodeURIComponent(`Barangay ${selectedBarangay}, Presentacion, Camarines Sur`)}&t=&z=14&ie=UTF8&iwloc=&output=embed`;
-    }
-    return "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d124014.6050032875!2d123.64968520736366!3d13.751327870152869!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x33a1d2796be6bd59%3A0x85594c3d82eed290!2sPresentacion%2C%20Camarines%20Sur!5e0!3m2!1sen!2sph!4v1783925587417!5m2!1sen!2sph";
   };
 
   return (
@@ -103,7 +118,7 @@ const PublicLandingPage: React.FC = () => {
                 Municipality of Presentacion
               </h1>
               <p className="text-xs font-semibold text-brand-600 dark:text-brand-400">
-                Gender & Development (GAD) Database
+                Gender &amp; Development (GAD) Database
               </p>
             </div>
           </div>
@@ -145,7 +160,7 @@ const PublicLandingPage: React.FC = () => {
               <h1 className="max-w-4xl text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-5xl lg:text-6xl leading-tight">
                 Presentacion Municipal <br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 via-brand-500 to-indigo-500 dark:from-brand-400 dark:to-indigo-300">
-                  GAD & Demographic Database
+                  GAD &amp; Demographic Database
                 </span>
               </h1>
 
@@ -176,28 +191,6 @@ const PublicLandingPage: React.FC = () => {
                 </a>
               </div>
 
-              {/* Overview Quick Stats Card */}
-              <div className="mt-12 w-full max-w-4xl rounded-2xl border border-gray-200/80 bg-white p-6 shadow-xl dark:border-gray-800/80 dark:bg-gray-900/90 backdrop-blur-md">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 divide-y md:divide-y-0 md:divide-x divide-gray-100 dark:divide-gray-800">
-                  <div className="flex flex-col items-center p-2">
-                    <span className="text-3xl font-extrabold text-brand-600 dark:text-brand-400">18</span>
-                    <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 mt-1">Barangays Tracked</span>
-                  </div>
-                  <div className="flex flex-col items-center p-2 pt-4 md:pt-2">
-                    <span className="text-3xl font-extrabold text-brand-600 dark:text-brand-400">7</span>
-                    <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 mt-1">Municipal Sectors</span>
-                  </div>
-                  <div className="flex flex-col items-center p-2 pt-4 md:pt-2">
-                    <span className="text-3xl font-extrabold text-brand-600 dark:text-brand-400">100%</span>
-                    <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 mt-1">Audit Logged</span>
-                  </div>
-                  <div className="flex flex-col items-center p-2 pt-4 md:pt-2">
-                    <span className="text-3xl font-extrabold text-emerald-500">Active</span>
-                    <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 mt-1">Realtime Sync</span>
-                  </div>
-                </div>
-              </div>
-
             </div>
           </div>
         </section>
@@ -217,20 +210,38 @@ const PublicLandingPage: React.FC = () => {
               </p>
             </div>
 
-            {/* Balanced Flex Layout: 4 cards in Row 1, 3 cards in Row 2 centered */}
-            <div className="flex flex-wrap justify-center gap-6">
-              {SECTORS.map((sector, idx) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {SECTORS.slice(0, 6).map((sector, idx) => (
                 <div 
                   key={idx}
-                  className="w-full sm:w-[calc(50%-12px)] lg:w-[calc(25%-18px)] flex flex-col rounded-2xl border border-gray-200/80 dark:border-gray-800/80 bg-gray-50/50 dark:bg-gray-900/80 p-6 transition-all hover:border-brand-300 dark:hover:border-brand-500/50 hover:shadow-lg"
+                  className="group rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm hover:shadow-xl hover:border-brand-500/40 dark:hover:border-brand-500/40 transition-all duration-200"
                 >
-                  <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 dark:bg-brand-500/10 ring-1 ring-brand-500/20 shrink-0">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 dark:bg-brand-500/10 mb-4 group-hover:scale-110 transition-transform">
                     {sector.icon}
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
                     {sector.title}
                   </h3>
-                  <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-400 flex-1">
+                  <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+                    {sector.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6 mx-auto max-w-md">
+              {SECTORS.slice(6).map((sector, idx) => (
+                <div 
+                  key={idx}
+                  className="group rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm hover:shadow-xl hover:border-brand-500/40 dark:hover:border-brand-500/40 transition-all duration-200 text-center flex flex-col items-center"
+                >
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 dark:bg-brand-500/10 mb-4 group-hover:scale-110 transition-transform">
+                    {sector.icon}
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                    {sector.title}
+                  </h3>
+                  <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
                     {sector.description}
                   </p>
                 </div>
@@ -239,7 +250,7 @@ const PublicLandingPage: React.FC = () => {
           </div>
         </section>
 
-        {/* 18 Barangays Directory Grid Section (Interactive Clickable Map Target) */}
+        {/* 18 Barangays Directory Grid Section (Reflecting Demographics Data Entry Defaults & Pop Stats) */}
         <section className="py-16 lg:py-24 bg-gray-50 dark:bg-gray-950 border-t border-b border-gray-200/60 dark:border-gray-800/60">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-3xl text-center mb-12">
@@ -250,43 +261,70 @@ const PublicLandingPage: React.FC = () => {
                 The 18 Barangays of Presentacion
               </h2>
               <p className="mt-3 text-base text-gray-500 dark:text-gray-400">
-                Click any barangay below to locate it on the Google Map.
+                Click any barangay card below to locate and view its speech bubble details on the Administrative Map.
               </p>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-              {BARANGAYS.map((brgy, idx) => {
-                const isSelected = selectedBarangay === brgy;
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {(barangayList.length > 0
+                ? barangayList
+                : BARANGAYS.map((name) => ({
+                    id: name,
+                    name,
+                    population_count: 0,
+                    household_count: 0,
+                  }))
+              ).map((brgy) => {
+                const brgyName = typeof brgy === 'string' ? brgy : brgy.name;
+                const popCount = (brgy as any).population_count || barangayStatsMap[brgyName]?.population || 0;
+                const hhCount = (brgy as any).household_count || barangayStatsMap[brgyName]?.households || 0;
+                const isSelected = selectedBarangay === brgyName;
 
                 return (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => handleBarangayClick(brgy)}
-                    className={`flex items-center gap-2.5 rounded-xl p-3 text-left transition-all cursor-pointer ${
+                  <div
+                    key={brgyName}
+                    onClick={() => handleBarangayClick(brgyName)}
+                    className={`group relative cursor-pointer overflow-hidden rounded-2xl border p-5 transition-all hover:-translate-y-1 hover:shadow-xl ${
                       isSelected
-                        ? "border-2 border-brand-500 bg-brand-50/80 dark:bg-brand-500/20 shadow-md ring-2 ring-brand-500/20"
-                        : "border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-brand-500/50 hover:bg-brand-50/40 dark:hover:bg-brand-500/10 shadow-xs"
+                        ? "border-2 border-brand-500 bg-brand-50/90 dark:bg-brand-500/15 shadow-xl ring-2 ring-brand-500/30 dark:border-brand-400"
+                        : "border-gray-200 bg-white hover:border-brand-300 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-brand-500/50"
                     }`}
                   >
-                    <div className={`flex h-7 w-7 items-center justify-center rounded-lg shrink-0 ${
-                      isSelected
-                        ? "bg-brand-500 text-white"
-                        : "bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-400"
-                    }`}>
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
+                    <div className="flex items-center justify-between">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-500/20 dark:text-brand-400">
+                        <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                          <polyline points="9 22 9 12 15 12 15 22" />
+                        </svg>
+                      </div>
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-50 text-gray-400 opacity-0 transition-all group-hover:opacity-100 group-hover:bg-brand-50 group-hover:text-brand-500 dark:bg-gray-800 dark:group-hover:bg-brand-500/20 dark:group-hover:text-brand-400">
+                        <svg className="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M4 10h12M10 4l6 6-6 6" />
+                        </svg>
+                      </div>
                     </div>
-                    <span className={`text-xs font-semibold truncate ${
-                      isSelected
-                        ? "text-brand-700 dark:text-brand-300 font-bold"
-                        : "text-gray-800 dark:text-gray-200"
-                    }`}>
-                      {brgy}
-                    </span>
-                  </button>
+                    
+                    <div className="mt-4">
+                      <h3 className="text-lg font-bold text-gray-800 dark:text-white/90">
+                        {brgyName}
+                      </h3>
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-2 gap-4 border-t border-gray-100 pt-4 dark:border-gray-800/50">
+                      <div>
+                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Population</p>
+                        <p className="mt-0.5 text-sm font-semibold text-gray-800 dark:text-white/90">
+                          {popCount.toLocaleString()}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Households</p>
+                        <p className="mt-0.5 text-sm font-semibold text-gray-800 dark:text-white/90">
+                          {hhCount.toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 );
               })}
             </div>
@@ -305,37 +343,17 @@ const PublicLandingPage: React.FC = () => {
               </h2>
               <p className="mt-3 text-base text-gray-500 dark:text-gray-400">
                 {selectedBarangay 
-                  ? `Showing geographic location for Barangay ${selectedBarangay}, Presentacion, Camarines Sur.`
+                  ? `Showing geographic location & demographic stats for Barangay ${selectedBarangay}, Presentacion, Camarines Sur.`
                   : "Located in the 4th Congressional District of Camarines Sur, Bicol Region."
                 }
               </p>
             </div>
             
-            <div className="overflow-hidden rounded-3xl shadow-xl border border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-950 relative aspect-[4/3] md:aspect-[21/9] w-full">
-              
-              {/* Selected Barangay Active Floating Overlay */}
-              {selectedBarangay && (
-                <div className="absolute top-4 left-4 z-10 flex items-center gap-3 rounded-2xl bg-white/95 dark:bg-gray-900/95 px-4 py-2.5 text-xs font-semibold text-gray-800 dark:text-white shadow-xl backdrop-blur-md border border-brand-500/30">
-                  <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <span>Viewing: <strong className="text-brand-600 dark:text-brand-400">Barangay {selectedBarangay}</strong></span>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedBarangay(null)}
-                    className="ml-2 rounded-lg bg-gray-100 dark:bg-gray-800 px-2 py-1 text-xs font-bold text-gray-600 dark:text-gray-300 hover:bg-brand-500 hover:text-white transition-colors"
-                  >
-                    Reset Map View
-                  </button>
-                </div>
-              )}
-
-              <iframe 
-                key={selectedBarangay || 'default'}
-                title={selectedBarangay ? `Barangay ${selectedBarangay} Map` : "Municipality of Presentacion Map"}
-                src={getMapSrc()} 
-                className="absolute top-0 left-0 w-full h-full border-0" 
-                allowFullScreen 
-                loading="lazy" 
-                referrerPolicy="no-referrer-when-downgrade"
+            <div className="overflow-hidden rounded-3xl shadow-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-4 sm:p-6 relative w-full flex flex-col items-center justify-center">
+              <PresentacionAdminMap 
+                selectedBarangay={selectedBarangay} 
+                onSelectBarangay={(brgy) => setSelectedBarangay(brgy || null)}
+                barangayStatsMap={barangayStatsMap}
               />
             </div>
           </div>

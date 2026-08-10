@@ -1,6 +1,7 @@
 import { supabase } from "@/config/supabase";
 import type { Database } from "@/types/database";
 import { BARANGAYS } from "@/lib/constants";
+import { getDepartmentDefaultYear } from "@/utils/yearUtils";
 
 type Barangay = Database['public']['Tables']['barangays']['Row'];
 type PopStat = Database['public']['Tables']['population_stats']['Row'];
@@ -14,7 +15,11 @@ export async function getBarangays(year?: number): Promise<{
   data: BarangayWithStats[];
   error: string | null;
 }> {
-  const currentYear = year || new Date().getFullYear();
+  const targetYear = year || getDepartmentDefaultYear([
+    "Demographics & Population_main",
+    "Demographics_Dashboard",
+    "Demographics & Population"
+  ]);
   
   const { data: barangays, error: bError } = await supabase
     .from("barangays")
@@ -35,13 +40,26 @@ export async function getBarangays(year?: number): Promise<{
     return validBarangayNames.has(lowerName) || BARANGAYS.some(b => b.toLowerCase() === lowerName || lowerName.startsWith(b.toLowerCase()));
   });
 
-  const { data: stats, error: sError } = await supabase
+  let { data: stats, error: sError } = await supabase
     .from("population_stats")
     .select("*")
-    .eq("year", currentYear);
+    .eq("year", targetYear);
     
   if (sError) {
     console.error("Error fetching stats:", sError);
+  }
+
+  // Fallback: If no stats found for targetYear, query latest year available in population_stats
+  if (!stats || stats.length === 0) {
+    const { data: latestStats } = await supabase
+      .from("population_stats")
+      .select("*")
+      .order("year", { ascending: false });
+
+    if (latestStats && latestStats.length > 0) {
+      const topYear = latestStats[0].year;
+      stats = latestStats.filter(s => s.year === topYear);
+    }
   }
   
   const statsMap: Record<string, PopStat> = {};

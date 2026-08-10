@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router";
 import { useAuth } from "@/hooks/useAuth";
 import PageMeta from "@/components/common/PageMeta";
 import { ThemeToggleButton } from "@/components/common/ThemeToggleButton";
+import { PresentacionAdminMap } from "@/components/maps/PresentacionAdminMap";
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -32,8 +33,8 @@ const LoginPage: React.FC = () => {
       <PageMeta title="Sign In" description="Sign in to Presentacion Municipal Database" />
       <div className="flex min-h-screen w-full bg-white dark:bg-gray-900 font-outfit">
         
-        {/* Left Panel — App Theme Hero */}
-        <div className="hidden lg:flex lg:w-1/2 relative flex-col justify-between p-12 xl:p-16 overflow-hidden">
+        {/* Left Panel — App Theme Hero with Administrative Map Showcase */}
+        <div className="hidden lg:flex lg:w-1/2 relative flex-col justify-between p-8 xl:p-12 overflow-hidden">
           {/* Brand Gradient Background matching app design system */}
           <div className="absolute inset-0 bg-gradient-to-br from-brand-700 via-brand-600 to-brand-500" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white/15 via-transparent to-transparent" />
@@ -43,41 +44,56 @@ const LoginPage: React.FC = () => {
           <div className="absolute -bottom-32 -right-20 h-96 w-96 rounded-full bg-brand-900/30 blur-3xl pointer-events-none" />
           
           {/* Top Logo & Branding Header */}
-          <div className="relative z-10 flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 p-2.5 backdrop-blur-xl border border-white/20 shadow-lg ring-1 ring-white/10 shrink-0">
-              <img src="/logo.png" alt="Presentacion Logo" className="h-full w-full object-contain drop-shadow" />
+          <div className="relative z-10 flex items-center justify-between w-full">
+            <div className="flex items-center gap-3.5">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 p-2 backdrop-blur-xl border border-white/20 shadow-lg ring-1 ring-white/10 shrink-0">
+                <img src="/logo.png" alt="Presentacion Logo" className="h-full w-full object-contain drop-shadow" />
+              </div>
+              <div>
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-brand-100">
+                  Republic of the Philippines
+                </span>
+                <h2 className="text-sm font-bold text-white tracking-wide">
+                  Municipality of Presentacion
+                </h2>
+              </div>
             </div>
-            <div>
-              <span className="text-xs font-semibold uppercase tracking-wider text-brand-100">
-                Republic of the Philippines
-              </span>
-              <h2 className="text-base font-bold text-white tracking-wide">
-                Municipality of Presentacion
-              </h2>
+
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-medium text-white border border-white/20 backdrop-blur-md shrink-0">
+              <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+              Centralized Municipal Database System
             </div>
           </div>
 
           {/* Main Hero Content */}
-          <div className="relative z-10 my-auto py-6 max-w-xl">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1 text-xs font-medium text-white border border-white/20 backdrop-blur-md mb-6">
-              <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-              Centralized Municipal Database System
-            </div>
-
-            <h1 className="text-4xl xl:text-5xl font-extrabold text-white leading-tight tracking-tight mb-4">
-              Presentacion <br />
-              <span>GAD Database</span>
+          <div className="relative z-10 my-auto py-4 max-w-xl w-full">
+            <h1 className="text-3xl xl:text-4xl font-extrabold text-white leading-tight tracking-tight mb-2">
+              Presentacion Municipal Database
             </h1>
 
-            <p className="text-base text-white/85 leading-relaxed max-w-lg">
-              A centralized digital platform for tracking, analyzing, and managing 
-              Gender and Development (GAD) initiatives and demographic statistical 
-              data across Presentacion's 18 barangays.
+            {/* Official Administrative Map Showcase Card */}
+            <div className="rounded-2xl border border-white/30 bg-white/95 p-3 shadow-2xl backdrop-blur-xl my-3 ring-1 ring-black/5 overflow-hidden transition-all hover:shadow-brand-950/20">
+              <div className="flex items-center justify-between px-2 pb-2 mb-1.5 border-b border-gray-100">
+                <span className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+                  <svg className="w-4 h-4 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                  </svg>
+                  Official Barangay Administrative Map
+                </span>
+                <span className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-brand-50 text-brand-700 border border-brand-200">
+                  18 Barangays
+                </span>
+              </div>
+              <PresentacionAdminMap />
+            </div>
+
+            <p className="text-xs xl:text-sm text-white/90 leading-relaxed">
+              Centralized platform for managing GAD initiatives, sector demographics, and municipal statistics across Presentacion's 18 barangays.
             </p>
           </div>
 
           {/* Footer Info */}
-          <div className="relative z-10 text-xs text-white/70 flex items-center justify-between border-t border-white/15 pt-4">
+          <div className="relative z-10 text-xs text-white/70 flex items-center justify-between border-t border-white/15 pt-3">
             <span>Camarines Sur, Bicol Region</span>
             <span>© {new Date().getFullYear()} Municipal Government</span>
           </div>
