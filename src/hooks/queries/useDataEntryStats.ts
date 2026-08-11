@@ -32,7 +32,7 @@ export function useDataEntryStats(department: string, tableName: string, year: n
                 sMap[bId][field] = (val && typeof val === 'object' && 'new' in val) ? val.new : val;
               });
             });
-            toast.success("Loaded rejected data for resubmission", { icon: '🔄' });
+            toast.success("Loaded rejected data for resubmission");
           }
         } catch (err) {
           console.error("Failed to load resubmission changes", err);

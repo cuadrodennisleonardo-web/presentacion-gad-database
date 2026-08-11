@@ -141,7 +141,9 @@ export const PresentacionAdminMap: React.FC<PresentacionAdminMapProps> = ({
             {/* Speech Header */}
             <div className="flex items-center justify-between gap-2 border-b border-slate-800 pb-2 mb-2">
               <div className="flex items-center gap-1.5">
-                <span className="text-sm">💬</span>
+                <svg className="w-3.5 h-3.5 text-brand-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
                 <h4 className="text-xs font-black tracking-wide text-brand-300 uppercase">
                   Barangay {activeBarangayName}
                 </h4>

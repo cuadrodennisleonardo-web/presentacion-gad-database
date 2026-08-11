@@ -292,7 +292,7 @@ export default function SocialDevelopmentDataEntry() {
     });
 
     if (Object.keys(changedData).length === 0) {
-       toast('No changes to save.', { icon: 'ℹ️' });
+       toast('No changes to save.');
        return;
     }
 

@@ -67,7 +67,7 @@ export default function GADDataEntry() {
             const val = changes[field];
             statData[field] = (val && typeof val === 'object' && 'new' in val) ? val.new : val;
           });
-          toast.success("Loaded rejected data for resubmission", { icon: '🔄' });
+          toast.success("Loaded rejected data for resubmission");
         }
       }
 
@@ -154,7 +154,7 @@ export default function GADDataEntry() {
     });
 
     if (!hasChanges) {
-       toast('No changes to save.', { icon: 'ℹ️' });
+       toast('No changes to save.');
        return;
     }
 

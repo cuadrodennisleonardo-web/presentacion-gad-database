@@ -59,7 +59,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
           if (payload.eventType === 'INSERT') {
             const newNotif = payload.new as Notification;
             setNotifications(prev => [newNotif, ...prev]);
-            toast(newNotif.title, { icon: '🔔', duration: 4000 });
+            toast(newNotif.title, { duration: 4000 });
           } else if (payload.eventType === 'UPDATE') {
             setNotifications(prev => prev.map(n => n.id === payload.new.id ? (payload.new as Notification) : n));
           } else if (payload.eventType === 'DELETE') {

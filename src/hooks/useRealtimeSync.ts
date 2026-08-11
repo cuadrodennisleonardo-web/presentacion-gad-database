@@ -33,11 +33,11 @@ export function useRealtimeSync(currentUserEmail?: string) {
             if (payload.eventType === 'INSERT') {
               const newRecord = payload.new as any;
               if (newRecord.submitted_by !== currentUserEmail) {
-                toast(`New data submitted for review by ${newRecord.submitted_by}`, { icon: '🔒', id: 'approval-toast' });
+                toast(`New data submitted for review by ${newRecord.submitted_by}`, { id: 'approval-toast' });
               }
             } else if (payload.eventType === 'UPDATE') {
                const newRecord = payload.new as any;
-               toast(`Approval status for ${newRecord.module_name} updated to ${newRecord.status}`, { icon: newRecord.status === 'approved' ? '✅' : '❌', id: 'approval-status-toast' });
+               toast(`Approval status for ${newRecord.module_name} updated to ${newRecord.status}`, { id: 'approval-status-toast' });
             }
           }
 
@@ -52,7 +52,7 @@ export function useRealtimeSync(currentUserEmail?: string) {
             
             if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
               // We don't have the user who made the change in the payload directly unless it's in the row (e.g. updated_by).
-              toast(`${moduleName} data was updated!`, { icon: '🔄', id: `sync-${table}` });
+              toast(`${moduleName} data was updated!`, { id: `sync-${table}` });
             }
           }
 
@@ -60,14 +60,14 @@ export function useRealtimeSync(currentUserEmail?: string) {
           if (table === 'dynamic_data') {
             queryClient.invalidateQueries({ queryKey: ['dynamic_data'] });
             if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
-              toast(`A dynamic table data was updated!`, { icon: '🔄', id: `sync-${table}` });
+              toast(`A dynamic table data was updated!`, { id: `sync-${table}` });
             }
           }
 
           if (table === 'dynamic_schemas') {
             queryClient.invalidateQueries({ queryKey: ['dynamic_schemas'] });
             if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
-              toast(`Dynamic tables definition updated!`, { icon: '📋', id: `sync-${table}` });
+              toast(`Dynamic tables definition updated!`, { id: `sync-${table}` });
             }
           }
         }

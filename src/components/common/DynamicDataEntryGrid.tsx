@@ -81,7 +81,7 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
                dMap[bId][fieldId] = bChanges[fieldId].new;
             });
           });
-          toast.success("Loaded rejected data for resubmission", { icon: '🔄' });
+          toast.success("Loaded rejected data for resubmission");
         }
       }
 
@@ -191,7 +191,7 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
       });
 
       if (Object.keys(changedData).length === 0) {
-         toast('No changes to save.', { icon: 'ℹ️' });
+         toast('No changes to save.');
          return;
       }
 

@@ -195,77 +195,60 @@ const PublicLandingPage: React.FC = () => {
           </div>
         </section>
 
-        {/* Municipal Sectors Grid Section (Symmetrically Aligned Layout) */}
-        <section id="sectors" className="py-16 lg:py-24 bg-white dark:bg-gray-900/50">
+        {/* Municipal Sectors Grid Section (Minimal Executive Design) */}
+        <section id="sectors" className="py-12 lg:py-16 bg-white dark:bg-gray-900/50">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="mx-auto max-w-3xl text-center mb-12 lg:mb-16">
+            <div className="mx-auto max-w-3xl text-center mb-8 lg:mb-10">
               <span className="text-xs font-bold uppercase tracking-widest text-brand-600 dark:text-brand-400">
                 Municipal Governance Pillars
               </span>
-              <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
+              <h2 className="mt-1.5 text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-3xl">
                 Integrated Data Management Sectors
               </h2>
-              <p className="mt-3 text-base text-gray-500 dark:text-gray-400">
-                Comprehensive data entry, statistical dashboards, and approval workflows across 7 dedicated LGU departments.
+              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                Data management &amp; approval workflows across 7 dedicated LGU departments.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {SECTORS.slice(0, 6).map((sector, idx) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+              {SECTORS.map((sector, idx) => (
                 <div 
                   key={idx}
-                  className="group rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm hover:shadow-xl hover:border-brand-500/40 dark:hover:border-brand-500/40 transition-all duration-200"
+                  className="group flex items-start gap-3 rounded-xl border border-gray-200/80 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-xs hover:shadow-md hover:border-brand-500/50 dark:hover:border-brand-500/50 transition-all duration-200"
                 >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 dark:bg-brand-500/10 mb-4 group-hover:scale-110 transition-transform">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 dark:bg-brand-500/10 group-hover:scale-105 transition-transform">
                     {sector.icon}
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
-                    {sector.title}
-                  </h3>
-                  <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-                    {sector.description}
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-6 mx-auto max-w-md">
-              {SECTORS.slice(6).map((sector, idx) => (
-                <div 
-                  key={idx}
-                  className="group rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm hover:shadow-xl hover:border-brand-500/40 dark:hover:border-brand-500/40 transition-all duration-200 text-center flex flex-col items-center"
-                >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 dark:bg-brand-500/10 mb-4 group-hover:scale-110 transition-transform">
-                    {sector.icon}
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors truncate">
+                      {sector.title}
+                    </h3>
+                    <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400 line-clamp-2 leading-snug">
+                      {sector.description}
+                    </p>
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
-                    {sector.title}
-                  </h3>
-                  <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-                    {sector.description}
-                  </p>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* 18 Barangays Directory Grid Section (Reflecting Demographics Data Entry Defaults & Pop Stats) */}
-        <section className="py-16 lg:py-24 bg-gray-50 dark:bg-gray-950 border-t border-b border-gray-200/60 dark:border-gray-800/60">
+        {/* 18 Barangays Directory Grid Section (Minimal Space-Saving Compact Grid) */}
+        <section className="py-12 lg:py-16 bg-gray-50 dark:bg-gray-950 border-t border-b border-gray-200/60 dark:border-gray-800/60">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="mx-auto max-w-3xl text-center mb-12">
+            <div className="mx-auto max-w-3xl text-center mb-8 lg:mb-10">
               <span className="text-xs font-bold uppercase tracking-widest text-brand-600 dark:text-brand-400">
                 Barangay Directory
               </span>
-              <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
+              <h2 className="mt-1.5 text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-3xl">
                 The 18 Barangays of Presentacion
               </h2>
-              <p className="mt-3 text-base text-gray-500 dark:text-gray-400">
-                Click any barangay card below to locate and view its speech bubble details on the Administrative Map.
+              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                Click any barangay card below to locate and highlight it on the Administrative Map.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {(barangayList.length > 0
                 ? barangayList
                 : BARANGAYS.map((name) => ({
@@ -284,45 +267,40 @@ const PublicLandingPage: React.FC = () => {
                   <div
                     key={brgyName}
                     onClick={() => handleBarangayClick(brgyName)}
-                    className={`group relative cursor-pointer overflow-hidden rounded-2xl border p-5 transition-all hover:-translate-y-1 hover:shadow-xl ${
+                    className={`group relative cursor-pointer overflow-hidden rounded-xl border p-3 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
                       isSelected
-                        ? "border-2 border-brand-500 bg-brand-50/90 dark:bg-brand-500/15 shadow-xl ring-2 ring-brand-500/30 dark:border-brand-400"
+                        ? "border-2 border-brand-500 bg-brand-50/90 dark:bg-brand-500/15 shadow-md ring-2 ring-brand-500/30 dark:border-brand-400"
                         : "border-gray-200 bg-white hover:border-brand-300 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-brand-500/50"
                     }`}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-500/20 dark:text-brand-400">
-                        <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <div className="flex items-center justify-between gap-1.5">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-50 text-brand-600 dark:bg-brand-500/20 dark:text-brand-400 shrink-0">
+                        <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                          <polyline points="9 22 9 12 15 12 15 22" />
                         </svg>
                       </div>
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-50 text-gray-400 opacity-0 transition-all group-hover:opacity-100 group-hover:bg-brand-50 group-hover:text-brand-500 dark:bg-gray-800 dark:group-hover:bg-brand-500/20 dark:group-hover:text-brand-400">
-                        <svg className="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M4 10h12M10 4l6 6-6 6" />
+                      <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
+                        isSelected 
+                          ? "bg-brand-500 text-white" 
+                          : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400 group-hover:bg-brand-50 group-hover:text-brand-600 dark:group-hover:bg-brand-500/20 dark:group-hover:text-brand-400"
+                      }`}>
+                        <span>Map</span>
+                        <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
-                      </div>
+                      </span>
                     </div>
                     
-                    <div className="mt-4">
-                      <h3 className="text-lg font-bold text-gray-800 dark:text-white/90">
+                    <div className="mt-2.5">
+                      <h3 className="text-sm font-bold text-gray-800 dark:text-white truncate">
                         {brgyName}
                       </h3>
                     </div>
 
-                    <div className="mt-4 grid grid-cols-2 gap-4 border-t border-gray-100 pt-4 dark:border-gray-800/50">
-                      <div>
-                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Population</p>
-                        <p className="mt-0.5 text-sm font-semibold text-gray-800 dark:text-white/90">
-                          {popCount.toLocaleString()}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Households</p>
-                        <p className="mt-0.5 text-sm font-semibold text-gray-800 dark:text-white/90">
-                          {hhCount.toLocaleString()}
-                        </p>
-                      </div>
+                    <div className="mt-2.5 flex items-center justify-between border-t border-gray-100 pt-2 dark:border-gray-800/60 text-[11px]">
+                      <span className="text-gray-500 dark:text-gray-400 font-medium">Pop <strong className="font-bold text-gray-800 dark:text-white/90">{popCount.toLocaleString()}</strong></span>
+                      <span className="text-gray-500 dark:text-gray-400 font-medium">HH <strong className="font-bold text-gray-800 dark:text-white/90">{hhCount.toLocaleString()}</strong></span>
                     </div>
                   </div>
                 );
