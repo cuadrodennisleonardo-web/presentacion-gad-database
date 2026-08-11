@@ -8,7 +8,7 @@ import type { Database } from '@/types/database';
 
 type DynamicSchema = Database['public']['Tables']['dynamic_schemas']['Row'];
 
-export type DynamicTableCategory = 'standard' | 'budget' | 'percentage' | 'project_tracker' | 'geo_registry' | 'time_series';
+export type DynamicTableCategory = 'standard' | 'budget' | 'percentage' | 'multi_group' | 'project_tracker' | 'geo_registry' | 'time_series';
 
 interface FieldDef {
   id: string;
@@ -29,6 +29,13 @@ export interface PercentageGroupDef {
   fields: PercentageSubField[];
 }
 
+export interface MultiGroupSectionDef {
+  id: string;
+  groupTitle: string;
+  totalTitle?: string;
+  fields: FieldDef[];
+}
+
 const DEPARTMENTS = [
   'Demographics & Population',
   'Social Development',
@@ -47,6 +54,7 @@ interface TablePreset {
   category: DynamicTableCategory;
   fields?: FieldDef[];
   groups?: PercentageGroupDef[];
+  multiGroups?: MultiGroupSectionDef[];
   isBudget?: boolean;
   isPercentage?: boolean;
 }
@@ -77,6 +85,42 @@ const PRESET_TABLE_SUGGESTIONS: TablePreset[] = [
       { id: 'cs2', name: 'Married Population', type: 'gender_split', chartType: 'bar' },
       { id: 'cs3', name: 'Widowed Population', type: 'gender_split', chartType: 'stat_card' },
       { id: 'cs4', name: 'Separated / Annulled', type: 'gender_split', chartType: 'pie' }
+    ]
+  },
+  {
+    id: 'preset-education-levels',
+    department: 'Social Development',
+    tabName: 'Education Enrollment by Level',
+    description: 'Multi-subtable tracking student enrollment and dropouts across Elementary, High School, and Higher Ed subtables.',
+    category: 'multi_group',
+    multiGroups: [
+      {
+        id: 'mg1',
+        groupTitle: 'Elementary Education (Primary)',
+        totalTitle: 'Total Elementary Students',
+        fields: [
+          { id: 'ef1', name: 'Elementary Enrollees', type: 'gender_split', chartType: 'stat_card' },
+          { id: 'ef2', name: 'Elementary Dropouts', type: 'gender_split', chartType: 'bar' }
+        ]
+      },
+      {
+        id: 'mg2',
+        groupTitle: 'High School Education (Secondary)',
+        totalTitle: 'Total High School Students',
+        fields: [
+          { id: 'hf1', name: 'High School Enrollees', type: 'gender_split', chartType: 'stat_card' },
+          { id: 'hf2', name: 'High School Dropouts', type: 'gender_split', chartType: 'bar' }
+        ]
+      },
+      {
+        id: 'mg3',
+        groupTitle: 'Tertiary & TVET Education',
+        totalTitle: 'Total Higher Ed Students',
+        fields: [
+          { id: 'tf1', name: 'College / University Enrollees', type: 'gender_split', chartType: 'stat_card' },
+          { id: 'tf2', name: 'TVET / Vocational Trainees', type: 'gender_split', chartType: 'pie' }
+        ]
+      }
     ]
   },
   {
@@ -269,6 +313,7 @@ export default function DynamicTablesPage() {
   const [tableCategory, setTableCategory] = useState<DynamicTableCategory>('standard');
   const [fields, setFields] = useState<FieldDef[]>([]);
   const [percentageGroups, setPercentageGroups] = useState<PercentageGroupDef[]>([]);
+  const [multiGroupSections, setMultiGroupSections] = useState<MultiGroupSectionDef[]>([]);
 
   // Tabs
   const [activeTab, setActiveTab] = useState<DynamicTableCategory>('standard');
@@ -309,6 +354,14 @@ export default function DynamicTablesPage() {
         fields: [{ id: crypto.randomUUID(), name: '' }]
       }
     ]);
+    setMultiGroupSections([
+      {
+        id: crypto.randomUUID(),
+        groupTitle: 'Group Subtable 1',
+        totalTitle: 'Group Total',
+        fields: [{ id: crypto.randomUUID(), name: '', type: 'gender_split', chartType: 'bar' }]
+      }
+    ]);
     setIsModalOpen(true);
   };
 
@@ -327,10 +380,21 @@ export default function DynamicTablesPage() {
       }));
       setPercentageGroups(newGroups);
       setFields([]);
+      setMultiGroupSections([]);
+    } else if (preset.category === 'multi_group' && preset.multiGroups) {
+      const newMultiGroups = preset.multiGroups.map(mg => ({
+        ...mg,
+        id: crypto.randomUUID(),
+        fields: mg.fields.map(f => ({ ...f, id: crypto.randomUUID() }))
+      }));
+      setMultiGroupSections(newMultiGroups);
+      setFields([]);
+      setPercentageGroups([]);
     } else if (preset.fields) {
       const newFields = preset.fields.map(f => ({ ...f, id: crypto.randomUUID() }));
       setFields(newFields);
       setPercentageGroups([]);
+      setMultiGroupSections([]);
     }
 
     setActiveTab(preset.category);
@@ -349,12 +413,14 @@ export default function DynamicTablesPage() {
        setTableCategory('standard');
        setFields(sData as unknown as FieldDef[]);
        setPercentageGroups([]);
+       setMultiGroupSections([]);
     } else {
        setDescription(sData?.description || '');
        const category: DynamicTableCategory = sData?.tableCategory || (sData?.isPercentage ? 'percentage' : sData?.isBudget ? 'budget' : 'standard');
        setTableCategory(category);
        setFields(sData?.fields || []);
        setPercentageGroups(sData?.groups || []);
+       setMultiGroupSections(sData?.multiGroups || []);
     }
     
     setIsModalOpen(true);
@@ -425,6 +491,55 @@ export default function DynamicTablesPage() {
     setPercentageGroups(newGroups);
   };
 
+  // Multi-Group Section Management
+  const addMultiGroupSection = () => {
+    setMultiGroupSections([
+      ...multiGroupSections,
+      {
+        id: crypto.randomUUID(),
+        groupTitle: `Subtable ${multiGroupSections.length + 1}`,
+        totalTitle: 'Group Total',
+        fields: [{ id: crypto.randomUUID(), name: '', type: 'gender_split', chartType: 'bar' }]
+      }
+    ]);
+  };
+
+  const updateMultiGroupTitle = (sIdx: number, title: string) => {
+    const newSecs = [...multiGroupSections];
+    newSecs[sIdx].groupTitle = title;
+    setMultiGroupSections(newSecs);
+  };
+
+  const updateMultiGroupSubtotalTitle = (sIdx: number, title: string) => {
+    const newSecs = [...multiGroupSections];
+    newSecs[sIdx].totalTitle = title;
+    setMultiGroupSections(newSecs);
+  };
+
+  const addMultiGroupField = (sIdx: number) => {
+    const newSecs = [...multiGroupSections];
+    newSecs[sIdx].fields.push({ id: crypto.randomUUID(), name: '', type: 'gender_split', chartType: 'bar' });
+    setMultiGroupSections(newSecs);
+  };
+
+  const updateMultiGroupField = (sIdx: number, fIdx: number, key: keyof FieldDef, value: string) => {
+    const newSecs = [...multiGroupSections];
+    newSecs[sIdx].fields[fIdx] = { ...newSecs[sIdx].fields[fIdx], [key]: value };
+    setMultiGroupSections(newSecs);
+  };
+
+  const removeMultiGroupField = (sIdx: number, fIdx: number) => {
+    const newSecs = [...multiGroupSections];
+    newSecs[sIdx].fields.splice(fIdx, 1);
+    setMultiGroupSections(newSecs);
+  };
+
+  const removeMultiGroupSection = (sIdx: number) => {
+    const newSecs = [...multiGroupSections];
+    newSecs.splice(sIdx, 1);
+    setMultiGroupSections(newSecs);
+  };
+
   const handleSave = async () => {
     if (!tabName.trim()) {
       toast.error('Please enter a tab name');
@@ -443,6 +558,21 @@ export default function DynamicTablesPage() {
         }
         if (g.fields.length === 0 || g.fields.some(f => !f.name.trim())) {
           toast.error('Please name all indicator fields in your percentage groups');
+          return;
+        }
+      }
+    } else if (tableCategory === 'multi_group') {
+      if (multiGroupSections.length === 0) {
+        toast.error('Please add at least one sub-table group');
+        return;
+      }
+      for (const mg of multiGroupSections) {
+        if (!mg.groupTitle.trim()) {
+          toast.error('Please specify a section header title for all sub-tables');
+          return;
+        }
+        if (mg.fields.length === 0 || mg.fields.some(f => !f.name.trim())) {
+          toast.error('Please name all data fields in your sub-tables');
           return;
         }
       }
@@ -465,6 +595,13 @@ export default function DynamicTablesPage() {
         isPercentage: true,
         tableType: 'percentage',
         groups: percentageGroups
+      };
+    } else if (tableCategory === 'multi_group') {
+      schemaPayload = {
+        description,
+        tableCategory: 'multi_group',
+        tableType: 'multi_group',
+        multiGroups: multiGroupSections
       };
     } else {
       schemaPayload = {
@@ -549,7 +686,7 @@ export default function DynamicTablesPage() {
         <div>
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">Dynamic Tables Manager</h2>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Build custom data tables, budgets, project trackers, geo-registries, and monthly time-series without writing code.
+            Build custom data tables, multi-group subtables, budgets, project trackers, geo-registries, and monthly time-series without writing code.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -632,6 +769,8 @@ export default function DynamicTablesPage() {
                         ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300' 
                         : preset.category === 'percentage'
                         ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300'
+                        : preset.category === 'multi_group'
+                        ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300'
                         : preset.category === 'project_tracker'
                         ? 'bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300'
                         : preset.category === 'geo_registry'
@@ -653,7 +792,7 @@ export default function DynamicTablesPage() {
 
                 <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
                   <span className="text-[11px] font-semibold text-gray-400">
-                    {preset.fields ? `${preset.fields.length} Fields` : `${preset.groups?.[0]?.fields.length || 0} Indicators`}
+                    {preset.fields ? `${preset.fields.length} Fields` : preset.multiGroups ? `${preset.multiGroups.length} Subtables` : `${preset.groups?.[0]?.fields.length || 0} Indicators`}
                   </span>
                   <button
                     onClick={() => applyPresetTemplate(preset)}
@@ -671,7 +810,7 @@ export default function DynamicTablesPage() {
         </div>
       )}
 
-      {/* Tabs Bar covering 6 Categories */}
+      {/* Tabs Bar covering 7 Categories */}
       <div className="mb-6 flex border-b border-gray-200 dark:border-gray-800 overflow-x-auto no-scrollbar">
         <button
           onClick={() => setActiveTab('standard')}
@@ -682,6 +821,16 @@ export default function DynamicTablesPage() {
           }`}
         >
           Standard Count
+        </button>
+        <button
+          onClick={() => setActiveTab('multi_group')}
+          className={`pb-3 px-4 text-xs font-bold border-b-2 whitespace-nowrap transition-all cursor-pointer ${
+            activeTab === 'multi_group'
+              ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
+              : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+          }`}
+        >
+          Multi-Group Subtables
         </button>
         <button
           onClick={() => setActiveTab('budget')}
@@ -744,7 +893,7 @@ export default function DynamicTablesPage() {
                 <th className="px-6 py-4">Department</th>
                 <th className="px-6 py-4">Tab Name</th>
                 <th className="px-6 py-4">Category</th>
-                <th className="px-6 py-4">Fields / Config</th>
+                <th className="px-6 py-4">Fields / Subtables</th>
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
@@ -788,6 +937,12 @@ export default function DynamicTablesPage() {
                                 {g.groupTitle || g.totalTitle} ({g.fields.map(f => f.name).join(', ')})
                               </span>
                             ))
+                          ) : cat === 'multi_group' ? (
+                            (sData?.multiGroups || []).map((mg: MultiGroupSectionDef) => (
+                              <span key={mg.id} className="px-2 py-1 bg-indigo-50 dark:bg-indigo-950/40 rounded-md text-indigo-800 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/50 font-medium">
+                                {mg.groupTitle} ({mg.fields.map(f => f.name).join(', ')})
+                              </span>
+                            ))
                           ) : (
                             ((Array.isArray(sData) ? sData : sData?.fields) || []).map((f: FieldDef) => (
                               <span key={f.id} className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-md text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
@@ -813,250 +968,360 @@ export default function DynamicTablesPage() {
       {/* CREATE / EDIT DYNAMIC TABLE MODAL */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/50 backdrop-blur-sm p-4">
-          <div className="w-full max-w-3xl rounded-2xl bg-white shadow-2xl dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100 dark:border-gray-800">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                  {editingSchema ? "Edit Dynamic Table" : `Create ${tableCategory.replace('_', ' ').toUpperCase()} Table`}
-                </h2>
-                
-                {/* Preset Dropdown inside Modal */}
-                {!editingSchema && (
-                  <select
-                    onChange={(e) => {
-                      const selected = PRESET_TABLE_SUGGESTIONS.find(p => p.id === e.target.value);
-                      if (selected) applyPresetTemplate(selected);
-                    }}
-                    defaultValue=""
-                    className="rounded-lg border border-brand-300 bg-brand-50/50 px-3 py-1.5 text-xs font-bold text-brand-700 dark:border-brand-500/40 dark:bg-brand-500/10 dark:text-brand-300 focus:outline-none cursor-pointer"
-                  >
-                    <option value="" disabled>Auto-Fill from Preset Template...</option>
-                    {PRESET_TABLE_SUGGESTIONS.map(p => (
-                      <option key={p.id} value={p.id}>[{p.department}] {p.tabName}</option>
-                    ))}
-                  </select>
-                )}
-              </div>
+          <div className="w-full max-w-3xl rounded-2xl bg-white shadow-2xl dark:bg-gray-900 border border-gray-100 dark:border-gray-800 max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="p-6 pb-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                {editingSchema ? "Edit Dynamic Table" : `Create ${tableCategory.replace('_', ' ').toUpperCase()} Table`}
+              </h2>
+              
+              {/* Preset Dropdown inside Modal */}
+              {!editingSchema && (
+                <select
+                  onChange={(e) => {
+                    const selected = PRESET_TABLE_SUGGESTIONS.find(p => p.id === e.target.value);
+                    if (selected) applyPresetTemplate(selected);
+                  }}
+                  defaultValue=""
+                  className="rounded-lg border border-brand-300 bg-brand-50/50 px-3 py-1.5 text-xs font-bold text-brand-700 dark:border-brand-500/40 dark:bg-brand-500/10 dark:text-brand-300 focus:outline-none cursor-pointer"
+                >
+                  <option value="" disabled>Auto-Fill from Preset Template...</option>
+                  {PRESET_TABLE_SUGGESTIONS.map(p => (
+                    <option key={p.id} value={p.id}>[{p.department}] {p.tabName}</option>
+                  ))}
+                </select>
+              )}
+            </div>
 
-              <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div>
-                    <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-gray-300">Department</label>
-                    <select
-                      value={department}
-                      onChange={e => setDepartment(e.target.value)}
-                      className="w-full rounded-lg border border-gray-300 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-800 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:text-white"
-                    >
-                      {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-gray-300">Table Type Category</label>
-                    <select
-                      value={tableCategory}
-                      onChange={e => setTableCategory(e.target.value as DynamicTableCategory)}
-                      className="w-full rounded-lg border border-gray-300 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-800 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:text-white"
-                    >
-                      <option value="standard">Standard Count</option>
-                      <option value="budget">Budget Allocation</option>
-                      <option value="percentage">Percentage & Ratio</option>
-                      <option value="project_tracker">Project Milestone Tracker</option>
-                      <option value="geo_registry">Geo-Spatial Asset Registry</option>
-                      <option value="time_series">Monthly Time-Series</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-gray-300">Tab Name</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Health & Nutrition"
-                      value={tabName}
-                      onChange={e => setTabName(e.target.value)}
-                      className="w-full rounded-lg border border-gray-300 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-800 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:text-white"
-                    />
-                  </div>
-                </div>
-
+            <div className="p-6 space-y-4 overflow-y-auto flex-1 pr-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Description (Optional)</label>
+                  <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-gray-300">Department</label>
+                  <select
+                    value={department}
+                    onChange={e => setDepartment(e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-800 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:text-white"
+                  >
+                    {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-gray-300">Table Type Category</label>
+                  <select
+                    value={tableCategory}
+                    onChange={e => setTableCategory(e.target.value as DynamicTableCategory)}
+                    className="w-full rounded-lg border border-gray-300 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-800 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:text-white"
+                  >
+                    <option value="standard">Standard Count</option>
+                    <option value="multi_group">Multi-Group Subtables</option>
+                    <option value="budget">Budget Allocation</option>
+                    <option value="percentage">Percentage &amp; Ratio</option>
+                    <option value="project_tracker">Project Milestone Tracker</option>
+                    <option value="geo_registry">Geo-Spatial Asset Registry</option>
+                    <option value="time_series">Monthly Time-Series</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-gray-300">Tab Name</label>
                   <input
                     type="text"
-                    placeholder="e.g. Manage custom household sanitation ratios or project progress."
-                    value={description}
-                    onChange={e => setDescription(e.target.value)}
+                    placeholder="e.g. Health & Nutrition"
+                    value={tabName}
+                    onChange={e => setTabName(e.target.value)}
                     className="w-full rounded-lg border border-gray-300 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-800 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:text-white"
                   />
                 </div>
+              </div>
 
-                {/* Percentage Table Builder Modal Form */}
-                {tableCategory === 'percentage' ? (
-                  <div className="mt-6 space-y-5">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-sm font-semibold text-gray-800 dark:text-white/90">Data Field Groups</h3>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Configure your Total input title and indicator fields to calculate percentage automatically.</p>
-                      </div>
-                      <button 
-                        onClick={addPercentageGroup} 
-                        className="text-xs font-semibold text-brand-600 hover:text-brand-700 dark:text-brand-400 flex items-center gap-1 bg-brand-50 dark:bg-brand-950/40 px-3 py-1.5 rounded-lg border border-brand-200 dark:border-brand-800/50 cursor-pointer"
-                      >
-                        + Add Total Group
-                      </button>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Description (Optional)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Track multiple education levels or sub-tables without percentages."
+                  value={description}
+                  onChange={e => setDescription(e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-800 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:text-white"
+                />
+              </div>
+
+              {/* Multi-Group Subtable Builder Form */}
+              {tableCategory === 'multi_group' ? (
+                <div className="mt-6 space-y-5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-800 dark:text-white/90">Sub-Table Groups</h3>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Add multiple grouped subtables in a single dynamic tab without percentage formulas.</p>
                     </div>
-
-                    {percentageGroups.map((group, gIdx) => (
-                      <div key={group.id} className="p-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-800/40 space-y-4">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-1">
-                            <div>
-                              <label className="mb-1 block text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
-                                Sub-Table / Section Header Title
-                              </label>
-                              <input
-                                type="text"
-                                placeholder="e.g. Toilet Facility Status"
-                                value={group.groupTitle || ''}
-                                onChange={e => updatePercentageSubTableTitle(gIdx, e.target.value)}
-                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-900 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-                              />
-                            </div>
-                            <div>
-                              <label className="mb-1 block text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
-                                Name of Total (Denominator)
-                              </label>
-                              <input
-                                type="text"
-                                placeholder="e.g. Total Households"
-                                value={group.totalTitle}
-                                onChange={e => updatePercentageGroupTitle(gIdx, e.target.value)}
-                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-900 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-                              />
-                            </div>
-                          </div>
-                          {percentageGroups.length > 1 && (
-                            <button
-                              onClick={() => removePercentageGroup(gIdx)}
-                              className="text-xs text-error-500 hover:text-error-600 font-medium pt-7 cursor-pointer"
-                            >
-                              Remove Group
-                            </button>
-                          )}
-                        </div>
-
-                        <div className="space-y-2 pt-2 border-t border-gray-200/80 dark:border-gray-700/60">
-                          <div className="flex items-center justify-between mb-1">
-                            <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                              Indicator Data Fields (Counts to compare against Total)
-                            </label>
-                            <button
-                              onClick={() => addPercentageSubField(gIdx)}
-                              className="text-xs font-medium text-brand-500 hover:text-brand-600 cursor-pointer"
-                            >
-                              + Add Field
-                            </button>
-                          </div>
-
-                          {group.fields.map((sf, fIdx) => (
-                            <div key={sf.id} className="flex items-center gap-2">
-                              <input
-                                type="text"
-                                placeholder="Field Name (e.g. Household w/ ST)"
-                                value={sf.name}
-                                onChange={e => updatePercentageSubField(gIdx, fIdx, e.target.value)}
-                                className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-                              />
-                              <span className="text-xs px-2 py-1 bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300 rounded font-medium">
-                                Fixed Auto %
-                              </span>
-                              {group.fields.length > 1 && (
-                                <button
-                                  onClick={() => removePercentageSubField(gIdx, fIdx)}
-                                  className="p-1 text-gray-400 hover:text-error-500 rounded-md cursor-pointer"
-                                >
-                                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                  </svg>
-                                </button>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
+                    <button 
+                      onClick={addMultiGroupSection} 
+                      className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 flex items-center gap-1 bg-indigo-50 dark:bg-indigo-950/40 px-3 py-1.5 rounded-lg border border-indigo-200 dark:border-indigo-800/50 cursor-pointer"
+                    >
+                      + Add Sub-Table Group
+                    </button>
                   </div>
-                ) : (
-                  /* Standard / Budget / Project / Geo / Time-Series Modal Form */
-                  <div className="mt-6">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-sm font-semibold text-gray-800 dark:text-white/90">Data Fields</h3>
-                      <button onClick={addField} className="text-xs font-medium text-brand-500 hover:text-brand-600 cursor-pointer">+ Add Field</button>
-                    </div>
-                    
-                    {fields.length === 0 ? (
-                      <div className="p-4 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 text-center text-sm text-gray-500">
-                        No fields added yet. Select a preset template above or click "+ Add Field" to start building.
+
+                  {multiGroupSections.map((sec, sIdx) => (
+                    <div key={sec.id} className="p-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-800/40 space-y-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-1">
+                          <div>
+                            <label className="mb-1 block text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
+                              Sub-Table Group Header Title
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="e.g. Primary School Enrollment"
+                              value={sec.groupTitle}
+                              onChange={e => updateMultiGroupTitle(sIdx, e.target.value)}
+                              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-900 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-1 block text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
+                              Group Subtotal Label (Optional)
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="e.g. Group Subtotal"
+                              value={sec.totalTitle || ''}
+                              onChange={e => updateMultiGroupSubtotalTitle(sIdx, e.target.value)}
+                              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-900 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                            />
+                          </div>
+                        </div>
+                        {multiGroupSections.length > 1 && (
+                          <button
+                            onClick={() => removeMultiGroupSection(sIdx)}
+                            className="text-xs text-error-500 hover:text-error-600 font-medium pt-7 cursor-pointer"
+                          >
+                            Remove Sub-Table
+                          </button>
+                        )}
                       </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {fields.map((field, idx) => (
-                          <div key={field.id} className="flex flex-col sm:flex-row gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/20">
-                            <div className="flex-1">
-                              <input
-                                type="text"
-                                placeholder="Field Name (e.g. Total Schools)"
-                                value={field.name}
-                                onChange={e => updateField(idx, 'name', e.target.value)}
-                                className="w-full rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-                              />
-                            </div>
-                            <div className="w-full sm:w-36">
-                              <select
-                                value={field.type}
-                                onChange={e => updateField(idx, 'type', e.target.value as any)}
-                                disabled={tableCategory === 'budget' || tableCategory === 'project_tracker' || tableCategory === 'geo_registry'}
-                                className="w-full rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white disabled:bg-gray-50 disabled:text-gray-500 dark:disabled:bg-gray-800 dark:disabled:text-white"
+
+                      <div className="space-y-2 pt-2 border-t border-gray-200/80 dark:border-gray-700/60">
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                            Sub-Table Data Fields
+                          </label>
+                          <button
+                            onClick={() => addMultiGroupField(sIdx)}
+                            className="text-xs font-medium text-indigo-500 hover:text-indigo-600 cursor-pointer"
+                          >
+                            + Add Field
+                          </button>
+                        </div>
+
+                        {sec.fields.map((f, fIdx) => (
+                          <div key={f.id} className="flex flex-col sm:flex-row gap-2 p-2.5 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+                            <input
+                              type="text"
+                              placeholder="Field Name (e.g. Enrollees)"
+                              value={f.name}
+                              onChange={e => updateMultiGroupField(sIdx, fIdx, 'name', e.target.value)}
+                              className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                            />
+                            <select
+                              value={f.type}
+                              onChange={e => updateMultiGroupField(sIdx, fIdx, 'type', e.target.value)}
+                              className="rounded-md border border-gray-300 bg-white px-2 py-1.5 text-xs focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                            >
+                              <option value="gender_split">Male/Female</option>
+                              <option value="single_value">Single Value</option>
+                            </select>
+                            <select
+                              value={f.chartType}
+                              onChange={e => updateMultiGroupField(sIdx, fIdx, 'chartType', e.target.value)}
+                              className="rounded-md border border-gray-300 bg-white px-2 py-1.5 text-xs focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                            >
+                              <option value="bar">Bar Chart</option>
+                              <option value="pie">Line Graph</option>
+                              <option value="stat_card">Summary Card</option>
+                              <option value="hidden">Hidden</option>
+                            </select>
+                            {sec.fields.length > 1 && (
+                              <button
+                                onClick={() => removeMultiGroupField(sIdx, fIdx)}
+                                className="p-1 text-gray-400 hover:text-error-500 rounded-md cursor-pointer self-center"
                               >
-                                {tableCategory !== 'budget' && tableCategory !== 'project_tracker' && tableCategory !== 'geo_registry' && <option value="gender_split">Male/Female</option>}
-                                <option value="single_value">{tableCategory === 'budget' ? 'Currency (₱)' : 'Single Value'}</option>
-                              </select>
-                            </div>
-                            <div className="w-full sm:w-36">
-                              <select
-                                value={field.chartType}
-                                onChange={e => updateField(idx, 'chartType', e.target.value as any)}
-                                className="w-full rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-                              >
-                                <option value="bar">Bar Chart</option>
-                                <option value="pie">{tableCategory === 'budget' ? 'Line Graph' : 'Line/Area Graph'}</option>
-                                <option value="stat_card">Total Summary Card</option>
-                                <option value="hidden">Hidden from Dash</option>
-                              </select>
-                            </div>
-                            <button onClick={() => removeField(idx)} className="p-1.5 text-gray-400 hover:text-error-500 rounded-md cursor-pointer">
-                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                            </button>
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
+                            )}
                           </div>
                         ))}
                       </div>
-                    )}
+                    </div>
+                  ))}
+                </div>
+              ) : tableCategory === 'percentage' ? (
+                /* Percentage Table Builder Form */
+                <div className="mt-6 space-y-5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-800 dark:text-white/90">Data Field Groups</h3>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Configure your Total input title and indicator fields to calculate percentage automatically.</p>
+                    </div>
+                    <button 
+                      onClick={addPercentageGroup} 
+                      className="text-xs font-semibold text-brand-600 hover:text-brand-700 dark:text-brand-400 flex items-center gap-1 bg-brand-50 dark:bg-brand-950/40 px-3 py-1.5 rounded-lg border border-brand-200 dark:border-brand-800/50 cursor-pointer"
+                    >
+                      + Add Total Group
+                    </button>
                   </div>
-                )}
-              </div>
 
-              <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-800">
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800 cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSave}
-                  className="rounded-lg bg-brand-500 px-5 py-2 text-sm font-medium text-white hover:bg-brand-600 cursor-pointer"
-                >
-                  Save Table
-                </button>
-              </div>
+                  {percentageGroups.map((group, gIdx) => (
+                    <div key={group.id} className="p-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-800/40 space-y-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-1">
+                          <div>
+                            <label className="mb-1 block text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
+                              Sub-Table / Section Header Title
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="e.g. Toilet Facility Status"
+                              value={group.groupTitle || ''}
+                              onChange={e => updatePercentageSubTableTitle(gIdx, e.target.value)}
+                              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-900 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-1 block text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
+                              Name of Total (Denominator)
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="e.g. Total Households"
+                              value={group.totalTitle}
+                              onChange={e => updatePercentageGroupTitle(gIdx, e.target.value)}
+                              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-900 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                            />
+                          </div>
+                        </div>
+                        {percentageGroups.length > 1 && (
+                          <button
+                            onClick={() => removePercentageGroup(gIdx)}
+                            className="text-xs text-error-500 hover:text-error-600 font-medium pt-7 cursor-pointer"
+                          >
+                            Remove Group
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="space-y-2 pt-2 border-t border-gray-200/80 dark:border-gray-700/60">
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                            Indicator Data Fields (Counts to compare against Total)
+                          </label>
+                          <button
+                            onClick={() => addPercentageSubField(gIdx)}
+                            className="text-xs font-medium text-brand-500 hover:text-brand-600 cursor-pointer"
+                          >
+                            + Add Field
+                          </button>
+                        </div>
+
+                        {group.fields.map((sf, fIdx) => (
+                          <div key={sf.id} className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              placeholder="Field Name (e.g. Household w/ ST)"
+                              value={sf.name}
+                              onChange={e => updatePercentageSubField(gIdx, fIdx, e.target.value)}
+                              className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                            />
+                            <span className="text-xs px-2 py-1 bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300 rounded font-medium">
+                              Fixed Auto %
+                            </span>
+                            {group.fields.length > 1 && (
+                              <button
+                                onClick={() => removePercentageSubField(gIdx, fIdx)}
+                                className="p-1 text-gray-400 hover:text-error-500 rounded-md cursor-pointer"
+                              >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                /* Standard / Budget / Project / Geo / Time-Series Modal Form */
+                <div className="mt-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold text-gray-800 dark:text-white/90">Data Fields</h3>
+                    <button onClick={addField} className="text-xs font-medium text-brand-500 hover:text-brand-600 cursor-pointer">+ Add Field</button>
+                  </div>
+                  
+                  {fields.length === 0 ? (
+                    <div className="p-4 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 text-center text-sm text-gray-500">
+                      No fields added yet. Select a preset template above or click "+ Add Field" to start building.
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {fields.map((field, idx) => (
+                        <div key={field.id} className="flex flex-col sm:flex-row gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/20">
+                          <div className="flex-1">
+                            <input
+                              type="text"
+                              placeholder="Field Name (e.g. Total Schools)"
+                              value={field.name}
+                              onChange={e => updateField(idx, 'name', e.target.value)}
+                              className="w-full rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                            />
+                          </div>
+                          <div className="w-full sm:w-36">
+                            <select
+                              value={field.type}
+                              onChange={e => updateField(idx, 'type', e.target.value as any)}
+                              disabled={tableCategory === 'budget' || tableCategory === 'project_tracker' || tableCategory === 'geo_registry'}
+                              className="w-full rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white disabled:bg-gray-50 disabled:text-gray-500 dark:disabled:bg-gray-800 dark:disabled:text-white"
+                            >
+                              {tableCategory !== 'budget' && tableCategory !== 'project_tracker' && tableCategory !== 'geo_registry' && <option value="gender_split">Male/Female</option>}
+                              <option value="single_value">{tableCategory === 'budget' ? 'Currency (₱)' : 'Single Value'}</option>
+                            </select>
+                          </div>
+                          <div className="w-full sm:w-36">
+                            <select
+                              value={field.chartType}
+                              onChange={e => updateField(idx, 'chartType', e.target.value as any)}
+                              className="w-full rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                            >
+                              <option value="bar">Bar Chart</option>
+                              <option value="pie">{tableCategory === 'budget' ? 'Line Graph' : 'Line/Area Graph'}</option>
+                              <option value="stat_card">Total Summary Card</option>
+                              <option value="hidden">Hidden from Dash</option>
+                            </select>
+                          </div>
+                          <button onClick={() => removeField(idx)} className="p-1.5 text-gray-400 hover:text-error-500 rounded-md cursor-pointer">
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 flex justify-end gap-3 border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                className="rounded-lg bg-brand-500 px-5 py-2 text-sm font-medium text-white hover:bg-brand-600 cursor-pointer"
+              >
+                Save Table
+              </button>
             </div>
           </div>
         </div>

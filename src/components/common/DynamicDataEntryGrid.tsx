@@ -8,8 +8,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { submitForApproval, getLatestApproval, notifySuperAdminsOfDirectSave } from '@/utils/approvalUtils';
 import ConfirmationModal from '@/components/common/ConfirmationModal';
 import { DataExportImport } from '@/components/common/DataExportImport';
-import { MobileDataCard } from '@/components/common/MobileDataCard';
-import { MobileDataInput, SplitInputWrapper } from '@/components/common/MobileDataInput';
 
 type Barangay = Database['public']['Tables']['barangays']['Row'];
 type DynamicSchema = Database['public']['Tables']['dynamic_schemas']['Row'];
@@ -45,7 +43,9 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
 
   const sData = schema.schema as any;
   const isPercentage = sData?.isPercentage || sData?.tableType === 'percentage';
+  const isMultiGroup = sData?.tableCategory === 'multi_group' || sData?.tableType === 'multi_group';
   const percentageGroups = (sData?.groups || []) as { id: string; groupTitle?: string; totalTitle: string; fields: { id: string; name: string }[] }[];
+  const multiGroups = (sData?.multiGroups || []) as { id: string; groupTitle: string; totalTitle?: string; fields: FieldDef[] }[];
   const fields = (Array.isArray(sData) ? sData : (sData?.fields || [])) as FieldDef[];
   const isLocked = latestApproval && latestApproval.status === 'pending' && !isSuperAdmin;
 
@@ -173,6 +173,18 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
             }
             currentChanges[g.id] = { old: oldVal, new: newVal };
           });
+        } else if (isMultiGroup) {
+          multiGroups.forEach(mg => {
+            mg.fields.forEach(f => {
+              const oldVal = originalRow[f.id] || {};
+              const newVal = row[f.id] || {};
+              
+              if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
+                hasChanges = true;
+              }
+              currentChanges[f.id] = { old: oldVal, new: newVal };
+            });
+          });
         } else {
           fields.forEach(f => {
             const oldVal = originalRow[f.id] || {};
@@ -223,6 +235,22 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
           ])
         ])
       ]
+    : isMultiGroup
+    ? [
+        { header: 'Barangay', key: 'barangay_name' },
+        ...multiGroups.flatMap(mg =>
+          mg.fields.flatMap(f => {
+            if (f.type === 'gender_split') {
+              return [
+                { header: `[${mg.groupTitle}] ${f.name} (M)`, key: `${f.id}_m` },
+                { header: `[${mg.groupTitle}] ${f.name} (F)`, key: `${f.id}_f` }
+              ];
+            } else {
+              return [{ header: `[${mg.groupTitle}] ${f.name}`, key: f.id }];
+            }
+          })
+        )
+      ]
     : [
         { header: 'Barangay', key: 'barangay_name' },
         ...fields.flatMap(f => {
@@ -251,6 +279,17 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
           const count = Number(gData[sf.id] || 0);
           row[`${g.id}_${sf.id}`] = gData[sf.id];
           row[`${g.id}_${sf.id}_pct`] = total > 0 ? `${((count / total) * 100).toFixed(1)}%` : '--';
+        });
+      });
+    } else if (isMultiGroup) {
+      multiGroups.forEach(mg => {
+        mg.fields.forEach(f => {
+          if (f.type === 'gender_split') {
+            row[`${f.id}_m`] = bData[f.id]?.m;
+            row[`${f.id}_f`] = bData[f.id]?.f;
+          } else {
+            row[f.id] = bData[f.id]?.value;
+          }
         });
       });
     } else {
@@ -287,6 +326,26 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
               }
             });
           });
+        } else if (isMultiGroup) {
+          multiGroups.forEach(mg => {
+            mg.fields.forEach(f => {
+              if (f.type === 'gender_split') {
+                const m = row[`${f.id}_m`];
+                const fVal = row[`${f.id}_f`];
+                if (m !== undefined && m !== null && m !== '') {
+                   newData[b.id][f.id] = { ...(newData[b.id][f.id] || {}), m: Number(m) };
+                }
+                if (fVal !== undefined && fVal !== null && fVal !== '') {
+                   newData[b.id][f.id] = { ...(newData[b.id][f.id] || {}), f: Number(fVal) };
+                }
+              } else {
+                const val = row[f.id];
+                if (val !== undefined && val !== null && val !== '') {
+                   newData[b.id][f.id] = { ...(newData[b.id][f.id] || {}), value: Number(val) };
+                }
+              }
+            });
+          });
         } else {
           fields.forEach(f => {
             if (f.type === 'gender_split') {
@@ -317,7 +376,7 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
     return key ? row[key] : undefined;
   };
 
-  const hasNoFields = isPercentage ? percentageGroups.length === 0 : fields.length === 0;
+  const hasNoFields = isPercentage ? percentageGroups.length === 0 : isMultiGroup ? multiGroups.length === 0 : fields.length === 0;
 
   return (
     <div className="space-y-4 w-full min-w-0">
@@ -334,7 +393,7 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
           <button
             onClick={handleSaveAll}
             disabled={mutation.isPending || loading || !canWrite || isLocked}
-            className="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-brand-600 disabled:opacity-50 ml-auto shrink-0"
+            className="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-brand-600 disabled:opacity-50 ml-auto shrink-0 cursor-pointer"
           >
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
             {mutation.isPending ? 'Saving...' : 'Save Changes'}
@@ -438,296 +497,223 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
                   );
                 })}
               </tbody>
-              <tfoot className="bg-amber-50/80 dark:bg-amber-950/30 font-bold border-t-2 border-amber-300 dark:border-amber-800 text-gray-900 dark:text-white">
+            </table>
+          </div>
+        </>
+      ) : isMultiGroup ? (
+        /* Multi-Group Subtable Render */
+        <>
+          <div className="hidden lg:block w-full max-w-full min-w-0 overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
+            <table className="w-full min-w-[750px] text-left text-sm text-gray-600 dark:text-gray-300">
+              <thead className="bg-gray-50 text-xs uppercase text-gray-500 dark:bg-gray-800/50 dark:text-gray-400">
                 <tr>
-                  <td className="whitespace-nowrap px-4 py-3 font-extrabold text-brand-700 dark:text-brand-300">Municipal Total</td>
-                  {percentageGroups.map(g => {
-                    let totalSum = 0;
-                    barangays.forEach(b => {
-                      totalSum += Number(data[b.id]?.[g.id]?.total || 0);
-                    });
-
+                  <th className="whitespace-nowrap px-4 py-3 font-medium border-b dark:border-gray-800" rowSpan={2}>{entityName}</th>
+                  {multiGroups.map((mg, mgIdx) => {
+                    const colCount = mg.fields.reduce((acc, f) => acc + (f.type === 'gender_split' ? 3 : 1), 0);
                     return (
-                      <React.Fragment key={g.id + '_foot'}>
-                        <td className="px-3 py-3 text-center border-l dark:border-gray-800 font-extrabold text-brand-800 dark:text-brand-200">
-                          {totalSum.toLocaleString()}
-                        </td>
-                        {g.fields.map(sf => {
-                          let subSum = 0;
-                          barangays.forEach(b => {
-                            subSum += Number(data[b.id]?.[g.id]?.[sf.id] || 0);
-                          });
-                          const overallPct = totalSum > 0 ? ((subSum / totalSum) * 100).toFixed(1) : '0.0';
-
-                          return (
-                            <React.Fragment key={sf.id + '_foot'}>
-                              <td className="px-3 py-3 text-center border-l dark:border-gray-800 font-bold text-gray-900 dark:text-white">
-                                {subSum.toLocaleString()}
-                              </td>
-                              <td className="px-3 py-3 text-center border-l dark:border-gray-800 font-extrabold text-amber-800 dark:text-amber-200 bg-amber-100/70 dark:bg-amber-900/40">
-                                {overallPct}%
-                              </td>
-                            </React.Fragment>
-                          );
-                        })}
-                      </React.Fragment>
+                      <th 
+                        key={mg.id} 
+                        className={`whitespace-nowrap px-4 py-2 font-bold text-center border-b border-l ${mgIdx === multiGroups.length - 1 ? 'border-r' : ''} dark:border-gray-800 bg-indigo-50/60 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-300`} 
+                        colSpan={colCount}
+                      >
+                        {mg.groupTitle}
+                      </th>
                     );
                   })}
                 </tr>
-              </tfoot>
+                <tr>
+                  {multiGroups.map((mg) => (
+                    <React.Fragment key={mg.id + '_subcols'}>
+                      {mg.fields.map(f => (
+                        <React.Fragment key={f.id}>
+                          {f.type === 'gender_split' ? (
+                            <>
+                              <th className="px-2 py-2 text-center border-l dark:border-gray-800 bg-gray-100/50 dark:bg-gray-800/60 font-semibold">{f.name} (M)</th>
+                              <th className="px-2 py-2 text-center font-semibold">{f.name} (F)</th>
+                              <th className="px-2 py-2 text-center font-bold bg-indigo-100/40 dark:bg-indigo-950/20 text-indigo-800 dark:text-indigo-300">Total</th>
+                            </>
+                          ) : (
+                            <th className="px-3 py-2 text-center font-semibold border-l dark:border-gray-800">
+                              {f.name}
+                            </th>
+                          )}
+                        </React.Fragment>
+                      ))}
+                    </React.Fragment>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
+                {barangays.map((b) => {
+                  const bData = data[b.id] || {};
+
+                  return (
+                    <tr key={b.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                      <td className="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">{b.name}</td>
+                      {multiGroups.map((mg) => (
+                        <React.Fragment key={mg.id}>
+                          {mg.fields.map(f => {
+                            const fData = bData[f.id] || {};
+
+                            if (f.type === 'gender_split') {
+                              const m = fData.m || 0;
+                              const fVal = fData.f || 0;
+                              return (
+                                <React.Fragment key={f.id}>
+                                  <td className="border-l dark:border-gray-800">
+                                    <input 
+                                      type="number" 
+                                      min="0" 
+                                      value={fData.m !== undefined && fData.m !== null ? fData.m : ''} 
+                                      onChange={(e) => handleChange(b.id, f.id, 'm', e.target.value)} 
+                                      disabled={!canWrite || isLocked} 
+                                      className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center text-gray-900 dark:text-white outline-none focus:bg-indigo-50 dark:focus:bg-indigo-900/20 disabled:opacity-100" 
+                                    />
+                                  </td>
+                                  <td>
+                                    <input 
+                                      type="number" 
+                                      min="0" 
+                                      value={fData.f !== undefined && fData.f !== null ? fData.f : ''} 
+                                      onChange={(e) => handleChange(b.id, f.id, 'f', e.target.value)} 
+                                      disabled={!canWrite || isLocked} 
+                                      className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center text-gray-900 dark:text-white outline-none focus:bg-indigo-50 dark:focus:bg-indigo-900/20 disabled:opacity-100" 
+                                    />
+                                  </td>
+                                  <td className="bg-indigo-50/30 dark:bg-indigo-950/20 text-center font-bold text-indigo-700 dark:text-indigo-300">
+                                    {m + fVal}
+                                  </td>
+                                </React.Fragment>
+                              );
+                            } else {
+                              return (
+                                <td key={f.id} className="border-l dark:border-gray-800">
+                                  <input 
+                                    type="number" 
+                                    min="0" 
+                                    value={fData.value !== undefined && fData.value !== null ? fData.value : ''} 
+                                    onChange={(e) => handleChange(b.id, f.id, null, e.target.value)} 
+                                    disabled={!canWrite || isLocked} 
+                                    className="w-full min-w-[65px] bg-transparent px-2 py-2 text-center text-gray-900 dark:text-white outline-none focus:bg-indigo-50 dark:focus:bg-indigo-900/20 disabled:opacity-100" 
+                                  />
+                                </td>
+                              );
+                            }
+                          })}
+                        </React.Fragment>
+                      ))}
+                    </tr>
+                  );
+                })}
+              </tbody>
             </table>
-          </div>
-
-          <div className="block lg:hidden mt-2">
-            {barangays.map(b => {
-              const bData = data[b.id] || {};
-              return (
-                <MobileDataCard key={b.id} title={b.name}>
-                  {percentageGroups.map(g => {
-                    const gData = bData[g.id] || {};
-                    const totalVal = Number(gData.total || 0);
-
-                    return (
-                      <div key={g.id} className="space-y-3 pb-3 border-b border-gray-100 dark:border-gray-800 last:border-0 last:pb-0">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold uppercase text-brand-600 dark:text-brand-400">{g.groupTitle || g.totalTitle}</span>
-                        </div>
-                        <MobileDataInput label={`${g.totalTitle} (Count)`}>
-                          <input
-                            type="number" min="0" placeholder="0"
-                            value={gData.total !== undefined && gData.total !== null ? gData.total : ''}
-                            onChange={(e) => handleChange(b.id, g.id, 'total', e.target.value)}
-                            disabled={!canWrite || isLocked}
-                            className="w-full px-2 py-2 rounded-lg border border-gray-300 dark:border-gray-800 bg-white dark:bg-gray-900 text-sm text-center font-semibold text-gray-900 dark:text-white outline-none focus:border-brand-500"
-                          />
-                        </MobileDataInput>
-
-                        {g.fields.map(sf => {
-                          const val = gData[sf.id] !== undefined && gData[sf.id] !== null ? Number(gData[sf.id]) : null;
-                          const pct = totalVal > 0 && val !== null ? ((val / totalVal) * 100).toFixed(1) : null;
-
-                          return (
-                            <MobileDataInput key={sf.id} label={sf.name}>
-                              <div className="flex items-center gap-2">
-                                <input
-                                  type="number" min="0" placeholder="0"
-                                  value={gData[sf.id] !== undefined && gData[sf.id] !== null ? gData[sf.id] : ''}
-                                  onChange={(e) => handleChange(b.id, g.id, sf.id, e.target.value)}
-                                  disabled={!canWrite || isLocked}
-                                  className="w-full px-2 py-2 rounded-lg border border-gray-300 dark:border-gray-800 bg-white dark:bg-gray-900 text-sm text-center text-gray-900 dark:text-white outline-none focus:border-brand-500"
-                                />
-                                <div className="min-w-[65px] px-2 py-1.5 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 rounded-lg text-xs font-bold text-center border border-amber-200 dark:border-amber-800/40">
-                                  {pct !== null ? `${pct}%` : '--'}
-                                </div>
-                              </div>
-                            </MobileDataInput>
-                          );
-                        })}
-                      </div>
-                    );
-                  })}
-                </MobileDataCard>
-              );
-            })}
           </div>
         </>
       ) : (
         /* Standard / Budget Table Render */
         <>
-        <div className="hidden lg:block w-full max-w-full min-w-0 overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
-          <table className="w-full min-w-[750px] text-left text-sm text-gray-600 dark:text-gray-300">
-            <thead className="bg-gray-50 text-xs uppercase text-gray-500 dark:bg-gray-800/50 dark:text-gray-400">
-              <tr>
-                <th className="whitespace-nowrap px-4 py-3 font-medium border-b dark:border-gray-800" rowSpan={2}>{entityName}</th>
-                {fields.map(f => (
-                  <th key={f.id} className={`whitespace-nowrap px-4 py-2 font-medium text-center border-b border-l ${f === fields[fields.length-1] ? 'border-r' : ''} dark:border-gray-800`} colSpan={f.type === 'gender_split' ? 3 : 1} rowSpan={f.type === 'gender_split' ? 1 : 2}>
-                    {f.name}
-                  </th>
-                ))}
-              </tr>
-              <tr>
-                {fields.map(f => {
-                  if (f.type === 'gender_split') {
-                    return (
-                      <React.Fragment key={f.id + '_sub'}>
-                        <th className="px-2 py-2 text-center border-l dark:border-gray-800">M</th>
-                        <th className="px-2 py-2 text-center">F</th>
-                        <th className={`px-2 py-2 text-center bg-gray-100 dark:bg-gray-800/50 ${f === fields[fields.length-1] ? 'border-r dark:border-gray-800' : ''}`}>Total</th>
-                      </React.Fragment>
-                    )
-                  }
-                  return null;
-                })}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
-              {barangays.map((b) => {
-                const bData = data[b.id] || {};
-                
-                return (
-                  <tr key={b.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                    <td className="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">{b.name}</td>
-                    
-                    {fields.map(f => {
-                      const fData = bData[f.id] || {};
-                      
-                      if (f.type === 'gender_split') {
-                        const m = fData.m || 0;
-                        const fVal = fData.f || 0;
-                        return (
-                          <React.Fragment key={f.id}>
-                            <td className="border-l dark:border-gray-800">
-                              <input 
-                                type="number" 
-                                min="0" 
-                                value={fData.m !== undefined && fData.m !== null ? fData.m : ''} 
-                                onChange={(e) => handleChange(b.id, f.id, 'm', e.target.value)} 
-                                disabled={!canWrite || isLocked} 
-                                className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center text-gray-900 dark:text-white outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:bg-transparent disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" 
-                              />
-                            </td>
-                            <td>
-                              <input 
-                                type="number" 
-                                min="0" 
-                                value={fData.f !== undefined && fData.f !== null ? fData.f : ''} 
-                                onChange={(e) => handleChange(b.id, f.id, 'f', e.target.value)} 
-                                disabled={!canWrite || isLocked} 
-                                className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center text-gray-900 dark:text-white outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:bg-transparent disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" 
-                              />
-                            </td>
-                            <td className={`bg-gray-100 dark:bg-gray-800/50 text-center font-medium ${f === fields[fields.length-1] ? 'border-r dark:border-gray-800' : ''}`}>
-                              {m + fVal}
-                            </td>
-                          </React.Fragment>
-                        );
-                      } else {
-                        return (
-                          <td key={f.id} className={`border-l dark:border-gray-800 relative ${f === fields[fields.length-1] ? 'border-r' : ''}`}>
-                            {sData.isBudget && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium pointer-events-none">₱</span>}
-                            <input 
-                                type="number" 
-                                min="0" 
-                                value={fData.value !== undefined && fData.value !== null ? fData.value : ''} 
-                                onChange={(e) => handleChange(b.id, f.id, null, e.target.value)} 
-                                disabled={!canWrite || isLocked} 
-                                className={`w-full min-w-[60px] bg-transparent py-2 text-gray-900 dark:text-white outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:bg-transparent disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white ${sData.isBudget ? 'pl-8 pr-2 text-left' : 'px-2 text-center'}`} 
-                              />
-                          </td>
-                        );
-                      }
-                    })}
-                  </tr>
-                );
-              })}
-            </tbody>
-            <tfoot className="bg-amber-50/80 dark:bg-amber-950/30 font-bold border-t-2 border-amber-300 dark:border-amber-800 text-gray-900 dark:text-white">
-              <tr>
-                <td className="whitespace-nowrap px-4 py-3 font-extrabold text-brand-700 dark:text-brand-300">Total</td>
-                {fields.map(f => {
-                  if (f.type === 'gender_split') {
-                    let mSum = 0;
-                    let fSum = 0;
-                    barangays.forEach(b => {
-                      const bData = data[b.id] || {};
-                      const fData = bData[f.id] || {};
-                      mSum += Number(fData.m || 0);
-                      fSum += Number(fData.f || 0);
-                    });
-                    return (
-                      <React.Fragment key={f.id + '_tot'}>
-                        <td className="px-2 py-3 text-center border-l dark:border-gray-800 text-blue-700 dark:text-blue-300 font-bold">{mSum.toLocaleString()}</td>
-                        <td className="px-2 py-3 text-center text-blue-700 dark:text-blue-300 font-bold">{fSum.toLocaleString()}</td>
-                        <td className={`px-4 py-3 text-center font-extrabold bg-amber-100/80 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 ${f === fields[fields.length - 1] ? 'border-r dark:border-gray-800' : ''}`}>
-                          {(mSum + fSum).toLocaleString()}
-                        </td>
-                      </React.Fragment>
-                    );
-                  } else {
-                    let vSum = 0;
-                    barangays.forEach(b => {
-                      const bData = data[b.id] || {};
-                      const fData = bData[f.id] || {};
-                      vSum += Number(fData.value || 0);
-                    });
-                    return (
-                      <td key={f.id + '_tot'} className={`px-4 py-3 border-l dark:border-gray-800 font-extrabold text-gray-900 dark:text-white ${sData?.isBudget ? 'text-left pl-8' : 'text-center'} ${f === fields[fields.length - 1] ? 'border-r dark:border-gray-800' : ''}`}>
-                        {sData?.isBudget ? `₱${vSum.toLocaleString()}` : vSum.toLocaleString()}
-                      </td>
-                    );
-                  }
-                })}
-              </tr>
-            </tfoot>
-            </table>
-        </div>
-        <div className="block lg:hidden mt-2">
-          {barangays.map((b) => {
-            const bData = data[b.id] || {};
-            return (
-              <MobileDataCard key={b.id} title={b.name}>
-                {fields.map(f => {
-                  const fData = bData[f.id] || {};
+          <div className="hidden lg:block w-full max-w-full min-w-0 overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
+            <table className="w-full min-w-[750px] text-left text-sm text-gray-600 dark:text-gray-300">
+              <thead className="bg-gray-50 text-xs uppercase text-gray-500 dark:bg-gray-800/50 dark:text-gray-400">
+                <tr>
+                  <th className="whitespace-nowrap px-4 py-3 font-medium border-b dark:border-gray-800" rowSpan={2}>{entityName}</th>
+                  {fields.map(f => (
+                    <th key={f.id} className={`whitespace-nowrap px-4 py-2 font-medium text-center border-b border-l ${f === fields[fields.length-1] ? 'border-r' : ''} dark:border-gray-800`} colSpan={f.type === 'gender_split' ? 3 : 1} rowSpan={f.type === 'gender_split' ? 1 : 2}>
+                      {f.name}
+                    </th>
+                  ))}
+                </tr>
+                <tr>
+                  {fields.map(f => {
+                    if (f.type === 'gender_split') {
+                      return (
+                        <React.Fragment key={f.id + '_sub'}>
+                          <th className="px-2 py-2 text-center border-l dark:border-gray-800">M</th>
+                          <th className="px-2 py-2 text-center">F</th>
+                          <th className={`px-2 py-2 text-center bg-gray-100 dark:bg-gray-800/50 ${f === fields[fields.length-1] ? 'border-r dark:border-gray-800' : ''}`}>Total</th>
+                        </React.Fragment>
+                      )
+                    }
+                    return null;
+                  })}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
+                {barangays.map((b) => {
+                  const bData = data[b.id] || {};
                   
-                  if (f.type === 'gender_split') {
-                    const m = fData.m || 0;
-                    const fVal = fData.f || 0;
-                    return (
-                      <MobileDataInput key={f.id} label={f.name} type="split">
-                        <SplitInputWrapper
-                          inputMale={
-                            <input 
-                              type="number" min="0" 
-                              value={fData.m !== undefined && fData.m !== null ? fData.m : ''} 
-                              onChange={(e) => handleChange(b.id, f.id, 'm', e.target.value)} 
-                              disabled={!canWrite || isLocked} 
-                              className="w-full px-2 py-2 rounded-lg border border-gray-300 dark:border-gray-800 bg-white dark:bg-gray-900 text-sm text-center text-gray-900 dark:text-white outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:text-gray-500" 
-                            />
-                          }
-                          inputFemale={
-                            <input 
-                              type="number" min="0" 
-                              value={fData.f !== undefined && fData.f !== null ? fData.f : ''} 
-                              onChange={(e) => handleChange(b.id, f.id, 'f', e.target.value)} 
-                              disabled={!canWrite || isLocked} 
-                              className="w-full px-2 py-2 rounded-lg border border-gray-300 dark:border-gray-800 bg-white dark:bg-gray-900 text-sm text-center text-gray-900 dark:text-white outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:text-gray-500" 
-                            />
-                          }
-                          total={m + fVal}
-                        />
-                      </MobileDataInput>
-                    );
-                  } else {
-                    return (
-                      <MobileDataInput key={f.id} label={f.name}>
-                        <div className="relative w-full">
-                          {sData.isBudget && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium pointer-events-none">₱</span>}
-                          <input 
-                            type="number" min="0" 
-                            value={fData.value !== undefined && fData.value !== null ? fData.value : ''} 
-                            onChange={(e) => handleChange(b.id, f.id, null, e.target.value)} 
-                            disabled={!canWrite || isLocked} 
-                            className={`w-full py-2 rounded-lg border border-gray-300 dark:border-gray-800 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-white outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:text-gray-500 ${sData.isBudget ? 'pl-8 pr-2 text-left' : 'px-2 text-center'}`} 
-                          />
-                        </div>
-                      </MobileDataInput>
-                    );
-                  }
+                  return (
+                    <tr key={b.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                      <td className="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">{b.name}</td>
+                      
+                      {fields.map(f => {
+                        const fData = bData[f.id] || {};
+                        
+                        if (f.type === 'gender_split') {
+                          const m = fData.m || 0;
+                          const fVal = fData.f || 0;
+                          return (
+                            <React.Fragment key={f.id}>
+                              <td className="border-l dark:border-gray-800">
+                                <input 
+                                  type="number" 
+                                  min="0" 
+                                  value={fData.m !== undefined && fData.m !== null ? fData.m : ''} 
+                                  onChange={(e) => handleChange(b.id, f.id, 'm', e.target.value)} 
+                                  disabled={!canWrite || isLocked} 
+                                  className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center text-gray-900 dark:text-white outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:bg-transparent disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" 
+                                />
+                              </td>
+                              <td>
+                                <input 
+                                  type="number" 
+                                  min="0" 
+                                  value={fData.f !== undefined && fData.f !== null ? fData.f : ''} 
+                                  onChange={(e) => handleChange(b.id, f.id, 'f', e.target.value)} 
+                                  disabled={!canWrite || isLocked} 
+                                  className="w-full min-w-[60px] bg-transparent px-2 py-2 text-center text-gray-900 dark:text-white outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:bg-transparent disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white" 
+                                />
+                              </td>
+                              <td className={`bg-gray-100 dark:bg-gray-800/50 text-center font-medium ${f === fields[fields.length-1] ? 'border-r dark:border-gray-800' : ''}`}>
+                                {m + fVal}
+                              </td>
+                            </React.Fragment>
+                          );
+                        } else {
+                          return (
+                            <td key={f.id} className={`border-l dark:border-gray-800 relative ${f === fields[fields.length-1] ? 'border-r' : ''}`}>
+                              {sData.isBudget && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium pointer-events-none">₱</span>}
+                              <input 
+                                  type="number" 
+                                  min="0" 
+                                  value={fData.value !== undefined && fData.value !== null ? fData.value : ''} 
+                                  onChange={(e) => handleChange(b.id, f.id, null, e.target.value)} 
+                                  disabled={!canWrite || isLocked} 
+                                  className={`w-full min-w-[60px] bg-transparent py-2 text-gray-900 dark:text-white outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:bg-transparent disabled:opacity-100 disabled:text-gray-900 dark:disabled:text-white ${sData.isBudget ? 'pl-8 pr-2 text-left' : 'px-2 text-center'}`} 
+                                />
+                            </td>
+                          );
+                        }
+                      })}
+                    </tr>
+                  );
                 })}
-              </MobileDataCard>
-            );
-          })}
-        </div>
+              </tbody>
+            </table>
+          </div>
         </>
       )}
-      
+
       <ConfirmationModal
         isOpen={showConfirmModal}
-        title="Overwrite Pending Approval?"
-        message="A pending approval request already exists for this tab. Saving new changes will replace the existing pending request. Do you want to proceed?"
-        confirmLabel="Yes, Overwrite"
-        onConfirm={() => mutation.mutate(pendingChanges!)}
         onCancel={() => setShowConfirmModal(false)}
+        onConfirm={() => {
+          if (pendingChanges) {
+            mutation.mutate(pendingChanges);
+          }
+        }}
+        title="Submit Changes for Approval"
+        message="Your changes will be submitted to the Superadmin for approval before updating the database. Proceed?"
       />
     </div>
   );
