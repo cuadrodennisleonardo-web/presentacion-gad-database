@@ -7,6 +7,7 @@ import type { Database } from '../../types/database';
 import { useRole } from '../../hooks/useRole';
 import { useAuth } from '../../hooks/useAuth';
 import { submitForApproval, getLatestApproval, notifySuperAdminsOfDirectSave } from '../../utils/approvalUtils';
+import { fetchBarangays } from '@/services/api';
 import DataEntryLayout from '@/components/layout/DataEntryLayout';
 
 type GadStat = Database['public']['Tables']['gad_stats']['Row'];
@@ -82,7 +83,10 @@ export default function GADDataEntry() {
     }
   }, [fetchedData]);
 
-  const barangays: any[] = []; // Institutional GAD has no barangays
+  const { data: barangays = [] } = useQuery({
+    queryKey: ['barangays'],
+    queryFn: fetchBarangays
+  });
 
   const handleInputChange = (field: keyof GadStat, value: string, isFloat = false) => {
     const numValue = value === '' ? 0 : (isFloat ? parseFloat(value) : parseInt(value, 10));

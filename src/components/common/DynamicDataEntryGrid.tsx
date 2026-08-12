@@ -180,7 +180,7 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
     try {
       const changedData: Record<string, any> = {};
       
-      barangays.forEach(b => {
+      entitiesToDisplay.forEach(b => {
         const row = data[b.id] || {};
         const originalRow = originalData[b.id] || {};
         
@@ -250,7 +250,7 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
 
   const exportColumns = isPercentage
     ? [
-        { header: 'Barangay', key: 'barangay_name' },
+        { header: currentEntityLabel, key: 'barangay_name' },
         ...percentageGroups.flatMap(g => [
           { header: `${g.totalTitle}`, key: `${g.id}_total` },
           ...g.fields.flatMap(sf => [
@@ -261,7 +261,7 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
       ]
     : isMultiGroup
     ? [
-        { header: 'Barangay', key: 'barangay_name' },
+        { header: currentEntityLabel, key: 'barangay_name' },
         ...multiGroups.flatMap(mg =>
           mg.fields.flatMap(f => {
             if (f.type === 'gender_split') {
@@ -276,7 +276,7 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
         )
       ]
     : [
-        { header: 'Barangay', key: 'barangay_name' },
+        { header: currentEntityLabel, key: 'barangay_name' },
         ...fields.flatMap(f => {
           if (f.type === 'gender_split') {
             return [
@@ -332,8 +332,8 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
   const handleImport = (importedData: any[]) => {
     const newData = { ...data };
     importedData.forEach(row => {
-      const bName = (row.barangay_name || '').trim().toLowerCase();
-      const b = barangays.find(b => b.name.trim().toLowerCase() === bName);
+      const bName = (row.barangay_name || row.entity_name || row.school_name || Object.values(row)[0] || '').toString().trim().toLowerCase();
+      const b = entitiesToDisplay.find(b => b.name.trim().toLowerCase() === bName);
       if (b) {
         newData[b.id] = { ...(newData[b.id] || {}) };
 

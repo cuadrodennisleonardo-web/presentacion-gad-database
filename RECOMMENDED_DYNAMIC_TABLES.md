@@ -1,6 +1,6 @@
 # 📋 Recommended Municipal Dynamic Data Tables Guide
 
-This document serves as an authoritative reference list of recommended custom dynamic data tables for the **Centralized Municipal Database System (Presentacion)**. Superadmins can use these short titles, table types, and indicator fields when building dynamic tables in the **Dynamic Tables Manager**.
+This document serves as an authoritative reference list of recommended custom dynamic data tables for the **Centralized Municipal Database System (Presentacion)**. All previously native tables from Economic Development, Infrastructure, Local Governance, Justice & Safety, and Health have been merged into this guide. Superadmins can use these short titles, table types, and indicator fields when building dynamic tables in the **Dynamic Tables Manager**.
 
 ---
 
@@ -17,7 +17,7 @@ This document serves as an authoritative reference list of recommended custom dy
 
 ## 2. 🏥 Social Development
 
-### A. Health & Nutrition
+### A. Health & Nutrition *(Merged Native Health Table)*
 | Table Title | Category Type | Short Description | Key Indicators / Fields |
 | :--- | :--- | :--- | :--- |
 | **Maternal & Adolescent Health** | `Standard` | Track teenage pregnancies and maternal mortality cases across barangays. | Teenage Pregnancies, Maternal Mortality Cases |
@@ -41,45 +41,47 @@ This document serves as an authoritative reference list of recommended custom dy
 
 ---
 
-## 3. 🌾 Economic Development
+## 3. 🌾 Economic Development *(Merged Native Economic Tables)*
 
 | Table Title | Category Type | Short Description | Key Indicators / Fields |
 | :--- | :--- | :--- | :--- |
-| **Crop Production** | `Standard` | Record registered crop farmers and RSBSA agricultural listings. | Rice Farmers, Corn/Coconut Farmers, RSBSA Registered |
-| **Fisheries & Boats** | `Standard` | Track motorized/non-motorized boat owners and fishpond operators. | Motorized Boats, Non-Motorized Boats, Fishponds |
-| **Quarterly Harvests** | `Monthly Time-Series` | Monitor quarterly agricultural crop yields in metric tons. | Palay (Rice) Yield, Corn Yield (Metric Tons) |
-| **MSME Businesses** | `Standard` | Register micro-enterprises and women-owned business shops. | Micro-Enterprises, Women-Owned MSMEs, Sari-sari Stores |
+| **Labor Force & Employment** | `Standard` | Track employed, unemployed, and underemployed workforce by gender. *(Merged from native Labor tab)* | Employed (M/F), Unemployed (M/F), Total Labor Force |
+| **Agriculture & Livestock** | `Standard` | Record registered crop farmers, livestock raisers, and RSBSA listings. *(Merged from native Agriculture tab)* | Rice Farmers, Corn/Coconut Farmers, RSBSA Registered, Livestock Raisers |
+| **Fisheries & Coastal** | `Standard` | Track motorized/non-motorized boat owners and fishpond operators. | Motorized Boats, Non-Motorized Boats, Fishponds, Coastal Beneficiaries |
+| **Commerce & MSME Shops** | `Standard` | Register micro-enterprises, commercial shops, sari-sari stores, and vendors. *(Merged from native Commerce tab)* | Registered MSMEs, Sari-sari Stores, Commercial Shops, Ambulant Vendors |
+| **Quarterly Crop Yields** | `Monthly Time-Series` | Monitor quarterly agricultural crop yields in metric tons. | Palay (Rice) Yield, Corn Yield (Metric Tons) |
 
 ---
 
-## 4. ⚡ Infrastructure & Utilities
+## 4. ⚡ Infrastructure & Utilities *(Merged Native Infrastructure Tables)*
 
 | Table Title | Category Type | Short Description | Key Indicators / Fields |
 | :--- | :--- | :--- | :--- |
-| **Infra Projects** | `Project Tracker` | Track barangay capital projects, budgets, and progress status. | Road Paving, Health Center Repairs (Budget/Status/Dates) |
-| **Evacuation Centers** | `Geo Registry` | Record evacuation center GPS coordinates, capacity, and status. | Refuge Gym, Water Points (GPS Lat/Lng, Capacity) |
-| **Power Access** | `Standard` | Monitor household power grid connectivity and solar systems. | Grid Electrified HHs, Solar HHs, Unelectrified HHs |
-| **Waste Sanitation** | `Percentage` | Percentage monitoring of waste segregation and sanitary toilets. | Segregating HHs, Sanitary Toilets vs Total HHs |
+| **Basic Utilities & Housing** | `Percentage` | Percentage monitoring of sanitary toilets, insanitary toilets, and safety managed sanitation. *(Merged from native Utilities tab)* | Sanitary Toilets (%), Insanitary Toilets (%), Safety Managed Sanitation (%), Potable Water Access |
+| **Roads & Transport** | `Standard` | Track paved barangay roads, unpaved roads, bridges, and transport access. | Paved Roads (km), Unpaved Roads (km), Bridges |
+| **Power & Electrification** | `Standard` | Monitor household power grid connectivity, solar systems, and unelectrified households. | Grid Electrified HHs, Solar HHs, Unelectrified HHs |
+| **Evacuation Centers & Assets** | `Geo Registry` | Record evacuation center GPS coordinates, refuge capacity, and water points. | Refuge Gym, Water Points (GPS Lat/Lng, Capacity) |
+| **Infra Capital Projects** | `Project Tracker` | Track barangay capital projects, budgets, milestone dates, and progress status. | Road Paving, Health Center Repairs (Budget/Status/Dates) |
 
 ---
 
-## 5. 🏛️ Local Governance
+## 5. 🏛️ Local Governance *(Merged Native Governance Tables)*
 
 | Table Title | Category Type | Short Description | Key Indicators / Fields |
 | :--- | :--- | :--- | :--- |
-| **BDC & Youth (SK)** | `Standard` | Track active Barangay Development Council and SK officials. | BDC Active Members, SK Officials (M/F), CSO Reps |
-| **LGU Plantilla** | `Standard` | Monitor LGU permanent and Job Order / Contract of Service staff. | Permanent Employees, Contract of Service Staff (M/F) |
-| **SGLGB Compliance** | `Standard` | Evaluate barangay governance compliance and audit scores. | Governance Area Scores, Pass/Fail Audit Criteria |
+| **Leadership & BDC Council** | `Standard` | Track elective barangay officials, SK officials, BDC members, and CSO reps. *(Merged from native Leadership tab)* | Barangay Officials (M/F), SK Officials (M/F), BDC Active Members, CSO Reps |
+| **LGU Staffing & Personnel** | `Standard` | Monitor LGU permanent employees, Job Order (JO), and Contract of Service (COS) staff. | Permanent Employees, Job Order (JO) Staff, COS Personnel (M/F) |
+| **SGLGB Compliance & Audits** | `Standard` | Evaluate barangay governance compliance, audit scores, and financial transparency. | SGLGB Area Scores, Financial Disclosure Postings, Audit Pass/Fail |
 
 ---
 
-## 6. ⚖️ Justice & Safety
+## 6. ⚖️ Justice & Safety *(Merged Native Justice Tables)*
 
 | Table Title | Category Type | Short Description | Key Indicators / Fields |
 | :--- | :--- | :--- | :--- |
-| **Lupon Disputes** | `Standard` | Record barangay disputes filed, settled, and court referrals. | Disputes Filed, Settled Amicably, Court Certificates |
-| **Protection Orders** | `Standard` | Track Barangay Protection Orders (BPO) and TPOs served. | BPO Issued, Temporary Protection Orders (TPO) |
-| **First Responders** | `Standard` | Monitor trained BDRRMC disaster responders and tanods. | BDRRMC Responders, Barangay Tanod Force |
+| **Lupon Dispute Settlement** | `Standard` | Record barangay disputes filed, settled amicably, and court referrals. *(Merged from native Peace tab)* | Disputes Filed, Settled Amicably, Court Certificates Issued |
+| **Protection Orders & VAWC** | `Standard` | Track Barangay Protection Orders (BPO), TPOs served, and VAWC assistance. | BPOs Issued, TPO Assistance, VAWC Desk Cases |
+| **BDRRMC First Responders** | `Standard` | Monitor trained BDRRMC disaster responders, tanod security force, and volunteers. | BDRRMC Responders, Barangay Tanod Force, Fire Volunteers |
 
 ---
 
@@ -87,8 +89,8 @@ This document serves as an authoritative reference list of recommended custom dy
 
 | Table Title | Category Type | Short Description | Key Indicators / Fields |
 | :--- | :--- | :--- | :--- |
-| **GAD Budget** | `Budget` | Track 5% mandatory GAD budget allocation and project expenses. | Allocated Mandatory GAD Budget, Actual Expenses |
-| **GAD Facilities** | `Standard` | Monitor lactation stations, PWD restrooms, and GST graduates. | Lactation Stations, Gender Restrooms, GST Graduates |
+| **GAD Budget Allocation** | `Budget` | Track 5% mandatory GAD budget allocation and project expenses. | Allocated Mandatory GAD Budget, Actual Expenses |
+| **GAD Facilities & Training** | `Standard` | Monitor lactation stations, PWD restrooms, and GST training graduates. | Lactation Stations, Gender Restrooms, GST Graduates |
 
 ---
 *Created for the Presentacion Centralized Municipal Database System.*
