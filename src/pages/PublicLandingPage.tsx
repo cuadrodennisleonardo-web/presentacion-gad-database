@@ -8,7 +8,7 @@ import { getBarangays, type BarangayWithStats } from '@/services/barangayService
 
 const SECTORS = [
   {
-    title: "Demographics & Population",
+    title: "Demographics",
     description: "Tracking total population, total households, gender breakdown, and barangay demographics.",
     icon: (
       <svg className="w-6 h-6 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">

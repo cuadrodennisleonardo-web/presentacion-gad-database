@@ -43,11 +43,11 @@ export function useMainDashboardStats() {
     queryFn: async () => {
       // Resolve department default year independently
       const popDefaultYear = getDepartmentDefaultYear([
-        "Demographics & Population_main",
-        "Demographics & Population_age",
-        "Demographics & Population_housing",
+        "Demographics_main",
+        "Demographics_age",
+        "Demographics_housing",
         "Demographics_Dashboard",
-        "Demographics & Population"
+        "Demographics"
       ]);
 
       const socDefaultYear = getDepartmentDefaultYear([

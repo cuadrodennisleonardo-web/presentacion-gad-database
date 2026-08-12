@@ -5,6 +5,7 @@ import { CHART_COLORS } from '@/config/chartColors';
 import { useDynamicDashboardSchemas, useDynamicSchemaData } from '@/hooks/queries/useDynamicDashboardSchemas';
 import YearSelector from '@/components/common/YearSelector';
 import { getDefaultYear } from '@/utils/yearUtils';
+import { getSchemaSubSector } from '@/utils/subSectorUtils';
 
 interface FieldDef {
   id: string;
@@ -15,15 +16,27 @@ interface FieldDef {
 
 interface DynamicDashboardChartsProps {
   department: string;
+  subSector?: string;
 }
 
-function DynamicSchemaSection({ schema, barangays, department }: { schema: any, barangays: any[], department: string }) {
+function DynamicSchemaSection({ schema, barangays, schools = [], department }: { schema: any, barangays: any[], schools?: any[], department: string }) {
   const [year, setYear] = useState(() => getDefaultYear(`${department}_${schema.tab_key}`));
   const [selectedIndicatorId, setSelectedIndicatorId] = useState<string>('all');
   const [showTable, setShowTable] = useState(false);
   const { data: schemaData, isLoading } = useDynamicSchemaData(schema.id, year);
   
   const sData = schema.schema as any;
+  const targetEntity = sData?.targetEntity || (schema.tab_key === "education" ? "all_schools" : "barangays");
+
+  let entitiesToDisplay = barangays;
+  if (targetEntity === 'primary_schools') {
+    entitiesToDisplay = schools.filter((s: any) => s.district === 'School-Primary' || s.district?.toLowerCase().includes('primary'));
+  } else if (targetEntity === 'secondary_schools') {
+    entitiesToDisplay = schools.filter((s: any) => s.district === 'School-Secondary' || s.district?.toLowerCase().includes('secondary'));
+  } else if (targetEntity === 'all_schools') {
+    entitiesToDisplay = schools;
+  }
+
   const isPercentage = sData?.isPercentage || sData?.tableType === 'percentage';
   const percentageGroups = (sData?.groups || []) as { id: string; groupTitle?: string; totalTitle: string; fields: { id: string; name: string }[] }[];
   const fields = (Array.isArray(sData) ? sData : (sData?.fields || [])) as FieldDef[];
@@ -32,7 +45,7 @@ function DynamicSchemaSection({ schema, barangays, department }: { schema: any, 
   const chartFields = fields.filter(f => f.chartType === 'bar' || f.chartType === 'pie');
   
   const data = schemaData || [];
-  const bNames = barangays.map(b => b.name);
+  const bNames = entitiesToDisplay.map(b => b.name);
 
   // Flatten all subfields for percentage tables
   const allPercentageIndicators = percentageGroups.flatMap(g => 
@@ -55,19 +68,100 @@ function DynamicSchemaSection({ schema, barangays, department }: { schema: any, 
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Barangay coverage ratios & automatic percentage indicators</p>
           )}
         </div>
+        
         <div className="flex items-center gap-3">
-          {isPercentage && (
-            <button
-              onClick={() => setShowTable(!showTable)}
-              className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+          {/* Indicator filter selector for percentage tables */}
+          {isPercentage && allPercentageIndicators.length > 0 && (
+            <select
+              value={selectedIndicatorId}
+              onChange={e => setSelectedIndicatorId(e.target.value)}
+              className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-xs font-semibold text-gray-700 dark:text-gray-200 focus:outline-none cursor-pointer"
             >
-              {showTable ? 'Hide Table View' : 'Show Summary Table'}
-            </button>
+              <option value="all">All Indicators</option>
+              {allPercentageIndicators.map(ind => (
+                <option key={`${ind.groupId}_${ind.fieldId}`} value={`${ind.groupId}_${ind.fieldId}`}>
+                  {ind.fullTitle}
+                </option>
+              ))}
+            </select>
           )}
+
+          <button
+            onClick={() => setShowTable(!showTable)}
+            className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition cursor-pointer"
+          >
+            {showTable ? "Hide Data Table" : "View Data Table"}
+          </button>
+          
           <YearSelector year={year} setYear={setYear} scopeKey={`${department}_${schema.tab_key}`} />
         </div>
       </div>
-      
+
+      {showTable && (
+        <div className="mb-6 overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
+          <table className="w-full text-left text-xs text-gray-600 dark:text-gray-300">
+            <thead className="bg-gray-50 dark:bg-gray-800/60 uppercase text-gray-500 dark:text-gray-400 font-medium">
+              <tr>
+                <th className="px-4 py-2.5">{targetEntity.includes('school') ? 'School' : 'Barangay'}</th>
+                {isPercentage ? (
+                  allPercentageIndicators.map(ind => (
+                    <th key={`${ind.groupId}_${ind.fieldId}`} className="px-4 py-2.5 text-center">
+                      {ind.fieldName} (%)
+                    </th>
+                  ))
+                ) : (
+                  fields.map(f => (
+                    <th key={f.id} className="px-4 py-2.5 text-center">
+                      {f.name}
+                    </th>
+                  ))
+                )}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
+              {entitiesToDisplay.map(b => {
+                const bRow = data.find((d: any) => d.barangay_id === b.id)?.data || {};
+                return (
+                  <tr key={b.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/30">
+                    <td className="px-4 py-2 font-medium text-gray-800 dark:text-gray-200">{b.name}</td>
+                    {isPercentage ? (
+                      allPercentageIndicators.map(ind => {
+                        const gData = bRow[ind.groupId] || {};
+                        const totalVal = Number(gData.total || 0);
+                        const countVal = Number(gData[ind.fieldId] || 0);
+                        const pct = totalVal > 0 ? ((countVal / totalVal) * 100).toFixed(1) : '--';
+                        return (
+                          <td key={`${ind.groupId}_${ind.fieldId}`} className="px-4 py-2 text-center font-semibold text-amber-600 dark:text-amber-400">
+                            {pct !== '--' ? `${pct}%` : '--'}
+                          </td>
+                        );
+                      })
+                    ) : (
+                      fields.map(f => {
+                        const fVal = bRow[f.id];
+                        let disp = '--';
+                        if (fVal) {
+                          if (f.type === 'gender_split') {
+                            disp = `M: ${fVal.m || 0} | F: ${fVal.f || 0}`;
+                          } else {
+                            disp = fVal.value !== undefined && fVal.value !== null ? String(fVal.value) : '--';
+                          }
+                        }
+                        return (
+                          <td key={f.id} className="px-4 py-2 text-center font-medium">
+                            {disp}
+                          </td>
+                        );
+                      })
+                    )}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
       {isLoading ? (
         <div className="flex h-32 items-center justify-center">
           <svg className="h-6 w-6 animate-spin text-brand-500" viewBox="0 0 24 24" fill="none">
@@ -342,7 +436,7 @@ function DynamicSchemaSection({ schema, barangays, department }: { schema: any, 
   );
 }
 
-export default function DynamicDashboardCharts({ department }: DynamicDashboardChartsProps) {
+export default function DynamicDashboardCharts({ department, subSector }: DynamicDashboardChartsProps) {
   const { data: dashboardData, isLoading } = useDynamicDashboardSchemas(department);
 
   if (isLoading) {
@@ -351,20 +445,36 @@ export default function DynamicDashboardCharts({ department }: DynamicDashboardC
 
   const schemas = (dashboardData?.schemas || []).filter(s => {
     const sData = s.schema as any;
-    return !(sData && !Array.isArray(sData) && sData.isBudget);
+    if (sData && !Array.isArray(sData) && sData.isBudget) return false;
+
+    if (subSector && subSector !== 'all') {
+      const sSub = getSchemaSubSector(s);
+      if (sSub !== subSector) return false;
+    }
+    return true;
   });
   const barangays = dashboardData?.barangays || [];
   const schools = dashboardData?.schools || [];
 
   if (schemas.length === 0) {
-    return null;
+    return (
+      <div className="mt-8 p-8 rounded-2xl border border-dashed border-gray-300 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/30 text-center space-y-3">
+        <div className="mx-auto w-12 h-12 rounded-full bg-brand-50 dark:bg-brand-950/40 text-brand-500 flex items-center justify-center font-bold text-lg">
+          +
+        </div>
+        <p className="font-semibold text-gray-800 dark:text-white">No dynamic charts configured for {department} yet.</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-md mx-auto">
+          Create custom dynamic tables in <span className="font-semibold text-brand-600 dark:text-brand-400">Settings &gt; Dynamic Tables Manager</span> to view dashboard charts for this sector.
+        </p>
+      </div>
+    );
   }
 
   return (
     <div className="mt-8">
       {schemas.map(schema => (
         <ErrorBoundary key={schema.id}>
-          <DynamicSchemaSection schema={schema} barangays={schema.tab_key === "education" ? schools : barangays} department={department} />
+          <DynamicSchemaSection schema={schema} barangays={barangays} schools={schools} department={department} />
         </ErrorBoundary>
       ))}
     </div>

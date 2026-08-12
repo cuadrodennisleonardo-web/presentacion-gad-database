@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 
 const TABLE_MODULE_MAP: Record<string, { queryKey: string, moduleName: string }> = {
   social_dev_stats: { queryKey: 'social_dev_stats', moduleName: 'Social Development' },
-  population_stats: { queryKey: 'demographics_stats', moduleName: 'Demographics & Population' },
+  population_stats: { queryKey: 'demographics_stats', moduleName: 'Demographics' },
   econ_dev_stats: { queryKey: 'economic_stats', moduleName: 'Economic Development' },
   infra_stats: { queryKey: 'infrastructure_stats', moduleName: 'Infrastructure' },
   governance_stats: { queryKey: 'governance_stats', moduleName: 'Local Governance' },

@@ -77,7 +77,7 @@ export default function ApprovalsPage() {
     markNotificationReadForApproval(approval.id);
     let modulePath = '';
     if (approval.module === 'Institutional GAD') modulePath = 'gad';
-    else if (approval.module === 'Demographics & Population') modulePath = 'demographics';
+    else if (approval.module === 'Demographics' || approval.module === 'Demographics & Population') modulePath = 'demographics';
     else if (approval.module === 'Justice & Safety') modulePath = 'justice-safety';
     else if (approval.module === 'Local Governance') modulePath = 'governance';
     else modulePath = approval.module.toLowerCase().replace(/ /g, '-');
@@ -170,7 +170,7 @@ export default function ApprovalsPage() {
           // Native table approval
           let tableName = '';
 
-          if (approval.module === 'Demographics & Population') {
+          if (approval.module === 'Demographics' || approval.module === 'Demographics & Population') {
             tableName = 'population_stats';
           } else if (approval.module === 'Social Development') {
             tableName = 'social_dev_stats';

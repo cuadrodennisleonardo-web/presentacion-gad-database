@@ -37,7 +37,7 @@ export interface MultiGroupSectionDef {
 }
 
 const DEPARTMENTS = [
-  'Demographics & Population',
+  'Demographics',
   'Social Development',
   'Economic Development',
   'Infrastructure',
@@ -49,6 +49,8 @@ const DEPARTMENTS = [
 interface TablePreset {
   id: string;
   department: string;
+  subSector?: string;
+  targetEntity?: string;
   tabName: string;
   description: string;
   category: DynamicTableCategory;
@@ -62,7 +64,7 @@ interface TablePreset {
 const PRESET_TABLE_SUGGESTIONS: TablePreset[] = [
   {
     id: 'preset-age-brackets',
-    department: 'Demographics & Population',
+    department: 'Demographics',
     tabName: 'Age Distribution & Dependency',
     description: 'Track population breakdown across age brackets and calculate dependency ratios.',
     category: 'standard',
@@ -76,7 +78,7 @@ const PRESET_TABLE_SUGGESTIONS: TablePreset[] = [
   },
   {
     id: 'preset-civil-status',
-    department: 'Demographics & Population',
+    department: 'Demographics',
     tabName: 'Civil Status Demographics',
     description: 'Record civil status distribution across male and female population.',
     category: 'standard',
@@ -126,6 +128,7 @@ const PRESET_TABLE_SUGGESTIONS: TablePreset[] = [
   {
     id: 'preset-eccd-daycare',
     department: 'Social Development',
+    subSector: 'education',
     tabName: 'ECCD & Daycare Operations',
     description: 'Monitor early childhood care centers, daycare enrollees, and accredited child workers.',
     category: 'standard',
@@ -133,6 +136,61 @@ const PRESET_TABLE_SUGGESTIONS: TablePreset[] = [
       { id: 'eccd1', name: 'Daycare Center Enrollees', type: 'gender_split', chartType: 'stat_card' },
       { id: 'eccd2', name: 'Operating Daycare Centers', type: 'single_value', chartType: 'bar' },
       { id: 'eccd3', name: 'Accredited Child Development Workers', type: 'single_value', chartType: 'stat_card' }
+    ]
+  },
+  {
+    id: 'preset-primary-grade-levels',
+    department: 'Social Development',
+    subSector: 'education',
+    targetEntity: 'primary_schools',
+    tabName: 'Primary School Grade Level Enrollees',
+    description: 'Track Kinder to Grade 6, SNED, and ALS-Elementary enrollment for 18 primary schools.',
+    category: 'standard',
+    fields: [
+      { id: 'pe1', name: 'Kindergarten Enrollees', type: 'gender_split', chartType: 'bar' },
+      { id: 'pe2', name: 'Grade 1 Enrollees', type: 'gender_split', chartType: 'bar' },
+      { id: 'pe3', name: 'Grade 2 Enrollees', type: 'gender_split', chartType: 'bar' },
+      { id: 'pe4', name: 'Grade 3 Enrollees', type: 'gender_split', chartType: 'bar' },
+      { id: 'pe5', name: 'Grade 4 Enrollees', type: 'gender_split', chartType: 'bar' },
+      { id: 'pe6', name: 'Grade 5 Enrollees', type: 'gender_split', chartType: 'bar' },
+      { id: 'pe7', name: 'Grade 6 Enrollees', type: 'gender_split', chartType: 'bar' },
+      { id: 'pe8', name: 'SNED (Special Needs Education)', type: 'gender_split', chartType: 'stat_card' },
+      { id: 'pe9', name: 'ALS (Elementary Level)', type: 'gender_split', chartType: 'stat_card' }
+    ]
+  },
+  {
+    id: 'preset-secondary-grade-strands',
+    department: 'Social Development',
+    subSector: 'education',
+    targetEntity: 'secondary_schools',
+    tabName: 'Secondary School Grades & Strands',
+    description: 'Record Grade 7-10, Grade 11-12, ALS-JHS/SHS, and Academic/TVL Strands for 7 secondary schools.',
+    category: 'multi_group',
+    multiGroups: [
+      {
+        id: 'mg-jhs',
+        groupTitle: 'Junior High School (Grades 7 - 10)',
+        totalTitle: 'Total JHS Enrollees',
+        fields: [
+          { id: 'jhs1', name: 'Grade 7', type: 'gender_split', chartType: 'bar' },
+          { id: 'jhs2', name: 'Grade 8', type: 'gender_split', chartType: 'bar' },
+          { id: 'jhs3', name: 'Grade 9', type: 'gender_split', chartType: 'bar' },
+          { id: 'jhs4', name: 'Grade 10', type: 'gender_split', chartType: 'bar' },
+          { id: 'jhs5', name: 'ALS-JHS Learners', type: 'gender_split', chartType: 'stat_card' }
+        ]
+      },
+      {
+        id: 'mg-shs',
+        groupTitle: 'Senior High School (Grades 11 - 12 & Strands)',
+        totalTitle: 'Total SHS Enrollees',
+        fields: [
+          { id: 'shs1', name: 'Grade 11', type: 'gender_split', chartType: 'bar' },
+          { id: 'shs2', name: 'Grade 12', type: 'gender_split', chartType: 'bar' },
+          { id: 'shs3', name: 'TVL Track Enrollees', type: 'gender_split', chartType: 'stat_card' },
+          { id: 'shs4', name: 'Academic Strands (STEM/ABM/HUMSS/GAS)', type: 'gender_split', chartType: 'stat_card' },
+          { id: 'shs5', name: 'ALS-SHS Learners', type: 'gender_split', chartType: 'stat_card' }
+        ]
+      }
     ]
   },
   {
@@ -308,6 +366,8 @@ export default function DynamicTablesPage() {
   
   // Form state
   const [department, setDepartment] = useState(DEPARTMENTS[0]);
+  const [subSector, setSubSector] = useState<string>('all');
+  const [targetEntity, setTargetEntity] = useState<string>('barangays');
   const [tabName, setTabName] = useState('');
   const [description, setDescription] = useState('');
   const [tableCategory, setTableCategory] = useState<DynamicTableCategory>('standard');
@@ -317,7 +377,7 @@ export default function DynamicTablesPage() {
 
   // Tabs
   const [activeTab, setActiveTab] = useState<DynamicTableCategory>('standard');
-  const [showPresets, setShowPresets] = useState(true);
+  const [showPresets, setShowPresets] = useState(false);
   const [selectedDepartmentFilter, setSelectedDepartmentFilter] = useState<string>('All');
 
   // Delete Modal
@@ -342,6 +402,8 @@ export default function DynamicTablesPage() {
   const handleOpenAdd = () => {
     setEditingSchema(null);
     setDepartment(DEPARTMENTS[0]);
+    setSubSector('all');
+    setTargetEntity('barangays');
     setTabName('');
     setDescription('');
     setTableCategory(activeTab);
@@ -368,6 +430,8 @@ export default function DynamicTablesPage() {
   const applyPresetTemplate = (preset: TablePreset) => {
     setEditingSchema(null);
     setDepartment(preset.department);
+    setSubSector(preset.subSector || 'all');
+    setTargetEntity(preset.targetEntity || 'barangays');
     setTabName(preset.tabName);
     setDescription(preset.description);
     setTableCategory(preset.category);
@@ -405,9 +469,12 @@ export default function DynamicTablesPage() {
   const handleOpenEdit = (schema: DynamicSchema) => {
     setEditingSchema(schema);
     setDepartment(schema.department);
-    setTabName(schema.tab_name);
     
     const sData = schema.schema as any;
+    setSubSector(sData?.subSector || 'all');
+    setTargetEntity(sData?.targetEntity || 'barangays');
+    setTabName(schema.tab_name);
+    
     if (Array.isArray(sData)) {
        setDescription('');
        setTableCategory('standard');
@@ -534,6 +601,42 @@ export default function DynamicTablesPage() {
     setMultiGroupSections(newSecs);
   };
 
+  const autoConfigureProjectTracker = () => {
+    setFields([
+      { id: crypto.randomUUID(), name: 'Project Title / Location', type: 'single_value', chartType: 'stat_card' },
+      { id: crypto.randomUUID(), name: 'Allocated Budget (₱)', type: 'single_value', chartType: 'stat_card' },
+      { id: crypto.randomUUID(), name: 'Project Status (On-going/Completed)', type: 'single_value', chartType: 'bar' },
+      { id: crypto.randomUUID(), name: 'Target Completion Date', type: 'single_value', chartType: 'hidden' },
+      { id: crypto.randomUUID(), name: 'Target Beneficiaries Count', type: 'gender_split', chartType: 'bar' }
+    ]);
+    toast.success('Auto-configured Project Tracker fields!');
+  };
+
+  const autoConfigureGeoRegistry = () => {
+    setFields([
+      { id: crypto.randomUUID(), name: 'Facility / Asset Name', type: 'single_value', chartType: 'stat_card' },
+      { id: crypto.randomUUID(), name: 'GPS Latitude (Lat)', type: 'single_value', chartType: 'hidden' },
+      { id: crypto.randomUUID(), name: 'GPS Longitude (Lng)', type: 'single_value', chartType: 'hidden' },
+      { id: crypto.randomUUID(), name: 'Resident / Refuge Capacity', type: 'single_value', chartType: 'stat_card' },
+      { id: crypto.randomUUID(), name: 'Operational Status (Functional/Needs Repair)', type: 'single_value', chartType: 'bar' }
+    ]);
+    toast.success('Auto-configured Geo-Spatial Asset fields!');
+  };
+
+  const autoConfigureTimeSeries = () => {
+    const months = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    setFields(months.map(m => ({
+      id: crypto.randomUUID(),
+      name: `${m} Cases / Yield`,
+      type: 'single_value',
+      chartType: 'bar'
+    })));
+    toast.success('Auto-configured 12-Month Time-Series fields!');
+  };
+
   const removeMultiGroupSection = (sIdx: number) => {
     const newSecs = [...multiGroupSections];
     newSecs.splice(sIdx, 1);
@@ -591,6 +694,8 @@ export default function DynamicTablesPage() {
     if (tableCategory === 'percentage') {
       schemaPayload = {
         description,
+        subSector: department === 'Social Development' ? subSector : 'all',
+        targetEntity,
         tableCategory: 'percentage',
         isPercentage: true,
         tableType: 'percentage',
@@ -599,6 +704,8 @@ export default function DynamicTablesPage() {
     } else if (tableCategory === 'multi_group') {
       schemaPayload = {
         description,
+        subSector: department === 'Social Development' ? subSector : 'all',
+        targetEntity,
         tableCategory: 'multi_group',
         tableType: 'multi_group',
         multiGroups: multiGroupSections
@@ -606,6 +713,8 @@ export default function DynamicTablesPage() {
     } else {
       schemaPayload = {
         description,
+        subSector: department === 'Social Development' ? subSector : 'all',
+        targetEntity,
         tableCategory,
         isBudget: tableCategory === 'budget',
         fields
@@ -735,7 +844,7 @@ export default function DynamicTablesPage() {
               Filter Sector:
             </span>
             {['All', ...DEPARTMENTS].map(dep => {
-              const label = dep === 'Demographics & Population' ? 'Demographics' : dep;
+              const label = dep;
               const isSelected = selectedDepartmentFilter === dep;
               return (
                 <button
@@ -993,7 +1102,7 @@ export default function DynamicTablesPage() {
             </div>
 
             <div className="p-6 space-y-4 overflow-y-auto flex-1 pr-3">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
                   <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-gray-300">Department</label>
                   <select
@@ -1004,6 +1113,25 @@ export default function DynamicTablesPage() {
                     {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
                   </select>
                 </div>
+
+                {department === 'Social Development' && (
+                  <div>
+                    <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-gray-300">
+                      Sub-Sector Branch
+                    </label>
+                    <select
+                      value={subSector}
+                      onChange={e => setSubSector(e.target.value)}
+                      className="w-full rounded-lg border border-brand-300 bg-brand-50/50 dark:bg-brand-950/30 px-3 py-2 text-sm font-semibold text-brand-700 dark:text-brand-300 focus:border-brand-500 focus:outline-none dark:border-brand-500/40"
+                    >
+                      <option value="all">General / All Sub-Sectors</option>
+                      <option value="education">Education &amp; Youth</option>
+                      <option value="health">Health &amp; Nutrition</option>
+                      <option value="welfare">Social Welfare</option>
+                      <option value="housing">Housing &amp; Basic Utilities</option>
+                    </select>
+                  </div>
+                )}
                 <div>
                   <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-gray-300">Table Type Category</label>
                   <select
@@ -1024,11 +1152,24 @@ export default function DynamicTablesPage() {
                   <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-gray-300">Tab Name</label>
                   <input
                     type="text"
-                    placeholder="e.g. Health & Nutrition"
+                    placeholder="e.g. Primary School Grade Levels"
                     value={tabName}
                     onChange={e => setTabName(e.target.value)}
                     className="w-full rounded-lg border border-gray-300 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-800 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:text-white"
                   />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-gray-300">Target Row Scope</label>
+                  <select
+                    value={targetEntity}
+                    onChange={e => setTargetEntity(e.target.value)}
+                    className="w-full rounded-lg border border-purple-300 bg-purple-50/40 dark:bg-purple-950/20 px-3 py-2 text-sm font-semibold text-purple-900 dark:text-purple-200 focus:border-purple-500 focus:outline-none dark:border-purple-500/40"
+                  >
+                    <option value="barangays">Barangays (18 Barangays)</option>
+                    <option value="primary_schools">Primary Schools (18 Primary Schools)</option>
+                    <option value="secondary_schools">Secondary Schools (7 High Schools)</option>
+                    <option value="all_schools">All Municipal Schools (25 Schools)</option>
+                  </select>
                 </div>
               </div>
 
@@ -1253,6 +1394,54 @@ export default function DynamicTablesPage() {
               ) : (
                 /* Standard / Budget / Project / Geo / Time-Series Modal Form */
                 <div className="mt-6">
+                  {tableCategory === 'project_tracker' && (
+                    <div className="mb-4 p-3.5 rounded-xl border border-purple-200 dark:border-purple-800/60 bg-purple-50/60 dark:bg-purple-950/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div>
+                        <h4 className="text-xs font-bold text-purple-900 dark:text-purple-200">Project Tracker Category</h4>
+                        <p className="text-xs text-purple-600 dark:text-purple-400 mt-0.5">Auto-fill project title, allocated budget (₱), status, target completion date, and beneficiaries.</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={autoConfigureProjectTracker}
+                        className="px-3.5 py-1.5 text-xs font-bold rounded-lg bg-purple-600 hover:bg-purple-700 text-white shadow-sm cursor-pointer whitespace-nowrap shrink-0"
+                      >
+                        Auto-Configure Fields
+                      </button>
+                    </div>
+                  )}
+
+                  {tableCategory === 'geo_registry' && (
+                    <div className="mb-4 p-3.5 rounded-xl border border-rose-200 dark:border-rose-800/60 bg-rose-50/60 dark:bg-rose-950/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div>
+                        <h4 className="text-xs font-bold text-rose-900 dark:text-rose-200">Geo-Spatial Asset Category</h4>
+                        <p className="text-xs text-rose-600 dark:text-rose-400 mt-0.5">Auto-fill facility names, GPS coordinates (Lat/Lng), resident capacity, and operational status.</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={autoConfigureGeoRegistry}
+                        className="px-3.5 py-1.5 text-xs font-bold rounded-lg bg-rose-600 hover:bg-rose-700 text-white shadow-sm cursor-pointer whitespace-nowrap shrink-0"
+                      >
+                        Auto-Configure Fields
+                      </button>
+                    </div>
+                  )}
+
+                  {tableCategory === 'time_series' && (
+                    <div className="mb-4 p-3.5 rounded-xl border border-cyan-200 dark:border-cyan-800/60 bg-cyan-50/60 dark:bg-cyan-950/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div>
+                        <h4 className="text-xs font-bold text-cyan-900 dark:text-cyan-200">Monthly Time-Series Category</h4>
+                        <p className="text-xs text-cyan-600 dark:text-cyan-400 mt-0.5">Auto-fill 12 monthly indicators (January through December) for seasonal tracking.</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={autoConfigureTimeSeries}
+                        className="px-3.5 py-1.5 text-xs font-bold rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white shadow-sm cursor-pointer whitespace-nowrap shrink-0"
+                      >
+                        Auto-Configure 12 Months
+                      </button>
+                    </div>
+                  )}
+
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-sm font-semibold text-gray-800 dark:text-white/90">Data Fields</h3>
                     <button onClick={addField} className="text-xs font-medium text-brand-500 hover:text-brand-600 cursor-pointer">+ Add Field</button>

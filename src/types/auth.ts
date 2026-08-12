@@ -12,7 +12,7 @@ export type Department =
   | "Infrastructure"
   | "Local Governance"
   | "Institutional GAD"
-  | "Demographics & Population"
+  | "Demographics"
   | "Justice & Safety";
 
 export interface UserProfile {

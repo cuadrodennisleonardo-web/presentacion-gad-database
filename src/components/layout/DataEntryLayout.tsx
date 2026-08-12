@@ -6,10 +6,17 @@ import ConfirmationModal from '@/components/common/ConfirmationModal';
 import DynamicDataEntryGrid from '@/components/common/DynamicDataEntryGrid';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import YearSelector from '@/components/common/YearSelector';
+import { getSchemaSubSector } from '@/utils/subSectorUtils';
 import type { Database } from '@/types/database';
 
 type DynamicSchema = Database['public']['Tables']['dynamic_schemas']['Row'];
 type Barangay = Database['public']['Tables']['barangays']['Row'];
+
+export interface SubSector {
+  id: string;
+  label: string;
+  keys: string[];
+}
 
 interface DataEntryLayoutProps {
   moduleName: string;
@@ -27,6 +34,10 @@ interface DataEntryLayoutProps {
   activeTab: string;
   entityName?: string;
   setActiveTab: (tab: string) => void;
+
+  subSectors?: SubSector[];
+  activeSubSector?: string;
+  onSelectSubSector?: (subSectorId: string) => void;
   
   dynamicSchemas: DynamicSchema[];
   barangays: Barangay[];
@@ -64,13 +75,17 @@ export default function DataEntryLayout({
   setYear,
   yearOptions,
   activeTab,
+  entityName,
   setActiveTab,
+  subSectors,
+  activeSubSector = 'all',
+  onSelectSubSector,
   dynamicSchemas,
   barangays,
   nativeTabs,
   isLocked,
-  latestApproval,
-  isSuperAdmin,
+  latestApproval: _latestApproval,
+  isSuperAdmin: _isSuperAdmin,
   canWrite,
   exportData,
   exportColumns,
@@ -85,12 +100,26 @@ export default function DataEntryLayout({
   children
 }: DataEntryLayoutProps) {
   
-  const tabs = [
+  const allTabs = [
     ...nativeTabs.map(t => ({ key: t.key, label: t.label, isDynamic: false, schema: undefined })),
     ...dynamicSchemas.map(ds => ({ key: ds.id, label: ds.tab_name, isDynamic: true, schema: ds }))
   ];
 
-  const activeTabData = tabs.find(t => t.key === activeTab);
+  // Filter tabs if a sub-sector is selected
+  const tabs = allTabs.filter(t => {
+    if (!subSectors || subSectors.length === 0 || activeSubSector === 'all') return true;
+    const selectedSub = subSectors.find(s => s.id === activeSubSector);
+    if (!selectedSub) return true;
+
+    if (t.isDynamic && t.schema) {
+      const sSub = getSchemaSubSector(t.schema);
+      return sSub === selectedSub.id;
+    }
+    
+    return selectedSub.keys.includes(t.key);
+  });
+
+  const activeTabData = allTabs.find(t => t.key === activeTab);
 
   const displayTitle = activeTabData?.isDynamic ? `${activeTabData.label} Grid` : gridTitle;
   
@@ -108,13 +137,46 @@ export default function DataEntryLayout({
       <PageBreadcrumb pageTitle={breadcrumbTitle} rootLabel="Menu" rootPath={null} />
       
       <div className="w-full max-w-full min-w-0 overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+        {/* Optional Sub-Sector Pills Bar */}
+        {subSectors && subSectors.length > 0 && (
+          <div className="px-5 py-3 bg-gray-50/80 dark:bg-gray-800/40 border-b border-gray-200 dark:border-gray-800 flex items-center gap-2 overflow-x-auto no-scrollbar">
+            <span className="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 shrink-0 mr-1">
+              Sub-Sector:
+            </span>
+            <button
+              onClick={() => onSelectSubSector?.('all')}
+              className={`px-3.5 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                activeSubSector === 'all'
+                  ? 'bg-brand-500 text-white shadow-md shadow-brand-500/20 ring-2 ring-brand-500/20'
+                  : 'bg-white dark:bg-gray-800/90 text-gray-600 dark:text-gray-300 hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
+              }`}
+            >
+              All Sub-Sectors
+            </button>
+            {subSectors.map(ss => (
+              <button
+                key={ss.id}
+                onClick={() => onSelectSubSector?.(ss.id)}
+                className={`px-3.5 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                  activeSubSector === ss.id
+                    ? 'bg-brand-500 text-white shadow-md shadow-brand-500/20 ring-2 ring-brand-500/20'
+                    : 'bg-white dark:bg-gray-800/90 text-gray-600 dark:text-gray-300 hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
+                }`}
+              >
+                {ss.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Tab Headers */}
         <div className="flex border-b border-gray-200 dark:border-gray-800 overflow-x-auto no-scrollbar w-full min-w-0">
           {tabs.map(t => (
             <button
               key={t.key}
-              className={`px-6 py-4 text-sm font-medium outline-none transition whitespace-nowrap ${
+              className={`px-6 py-4 text-sm font-medium outline-none transition whitespace-nowrap cursor-pointer ${
                 activeTab === t.key
-                  ? 'border-b-2 border-brand-500 text-brand-600 dark:text-brand-400'
+                  ? 'border-b-2 border-brand-500 text-brand-600 dark:text-brand-400 font-bold'
                   : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
               }`}
               onClick={() => setActiveTab(t.key)}
@@ -138,97 +200,67 @@ export default function DataEntryLayout({
             <div className="shrink-0">
               <YearSelector 
                 year={year} 
-                setYear={setYear} 
-                yearOptions={yearOptions} 
+                setYear={setYear}
+                yearOptions={yearOptions}
                 scopeKey={`${moduleName}_${activeTab}`}
               />
             </div>
           </div>
-          
-          {latestApproval?.status === 'rejected' && (
-            <div className="mb-4 rounded-lg bg-error-50 border border-error-200 p-4 dark:bg-error-900/20 dark:border-error-800/50 flex items-start gap-3">
-               <svg className="w-5 h-5 text-error-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-               </svg>
-               <div>
-                 <h4 className="text-sm font-medium text-error-800 dark:text-error-300">Approval Rejected</h4>
-                 <p className="text-xs text-error-700 dark:text-error-400 mt-0.5">Your previous submission was rejected. Please review the feedback and resubmit.</p>
-                 {latestApproval.comments && (
-                   <div className="mt-2 p-3 bg-white dark:bg-gray-800 rounded border border-error-100 dark:border-error-800/30 text-sm text-gray-700 dark:text-gray-300">
-                     <strong>Reviewer Comments:</strong><br/>
-                     {latestApproval.comments}
-                   </div>
-                 )}
-               </div>
+
+          {!activeTabData?.isDynamic && canWrite && (
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-1 mb-4 w-full min-w-0">
+              {exportData && exportColumns && (
+                <DataExportImport 
+                  data={exportData} 
+                  columns={exportColumns}
+                  title={exportTitle || `${pageTitle} (${year})`}
+                  onImport={onImport} 
+                />
+              )}
+              <button
+                onClick={onSave}
+                disabled={isSaving || isLoading || !canWrite || isLocked}
+                className="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-brand-600 disabled:opacity-50 ml-auto shrink-0 cursor-pointer"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
+                {isSaving ? 'Saving...' : 'Save Changes'}
+              </button>
             </div>
           )}
 
-          {isLocked && !isSuperAdmin && (
-            <div className="mb-4 rounded-lg bg-brand-50 border border-brand-200 p-4 dark:bg-brand-900/20 dark:border-brand-800/50 flex items-center justify-between">
-               <div className="flex items-center gap-3">
-                 <svg className="w-5 h-5 text-brand-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                 </svg>
-                 <div>
-                   <h4 className="text-sm font-medium text-brand-800 dark:text-brand-300">Module Locked ({latestApproval.status})</h4>
-                   <p className="text-xs text-brand-700 dark:text-brand-400 mt-0.5">This data is currently {latestApproval.status} and cannot be edited. Wait for review or contact a superadmin.</p>
-                 </div>
-               </div>
+          {tabs.length === 0 ? (
+            <div className="py-16 text-center text-sm text-gray-500 dark:text-gray-400 space-y-3">
+              <div className="mx-auto w-12 h-12 rounded-full bg-brand-50 dark:bg-brand-950/40 text-brand-500 flex items-center justify-center font-bold text-lg">
+                +
+              </div>
+              <p className="font-semibold text-gray-800 dark:text-white">No dynamic tables created for {moduleName} yet.</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 max-w-md mx-auto">
+                Go to <span className="font-semibold text-brand-600 dark:text-brand-400">Settings &gt; Dynamic Tables Manager</span> to create custom dynamic tables for this sector.
+              </p>
             </div>
-          )}
-
-          {activeTabData?.isDynamic ? (
-            <ErrorBoundary>
-              <DynamicDataEntryGrid schema={activeTabData.schema!} barangays={barangays} year={year} />
-            </ErrorBoundary>
           ) : (
-            <>
-              <div className="flex flex-wrap items-center justify-between gap-3 pt-1 w-full min-w-0">
-                {exportData && exportColumns && exportTitle && (
-                  <DataExportImport 
-                    data={exportData} 
-                    columns={exportColumns}
-                    title={exportTitle}
-                    onImport={canWrite ? onImport : undefined} 
-                  />
-                )}
-                {canWrite && (
-                  <button
-                    onClick={onSave}
-                    disabled={isSaving || isLoading || !canWrite || isLocked}
-                    className="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-brand-600 disabled:opacity-50 ml-auto shrink-0"
-                  >
-                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                    {isSaving ? 'Saving...' : 'Save Changes'}
-                  </button>
-                )}
-              </div>
-
-              <div className="pt-4 border-t border-gray-100 dark:border-gray-800 w-full min-w-0">
-                {isLoading ? (
-                  <div className="py-10 text-center text-sm text-gray-500">Loading grid...</div>
-                ) : (
-                  <ErrorBoundary>
-                    <div className="w-full max-w-full min-w-0 overflow-x-auto">
-                      {children}
-                    </div>
-                  </ErrorBoundary>
-                )}
-              </div>
-            </>
+            <ErrorBoundary>
+              {activeTabData?.isDynamic && activeTabData.schema ? (
+                <DynamicDataEntryGrid
+                  schema={activeTabData.schema}
+                  barangays={barangays}
+                  year={year}
+                  entityName={entityName}
+                />
+              ) : (
+                children
+              )}
+            </ErrorBoundary>
           )}
         </div>
       </div>
 
       <ConfirmationModal
         isOpen={showConfirmModal}
-        title="Overwrite Pending Approval?"
-        message="A pending approval request already exists for this tab. Saving new changes will replace the existing pending request. Do you want to proceed?"
-        confirmLabel="Yes, Overwrite"
-        onConfirm={onConfirmSave}
         onCancel={() => setShowConfirmModal(false)}
+        onConfirm={onConfirmSave}
+        title="Submit Changes for Approval"
+        message="Your changes will be submitted to the Superadmin for approval before updating the database. Proceed?"
       />
     </>
   );

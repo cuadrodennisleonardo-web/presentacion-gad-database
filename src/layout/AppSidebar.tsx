@@ -158,7 +158,7 @@ const AppSidebar: React.FC = () => {
     const getDeptPath = (dept?: string | null) => {
       if (!dept) return "";
       if (dept === "Institutional GAD") return "gad";
-      if (dept === "Demographics & Population") return "demographics";
+      if (dept === "Demographics") return "demographics";
       if (dept === "Justice & Safety") return "justice-safety";
       if (dept === "Local Governance") return "governance";
       return dept.toLowerCase().replace(" ", "-");
@@ -206,10 +206,10 @@ const AppSidebar: React.FC = () => {
       });
 
       // Data Entry Hub with sub-items
-      if (isSuperAdmin || canAccessModule("Demographics & Population") || canAccessModule("Social Development") || canAccessModule("Economic Development") || canAccessModule("Infrastructure") || canAccessModule("Local Governance") || canAccessModule("Justice & Safety") || canAccessModule("Institutional GAD")) {
+      if (isSuperAdmin || canAccessModule("Demographics") || canAccessModule("Social Development") || canAccessModule("Economic Development") || canAccessModule("Infrastructure") || canAccessModule("Local Governance") || canAccessModule("Justice & Safety") || canAccessModule("Institutional GAD")) {
         const dataEntrySubItems = [];
         
-        if (canAccessModule("Demographics & Population")) dataEntrySubItems.push({ name: "Demographics & Population", path: "/data-entry/demographics" });
+        if (canAccessModule("Demographics")) dataEntrySubItems.push({ name: "Demographics", path: "/data-entry/demographics" });
         if (canAccessModule("Social Development")) dataEntrySubItems.push({ name: "Social Development", path: "/data-entry/social-development" });
         if (canAccessModule("Economic Development")) dataEntrySubItems.push({ name: "Economic Development", path: "/data-entry/economic-development" });
         if (canAccessModule("Infrastructure")) dataEntrySubItems.push({ name: "Infrastructure", path: "/data-entry/infrastructure" });
@@ -228,7 +228,7 @@ const AppSidebar: React.FC = () => {
 
       // Dept Dashboards Hub with sub-items
       const dashboardSubItems = [];
-      if (canAccessModule("Demographics & Population")) dashboardSubItems.push({ name: "Demographics & Population", path: "/dashboard/demographics" });
+      if (canAccessModule("Demographics")) dashboardSubItems.push({ name: "Demographics", path: "/dashboard/demographics" });
       if (canAccessModule("Social Development")) dashboardSubItems.push({ name: "Social Development", path: "/dashboard/social-development" });
       if (canAccessModule("Economic Development")) dashboardSubItems.push({ name: "Economic Development", path: "/dashboard/economic-development" });
       if (canAccessModule("Infrastructure")) dashboardSubItems.push({ name: "Infrastructure", path: "/dashboard/infrastructure" });

@@ -9,6 +9,8 @@ import { submitForApproval, getLatestApproval, notifySuperAdminsOfDirectSave } f
 import ConfirmationModal from '@/components/common/ConfirmationModal';
 import { DataExportImport } from '@/components/common/DataExportImport';
 
+import { fetchSchools } from '@/services/api';
+
 type Barangay = Database['public']['Tables']['barangays']['Row'];
 type DynamicSchema = Database['public']['Tables']['dynamic_schemas']['Row'];
 
@@ -36,12 +38,34 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
   const [pendingChanges, setPendingChanges] = useState<Record<string, any> | null>(null);
   const queryClient = useQueryClient();
 
+  const sData = schema.schema as any;
+  const targetEntity = sData?.targetEntity || 'barangays';
+
+  const { data: schools = [] } = useQuery({
+    queryKey: ['schools'],
+    queryFn: fetchSchools,
+    enabled: targetEntity !== 'barangays'
+  });
+
+  let entitiesToDisplay: any[] = barangays;
+  let currentEntityLabel = entityName || "Barangay";
+
+  if (targetEntity === 'primary_schools') {
+    entitiesToDisplay = schools.filter((s: any) => s.district === 'School-Primary' || s.district?.toLowerCase().includes('primary'));
+    currentEntityLabel = "Primary School";
+  } else if (targetEntity === 'secondary_schools') {
+    entitiesToDisplay = schools.filter((s: any) => s.district === 'School-Secondary' || s.district?.toLowerCase().includes('secondary'));
+    currentEntityLabel = "Secondary School";
+  } else if (targetEntity === 'all_schools') {
+    entitiesToDisplay = schools;
+    currentEntityLabel = "School";
+  }
+
   const { data: latestApproval } = useQuery({
     queryKey: ['latest_approval', schema.department, schema.tab_name, year],
     queryFn: () => getLatestApproval(schema.department, schema.tab_name, year)
   });
 
-  const sData = schema.schema as any;
   const isPercentage = sData?.isPercentage || sData?.tableType === 'percentage';
   const isMultiGroup = sData?.tableCategory === 'multi_group' || sData?.tableType === 'multi_group';
   const percentageGroups = (sData?.groups || []) as { id: string; groupTitle?: string; totalTitle: string; fields: { id: string; name: string }[] }[];
@@ -265,7 +289,7 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
         })
       ];
 
-  const exportData = barangays.map(b => {
+  const exportData = entitiesToDisplay.map(b => {
     const bData = data[b.id] || {};
     const row: any = { barangay_name: b.name };
 
@@ -412,7 +436,7 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
             <table className="w-full min-w-[750px] text-left text-sm text-gray-600 dark:text-gray-300">
               <thead className="bg-gray-50 text-xs uppercase text-gray-500 dark:bg-gray-800/50 dark:text-gray-400">
                 <tr>
-                  <th className="whitespace-nowrap px-4 py-3 font-medium border-b dark:border-gray-800" rowSpan={2}>{entityName}</th>
+                  <th className="whitespace-nowrap px-4 py-3 font-medium border-b dark:border-gray-800" rowSpan={2}>{currentEntityLabel}</th>
                   {percentageGroups.map((g, gIdx) => (
                     <th 
                       key={g.id} 
@@ -444,7 +468,7 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
-                {barangays.map((b) => {
+                {entitiesToDisplay.map((b) => {
                   const bData = data[b.id] || {};
 
                   return (
@@ -507,7 +531,7 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
             <table className="w-full min-w-[750px] text-left text-sm text-gray-600 dark:text-gray-300">
               <thead className="bg-gray-50 text-xs uppercase text-gray-500 dark:bg-gray-800/50 dark:text-gray-400">
                 <tr>
-                  <th className="whitespace-nowrap px-4 py-3 font-medium border-b dark:border-gray-800" rowSpan={2}>{entityName}</th>
+                  <th className="whitespace-nowrap px-4 py-3 font-medium border-b dark:border-gray-800" rowSpan={2}>{currentEntityLabel}</th>
                   {multiGroups.map((mg, mgIdx) => {
                     const colCount = mg.fields.reduce((acc, f) => acc + (f.type === 'gender_split' ? 3 : 1), 0);
                     return (
@@ -544,7 +568,7 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
-                {barangays.map((b) => {
+                {entitiesToDisplay.map((b) => {
                   const bData = data[b.id] || {};
 
                   return (
@@ -616,7 +640,7 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
             <table className="w-full min-w-[750px] text-left text-sm text-gray-600 dark:text-gray-300">
               <thead className="bg-gray-50 text-xs uppercase text-gray-500 dark:bg-gray-800/50 dark:text-gray-400">
                 <tr>
-                  <th className="whitespace-nowrap px-4 py-3 font-medium border-b dark:border-gray-800" rowSpan={2}>{entityName}</th>
+                  <th className="whitespace-nowrap px-4 py-3 font-medium border-b dark:border-gray-800" rowSpan={2}>{currentEntityLabel}</th>
                   {fields.map(f => (
                     <th key={f.id} className={`whitespace-nowrap px-4 py-2 font-medium text-center border-b border-l ${f === fields[fields.length-1] ? 'border-r' : ''} dark:border-gray-800`} colSpan={f.type === 'gender_split' ? 3 : 1} rowSpan={f.type === 'gender_split' ? 1 : 2}>
                       {f.name}
@@ -639,7 +663,7 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
-                {barangays.map((b) => {
+                {entitiesToDisplay.map((b) => {
                   const bData = data[b.id] || {};
                   
                   return (

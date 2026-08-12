@@ -70,7 +70,10 @@ export async function fetchApprovalChanges(resubmitId: string) {
 }
 
 export async function fetchDynamicSchemas(department: string) {
-  const { data, error } = await supabase.from('dynamic_schemas').select('*').eq('department', department);
+  const depts = (department === 'Demographics' || department === 'Demographics & Population')
+    ? ['Demographics', 'Demographics & Population']
+    : [department];
+  const { data, error } = await supabase.from('dynamic_schemas').select('*').in('department', depts);
   if (error) throw error;
   return data || [];
 }

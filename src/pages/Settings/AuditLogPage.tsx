@@ -59,7 +59,7 @@ const parseDevice = (ua: string) => {
 
 const getTableLabel = (tableName: string) => {
   switch (tableName) {
-    case 'population_stats': return 'Demographics & Population';
+    case 'population_stats': return 'Demographics';
     case 'social_dev_stats': return 'Social Development';
     case 'econ_dev_stats': return 'Economic Development';
     case 'infra_stats': return 'Infrastructure';

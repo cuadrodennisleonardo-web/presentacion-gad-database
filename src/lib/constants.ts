@@ -41,7 +41,7 @@ export const ROLE_LABELS: Record<Role, string> = {
 
 // ─── Department Names ───────────────────────────────────────
 export const DEPARTMENTS: Department[] = [
-  "Demographics & Population",
+  "Demographics",
   "Social Development",
   "Economic Development",
   "Infrastructure",
@@ -51,7 +51,7 @@ export const DEPARTMENTS: Department[] = [
 ];
 
 export const DEPARTMENT_TABLES: Record<Department, string[]> = {
-  "Demographics & Population": ["population_stats"],
+  Demographics: ["population_stats"],
   "Social Development": ["social_dev_stats", "population_stats"],
   "Economic Development": ["econ_dev_stats"],
   Infrastructure: ["infra_stats"],

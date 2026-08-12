@@ -24,7 +24,15 @@ export default function SocialDevelopmentDataEntry() {
   const [stats, setStats] = useState<Record<string, Partial<SocialStat>>>({});
   const [originalStats, setOriginalStats] = useState<Record<string, Partial<SocialStat>>>({});
   const [activeTab, setActiveTab] = useState<TabType>('education');
+  const [activeSubSector, setActiveSubSector] = useState<string>('all');
   const [year, setYear] = useState(getDefaultYear(`Social Development_${'education'}`));
+
+  const subSectors = [
+    { id: 'education', label: 'Education & Youth', keys: ['education', 'school', 'student', 'youth', 'daycare', 'eccd', 'dropout', 'osya'] },
+    { id: 'health', label: 'Health & Nutrition', keys: ['health', 'nutrition', 'malnourished', 'maternal', 'pregnancy', 'outbreak', 'dengue', 'tb'] },
+    { id: 'welfare', label: 'Social Welfare', keys: ['welfare', 'pwd', '4ps', 'senior', 'solo_parent', 'pensioner', 'aics'] },
+    { id: 'housing', label: 'Housing & Basic Utilities', keys: ['utilities', 'housing', 'settlers', 'water', 'electricity', 'sanitation', 'toilet'] },
+  ];
 
   useEffect(() => {
     setYear(getDefaultYear('Social Development_' + activeTab));
@@ -38,6 +46,20 @@ export default function SocialDevelopmentDataEntry() {
     { key: 'health', label: 'Health & Nutrition' },
     { key: 'welfare', label: 'Social Welfare' },
   ];
+
+  const handleSelectSubSector = (subId: string) => {
+    setActiveSubSector(subId);
+    if (subId === 'education') setActiveTab('education');
+    else if (subId === 'health') setActiveTab('health');
+    else if (subId === 'welfare') setActiveTab('welfare');
+    else if (subId === 'housing') {
+      const housingSchema = dynamicSchemas.find(d => 
+        d.tab_name.toLowerCase().includes('housing') || 
+        d.tab_name.toLowerCase().includes('utilities')
+      );
+      if (housingSchema) setActiveTab(housingSchema.id);
+    }
+  };
 
   const { data: dynamicSchemas = [] } = useQuery({
     queryKey: ['dynamic_schemas', 'Social Development'],
@@ -325,6 +347,9 @@ export default function SocialDevelopmentDataEntry() {
       yearOptions={yearOptions}
       activeTab={activeTab}
       setActiveTab={setActiveTab}
+      subSectors={subSectors}
+      activeSubSector={activeSubSector}
+      onSelectSubSector={handleSelectSubSector}
       dynamicSchemas={dynamicSchemas}
       barangays={entities}
       entityName={isEducation ? "School" : "Barangay"}

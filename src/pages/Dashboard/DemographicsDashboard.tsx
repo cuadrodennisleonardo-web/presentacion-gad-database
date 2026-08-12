@@ -25,9 +25,9 @@ export default function DemographicsDashboard() {
 
   return (
     <>
-      <PageMeta title="Demographics Dashboard" description="Demographics & Population Overview" />
+      <PageMeta title="Demographics Dashboard" description="Demographics Overview" />
       <div className="mb-6">
-        <PageBreadcrumb pageTitle="Demographics & Population Dashboard" hideNav={true} />
+        <PageBreadcrumb pageTitle="Demographics Dashboard" hideNav={true} />
       </div>
 
       <div className="flex items-center justify-between mb-4">
@@ -90,8 +90,8 @@ export default function DemographicsDashboard() {
             </div>
           </div>
 
-          <DynamicDashboardCharts department="Demographics & Population" />
-          <DynamicBudgetCharts department="Demographics & Population" />
+          <DynamicDashboardCharts department="Demographics" />
+          <DynamicBudgetCharts department="Demographics" />
 
         </>
       )}

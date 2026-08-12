@@ -52,7 +52,7 @@ const AppHeader: React.FC = () => {
 
     const ALL_DEPARTMENTS: { name: Department; indicators: { name: string; keywords: string }[] }[] = [
       {
-        name: "Demographics & Population",
+        name: "Demographics",
         indicators: [
           { name: "Total Population & Total Households", keywords: "population total households demographics residents census" }
         ]

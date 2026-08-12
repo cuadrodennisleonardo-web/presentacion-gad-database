@@ -16,9 +16,9 @@ export async function getBarangays(year?: number): Promise<{
   error: string | null;
 }> {
   const targetYear = year || getDepartmentDefaultYear([
-    "Demographics & Population_main",
+    "Demographics_main",
     "Demographics_Dashboard",
-    "Demographics & Population"
+    "Demographics"
   ]);
   
   const { data: barangays, error: bError } = await supabase

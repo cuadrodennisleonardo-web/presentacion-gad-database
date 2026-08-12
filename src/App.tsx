@@ -95,7 +95,7 @@ export default function App() {
             >
               <Route path="/dashboard" element={<ProtectedRoute allowedRoles={['superadmin', 'senior_viewer', 'viewer']}><DashboardPage /></ProtectedRoute>} />
               
-              <Route path="/dashboard/demographics" element={<ModuleGuard module="Demographics & Population"><DemographicsDashboard /></ModuleGuard>} />
+              <Route path="/dashboard/demographics" element={<ModuleGuard module="Demographics"><DemographicsDashboard /></ModuleGuard>} />
               <Route path="/dashboard/social-development" element={<ModuleGuard module="Social Development"><SocialDevelopmentDashboard /></ModuleGuard>} />
               <Route path="/dashboard/economic-development" element={<ModuleGuard module="Economic Development"><EconomicDevelopmentDashboard /></ModuleGuard>} />
               <Route path="/dashboard/infrastructure" element={<ModuleGuard module="Infrastructure"><InfrastructureDashboard /></ModuleGuard>} />
@@ -112,7 +112,7 @@ export default function App() {
               <Route path="/settings/dynamic-tables" element={<ProtectedRoute allowedRoles={['superadmin']}><DynamicTablesPage /></ProtectedRoute>} />
               <Route path="/settings/data-management" element={<ProtectedRoute allowedRoles={['superadmin']}><DataManagementPage /></ProtectedRoute>} />
 
-              <Route path="/data-entry/demographics" element={<ModuleGuard module="Demographics & Population"><DemographicsDataEntry /></ModuleGuard>} />
+              <Route path="/data-entry/demographics" element={<ModuleGuard module="Demographics"><DemographicsDataEntry /></ModuleGuard>} />
               <Route path="/data-entry/social-development" element={<ModuleGuard module="Social Development"><SocialDevelopmentDataEntry /></ModuleGuard>} />
               <Route path="/data-entry/economic-development" element={<ModuleGuard module="Economic Development"><EconomicDevelopmentDataEntry /></ModuleGuard>} />
               <Route path="/data-entry/infrastructure" element={<ModuleGuard module="Infrastructure"><InfrastructureDataEntry /></ModuleGuard>} />

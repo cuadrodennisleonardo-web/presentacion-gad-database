@@ -7,7 +7,7 @@ const HomeRedirect: React.FC = () => {
 
   if (role === "dept_admin" || role === "dept_viewer") {
     switch (department) {
-      case "Demographics & Population":
+      case "Demographics":
         return <Navigate to="/dashboard/demographics" replace />;
       case "Social Development":
         return <Navigate to="/dashboard/social-development" replace />;

@@ -61,14 +61,14 @@ const LoginPage: React.FC = () => {
 
             <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-medium text-white border border-white/20 backdrop-blur-md shrink-0">
               <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-              Centralized Municipal Database System
+              Centralized Municipal Database
             </div>
           </div>
 
           {/* Main Hero Content */}
           <div className="relative z-10 my-auto py-4 max-w-xl w-full">
-            <h1 className="text-3xl xl:text-4xl font-extrabold text-white leading-tight tracking-tight mb-2">
-              Presentacion Municipal Database
+            <h1 className="text-xl sm:text-2xl lg:text-2xl xl:text-3xl font-extrabold text-white leading-tight tracking-tight mb-2 whitespace-nowrap">
+              Municipal Gender Aggregation Database
             </h1>
 
             {/* Official Administrative Map Showcase Card */}
@@ -86,10 +86,6 @@ const LoginPage: React.FC = () => {
               </div>
               <PresentacionAdminMap />
             </div>
-
-            <p className="text-xs xl:text-sm text-white/90 leading-relaxed">
-              Centralized platform for managing GAD initiatives, sector demographics, and municipal statistics across Presentacion's 18 barangays.
-            </p>
           </div>
 
           {/* Footer Info */}

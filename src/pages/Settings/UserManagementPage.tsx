@@ -15,7 +15,7 @@ const ROLE_LABELS: Record<string, string> = {
   dept_viewer: 'Department Viewer',
   viewer: 'Viewer',
 };
-const DEPARTMENTS = ['Social Development', 'Economic Development', 'Infrastructure', 'Local Governance', 'Institutional GAD', 'Demographics & Population', 'Justice & Safety'];
+const DEPARTMENTS = ['Social Development', 'Economic Development', 'Infrastructure', 'Local Governance', 'Institutional GAD', 'Demographics', 'Justice & Safety'];
 
 export default function UserManagementPage() {
   const [users, setUsers] = useState<UserProfile[]>([]);

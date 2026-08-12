@@ -13,7 +13,7 @@ interface NativeSubTable {
 }
 
 const NATIVE_SUB_TABLES: Record<string, NativeSubTable[]> = {
-  'Demographics & Population': [
+  'Demographics': [
     {
       key: 'total_population',
       label: 'Native: Total Population',
@@ -174,7 +174,7 @@ export default function DataManagementPage() {
   const [confirmText, setConfirmText] = useState('');
 
   const DEPARTMENTS = [
-    'Demographics & Population',
+    'Demographics',
     'Social Development',
     'Economic Development',
     'Infrastructure',
@@ -185,7 +185,7 @@ export default function DataManagementPage() {
 
   const getNativeTableName = (dept: string) => {
     switch (dept) {
-      case 'Demographics & Population': return 'population_stats';
+      case 'Demographics': return 'population_stats';
       case 'Social Development': return 'social_dev_stats';
       case 'Economic Development': return 'econ_dev_stats';
       case 'Infrastructure': return 'infra_stats';

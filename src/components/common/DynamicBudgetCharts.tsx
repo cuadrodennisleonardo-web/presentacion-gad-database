@@ -5,6 +5,7 @@ import { CHART_COLORS } from '@/config/chartColors';
 import { useDynamicDashboardSchemas, useDynamicSchemaData } from '@/hooks/queries/useDynamicDashboardSchemas';
 import YearSelector from '@/components/common/YearSelector';
 import { getDefaultYear } from '@/utils/yearUtils';
+import { getSchemaSubSector } from '@/utils/subSectorUtils';
 
 interface FieldDef {
   id: string;
@@ -15,6 +16,7 @@ interface FieldDef {
 
 interface DynamicBudgetChartsProps {
   department: string;
+  subSector?: string;
 }
 
 function DynamicBudgetSection({ schema, barangays, department }: { schema: any, barangays: any[], department: string }) {
@@ -92,7 +94,7 @@ function DynamicBudgetSection({ schema, barangays, department }: { schema: any, 
   );
 }
 
-export default function DynamicBudgetCharts({ department }: DynamicBudgetChartsProps) {
+export default function DynamicBudgetCharts({ department, subSector }: DynamicBudgetChartsProps) {
   const { data: dashboardData, isLoading } = useDynamicDashboardSchemas(department);
 
   if (isLoading) {
@@ -101,7 +103,13 @@ export default function DynamicBudgetCharts({ department }: DynamicBudgetChartsP
 
   const schemas = (dashboardData?.schemas || []).filter(s => {
     const sData = s.schema as any;
-    return sData && !Array.isArray(sData) && sData.isBudget;
+    if (!(sData && !Array.isArray(sData) && sData.isBudget)) return false;
+
+    if (subSector && subSector !== 'all') {
+      const sSub = getSchemaSubSector(s);
+      if (sSub !== subSector) return false;
+    }
+    return true;
   });
   const barangays = dashboardData?.barangays || [];
 

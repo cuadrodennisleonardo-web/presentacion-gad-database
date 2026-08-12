@@ -23,19 +23,19 @@ export default function DemographicsDataEntry() {
   const [popStats, setPopStats] = useState<Record<string, Partial<PopStat>>>({});
   const [originalPopStats, setOriginalPopStats] = useState<Record<string, Partial<PopStat>>>({});
   const [activeTab, setActiveTab] = useState('main');
-  const [year, setYear] = useState(getDefaultYear(`Demographics & Population_${'main'}`));
+  const [year, setYear] = useState(getDefaultYear(`Demographics_${'main'}`));
 
   useEffect(() => {
-    setYear(getDefaultYear('Demographics & Population_' + activeTab));
+    setYear(getDefaultYear('Demographics_' + activeTab));
   }, [activeTab]);
   
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingChanges, setPendingChanges] = useState<Record<string, any> | null>(null);
 
   const { data: dynamicSchemas = [] } = useQuery({
-    queryKey: ['dynamic_schemas', 'Demographics & Population'],
+    queryKey: ['dynamic_schemas', 'Demographics'],
     queryFn: async () => {
-      const { data } = await supabase.from('dynamic_schemas').select('*').eq('department', 'Demographics & Population');
+      const { data } = await supabase.from('dynamic_schemas').select('*').in('department', ['Demographics', 'Demographics & Population']);
       return data || [];
     }
   });
@@ -43,8 +43,8 @@ export default function DemographicsDataEntry() {
   const tabLabel = activeTab === 'main' ? 'Demographics' : (dynamicSchemas.find(d => d.id === activeTab)?.tab_name || 'Demographics');
 
   const { data: latestApproval } = useQuery({
-    queryKey: ['latest_approval', 'Demographics & Population', tabLabel, year],
-    queryFn: () => getLatestApproval('Demographics & Population', tabLabel, year)
+    queryKey: ['latest_approval', 'Demographics', tabLabel, year],
+    queryFn: () => getLatestApproval('Demographics', tabLabel, year)
   });
 
   const isLocked = latestApproval && latestApproval.status === 'pending' && !isSuperAdmin;
@@ -156,15 +156,15 @@ export default function DemographicsDataEntry() {
         const { error } = await supabase.from('population_stats').upsert(upsertData, { onConflict: 'barangay_id,year' });
         if (error) throw error;
         
-        await notifySuperAdminsOfDirectSave('Demographics & Population', 'Demographics', year, user!.id);
+        await notifySuperAdminsOfDirectSave('Demographics', 'Demographics', year, user!.id);
       } else {
-        await submitForApproval('Demographics & Population', 'Demographics', year, changedData, user!.id);
+        await submitForApproval('Demographics', 'Demographics', year, changedData, user!.id);
       }
     },
     onSuccess: () => {
-      toast.success(isSuperAdmin ? `Demographics & Population data saved directly!` : `Changes submitted for approval!`);
+      toast.success(isSuperAdmin ? `Demographics data saved directly!` : `Changes submitted for approval!`);
       queryClient.invalidateQueries({ queryKey: ['native_data', 'Demographics', year] });
-      queryClient.invalidateQueries({ queryKey: ['latest_approval', 'Demographics & Population', tabLabel, year] });
+      queryClient.invalidateQueries({ queryKey: ['latest_approval', 'Demographics', tabLabel, year] });
       queryClient.invalidateQueries({ queryKey: ['demographics_stats', year] });
       queryClient.invalidateQueries({ queryKey: ['main_dashboard_stats'] });
       setShowConfirmModal(false);
@@ -228,10 +228,10 @@ export default function DemographicsDataEntry() {
 
   return (
     <DataEntryLayout
-      moduleName="Demographics & Population"
+      moduleName="Demographics"
       pageTitle="Demographics Data Entry"
       pageDescription="Manage Demographics stats"
-      breadcrumbTitle={`Demographics & Population ${!canWrite ? 'View Data' : 'Data Entry'}`}
+      breadcrumbTitle={`Demographics ${!canWrite ? 'View Data' : 'Data Entry'}`}
       gridTitle="Demographics Grid"
       gridDescription={`Manage population and household data for ${barangays.length} barangays.`}
       year={year}
@@ -260,7 +260,7 @@ export default function DemographicsDataEntry() {
         };
       })}
       exportColumns={columns}
-      exportTitle={`Demographics & Population (${year})`}
+      exportTitle={`Demographics (${year})`}
       onImport={handleImport}
       onSave={handleSaveAll}
       isSaving={mutation.isPending}
