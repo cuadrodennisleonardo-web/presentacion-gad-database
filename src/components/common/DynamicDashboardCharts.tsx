@@ -45,7 +45,15 @@ function DynamicSchemaSection({ schema, barangays, schools = [], department }: {
   const chartFields = fields.filter(f => f.chartType === 'bar' || f.chartType === 'pie');
   
   const data = schemaData || [];
-  const bNames = entitiesToDisplay.map(b => b.name);
+  const bNames = entitiesToDisplay.map(b => {
+    const isPrivate = Boolean(
+      b.isPrivate || 
+      b.district === 'School-Private' || 
+      b.name?.includes('Holy Angel') || 
+      b.name?.includes('Moises D. Fernandez')
+    );
+    return isPrivate ? `${b.name} (Private)` : b.name;
+  });
 
   // Flatten all subfields for percentage tables
   const allPercentageIndicators = percentageGroups.flatMap(g => 

@@ -20,10 +20,10 @@ This document serves as an authoritative reference list of recommended custom dy
 ### A. Health & Nutrition
 | Table Title | Category Type | Short Description | Key Indicators / Fields |
 | :--- | :--- | :--- | :--- |
-| **Health & Nutrition Overview** | `Standard` | Monitor teenage pregnancies, maternal mortality, malnourished/stunted children, and chronic disease cases. | Teenage Pregnancies, Maternal Mortality, Malnourished/Stunted Children (M/F), Hypertension & TB |
-| **Health & Immunization** | `Standard` | Track infant immunization rates and registered health cases. | Fully Immunized Infants, TB Patients, Hypertension Cases |
-| **Nutritional Status** | `Standard` | Monitor underweight, stunted, and severely wasted children. | Normal Weight, Underweight, Stunted Children (M/F) |
-| **Monthly Outbreaks** | `Monthly Time-Series` | Monitor monthly disease cases to detect peak outbreak seasons. | Monthly Dengue & Gastroenteritis Cases (Jan - Dec) |
+| **Maternal & Adolescent Health** | `Standard` | Track teenage pregnancies and maternal mortality cases across barangays. | Teenage Pregnancies, Maternal Mortality Cases |
+| **Health & Immunization** | `Standard` | Track infant immunization rates, TB patients, and chronic disease cases. | Fully Immunized Infants, TB Patients, Hypertension Cases |
+| **Nutritional Status** | `Standard` | Monitor underweight, stunted, and severely wasted children. | Normal Weight, Underweight, Stunted Children (Male / Female) |
+| **Monthly Outbreaks** | `Monthly Time-Series` | Monitor monthly disease cases to detect peak outbreak seasons. | Monthly Dengue Cases, Gastroenteritis Cases (Jan - Dec) |
 
 ### B. Education & Youth
 | Table Title | Category Type | Short Description | Key Indicators / Fields |

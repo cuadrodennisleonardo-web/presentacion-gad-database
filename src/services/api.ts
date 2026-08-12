@@ -23,7 +23,13 @@ export async function fetchSchools() {
     let district = b.district;
     if (b.name.includes('Holy Angel')) district = 'School-Primary';
     if (b.name.includes('Moises D. Fernandez')) district = 'School-Secondary';
-    return { ...b, district };
+    const isPrivate = Boolean(
+      b.is_private || 
+      b.district === 'School-Private' || 
+      b.name.includes('Holy Angel') || 
+      b.name.includes('Moises D. Fernandez')
+    );
+    return { ...b, district, isPrivate };
   });
 
   return schools.sort((a, b) => {

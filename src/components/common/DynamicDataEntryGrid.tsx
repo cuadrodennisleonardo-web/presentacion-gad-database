@@ -400,6 +400,28 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
     return key ? row[key] : undefined;
   };
 
+  const renderEntityCell = (b: any) => {
+    const isPrivate = Boolean(
+      b.isPrivate || 
+      b.district === 'School-Private' || 
+      b.name?.includes('Holy Angel') || 
+      b.name?.includes('Moises D. Fernandez')
+    );
+
+    return (
+      <td className="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">
+        <div className="flex items-center justify-between gap-2">
+          <span>{b.name}</span>
+          {isPrivate && (
+            <span className="inline-flex items-center rounded-md bg-purple-100 dark:bg-purple-900/40 px-2 py-0.5 text-xs font-semibold text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+              (Private)
+            </span>
+          )}
+        </div>
+      </td>
+    );
+  };
+
   const hasNoFields = isPercentage ? percentageGroups.length === 0 : isMultiGroup ? multiGroups.length === 0 : fields.length === 0;
 
   return (
@@ -473,7 +495,7 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
 
                   return (
                     <tr key={b.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                      <td className="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">{b.name}</td>
+                      {renderEntityCell(b)}
                       {percentageGroups.map((g) => {
                         const gData = bData[g.id] || {};
                         const totalVal = gData.total !== undefined && gData.total !== null ? Number(gData.total) : 0;
@@ -573,7 +595,7 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
 
                   return (
                     <tr key={b.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                      <td className="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">{b.name}</td>
+                      {renderEntityCell(b)}
                       {multiGroups.map((mg) => (
                         <React.Fragment key={mg.id}>
                           {mg.fields.map(f => {
@@ -668,7 +690,7 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
                   
                   return (
                     <tr key={b.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                      <td className="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">{b.name}</td>
+                      {renderEntityCell(b)}
                       
                       {fields.map(f => {
                         const fData = bData[f.id] || {};
