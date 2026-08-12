@@ -13,12 +13,11 @@ import { useSocialDevStats } from "@/hooks/queries/useSocialDevStats";
 
 export default function SocialDevelopmentDashboard() {
   const [year, setYear] = useState(getDefaultYear('SocialDevelopment_Dashboard'));
-  const [activeSubSector, setActiveSubSector] = useState<string>('all');
+  const [activeSubSector, setActiveSubSector] = useState<string>('education');
 
   const { data: stats, isLoading } = useSocialDevStats(year);
 
   const subSectors = [
-    { id: 'all', label: 'All Sub-Sectors' },
     { id: 'education', label: 'Education & Youth' },
     { id: 'health', label: 'Health & Nutrition' },
     { id: 'welfare', label: 'Social Welfare' },
@@ -45,9 +44,7 @@ export default function SocialDevelopmentDashboard() {
     { subSector: 'welfare', title: "Solo Parents", value: stats?.soloParents || 0, icon: "", bg: "bg-rose-50 dark:bg-rose-500/10", color: "text-rose-600" },
   ];
 
-  const statCards = activeSubSector === 'all' 
-    ? allStatCards 
-    : allStatCards.filter(c => c.subSector === activeSubSector);
+  const statCards = allStatCards.filter(c => c.subSector === activeSubSector);
 
   return (
     <>

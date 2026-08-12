@@ -143,16 +143,6 @@ export default function DataEntryLayout({
             <span className="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 shrink-0 mr-1">
               Sub-Sector:
             </span>
-            <button
-              onClick={() => onSelectSubSector?.('all')}
-              className={`px-3.5 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-                activeSubSector === 'all'
-                  ? 'bg-brand-500 text-white shadow-md shadow-brand-500/20 ring-2 ring-brand-500/20'
-                  : 'bg-white dark:bg-gray-800/90 text-gray-600 dark:text-gray-300 hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
-              }`}
-            >
-              All Sub-Sectors
-            </button>
             {subSectors.map(ss => (
               <button
                 key={ss.id}

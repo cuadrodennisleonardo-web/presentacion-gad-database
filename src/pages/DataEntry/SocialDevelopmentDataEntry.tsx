@@ -24,7 +24,7 @@ export default function SocialDevelopmentDataEntry() {
   const [stats, setStats] = useState<Record<string, Partial<SocialStat>>>({});
   const [originalStats, setOriginalStats] = useState<Record<string, Partial<SocialStat>>>({});
   const [activeTab, setActiveTab] = useState<TabType>('education');
-  const [activeSubSector, setActiveSubSector] = useState<string>('all');
+  const [activeSubSector, setActiveSubSector] = useState<string>('education');
   const [year, setYear] = useState(getDefaultYear(`Social Development_${'education'}`));
 
   const subSectors = [
@@ -43,17 +43,25 @@ export default function SocialDevelopmentDataEntry() {
 
   const nativeTabs = [
     { key: 'education', label: 'Education' },
-    { key: 'health', label: 'Health & Nutrition' },
     { key: 'welfare', label: 'Social Welfare' },
   ];
 
   const handleSelectSubSector = (subId: string) => {
     setActiveSubSector(subId);
-    if (subId === 'education') setActiveTab('education');
-    else if (subId === 'health') setActiveTab('health');
-    else if (subId === 'welfare') setActiveTab('welfare');
-    else if (subId === 'housing') {
+    if (subId === 'education') {
+      setActiveTab('education');
+    } else if (subId === 'welfare') {
+      setActiveTab('welfare');
+    } else if (subId === 'health') {
+      const healthSchema = dynamicSchemas.find(d => 
+        (d.schema as any)?.subSector === 'health' ||
+        d.tab_name.toLowerCase().includes('health') || 
+        d.tab_name.toLowerCase().includes('nutrition')
+      );
+      if (healthSchema) setActiveTab(healthSchema.id);
+    } else if (subId === 'housing') {
       const housingSchema = dynamicSchemas.find(d => 
+        (d.schema as any)?.subSector === 'housing' ||
         d.tab_name.toLowerCase().includes('housing') || 
         d.tab_name.toLowerCase().includes('utilities')
       );
