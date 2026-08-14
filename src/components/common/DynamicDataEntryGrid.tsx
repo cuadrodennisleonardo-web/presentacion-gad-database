@@ -367,8 +367,16 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
           multiGroups.forEach(mg => {
             mg.fields.forEach(f => {
               if (f.type === 'gender_split') {
-                const m = row[`${f.id}_m`];
-                const fVal = row[`${f.id}_f`];
+                const m = row[`${f.id}_m`]
+                  ?? headKeyMatch(row, `[${mg.groupTitle}] ${f.name} (M)`)
+                  ?? headKeyMatch(row, `[${mg.groupTitle}] ${f.name} (Male)`)
+                  ?? headKeyMatch(row, `${f.name} (M)`)
+                  ?? headKeyMatch(row, `${f.name}_m`);
+                const fVal = row[`${f.id}_f`]
+                  ?? headKeyMatch(row, `[${mg.groupTitle}] ${f.name} (F)`)
+                  ?? headKeyMatch(row, `[${mg.groupTitle}] ${f.name} (Female)`)
+                  ?? headKeyMatch(row, `${f.name} (F)`)
+                  ?? headKeyMatch(row, `${f.name}_f`);
                 if (m !== undefined && m !== null && m !== '') {
                    newData[b.id][f.id] = { ...(newData[b.id][f.id] || {}), m: Number(m) };
                 }
@@ -376,7 +384,9 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
                    newData[b.id][f.id] = { ...(newData[b.id][f.id] || {}), f: Number(fVal) };
                 }
               } else {
-                const val = row[f.id];
+                const val = row[f.id] 
+                  ?? headKeyMatch(row, `[${mg.groupTitle}] ${f.name}`)
+                  ?? headKeyMatch(row, f.name);
                 if (val !== undefined && val !== null && val !== '') {
                    newData[b.id][f.id] = { ...(newData[b.id][f.id] || {}), value: Number(val) };
                 }
@@ -386,8 +396,22 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
         } else {
           fields.forEach(f => {
             if (f.type === 'gender_split') {
-              const m = row[`${f.id}_m`];
-              const fVal = row[`${f.id}_f`];
+              const m = row[`${f.id}_m`] 
+                ?? headKeyMatch(row, `${f.name} (M)`) 
+                ?? headKeyMatch(row, `${f.name} (Male)`)
+                ?? headKeyMatch(row, `${f.name}_m`)
+                ?? headKeyMatch(row, `${f.name}_male`)
+                ?? headKeyMatch(row, `${f.name} M`)
+                ?? headKeyMatch(row, `${f.name} Male`);
+                
+              const fVal = row[`${f.id}_f`] 
+                ?? headKeyMatch(row, `${f.name} (F)`) 
+                ?? headKeyMatch(row, `${f.name} (Female)`)
+                ?? headKeyMatch(row, `${f.name}_f`)
+                ?? headKeyMatch(row, `${f.name}_female`)
+                ?? headKeyMatch(row, `${f.name} F`)
+                ?? headKeyMatch(row, `${f.name} Female`);
+
               if (m !== undefined && m !== null && m !== '') {
                  newData[b.id][f.id] = { ...(newData[b.id][f.id] || {}), m: Number(m) };
               }
@@ -395,7 +419,7 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
                  newData[b.id][f.id] = { ...(newData[b.id][f.id] || {}), f: Number(fVal) };
               }
             } else {
-              const val = row[f.id];
+              const val = row[f.id] ?? headKeyMatch(row, f.name);
               if (val !== undefined && val !== null && val !== '') {
                  newData[b.id][f.id] = { ...(newData[b.id][f.id] || {}), value: Number(val) };
               }
