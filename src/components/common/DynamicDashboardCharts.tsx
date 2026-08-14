@@ -28,7 +28,7 @@ function DynamicSchemaSection({ schema, barangays, schools = [], department }: {
   const sData = schema.schema as any;
   const targetEntity = sData?.targetEntity || (schema.tab_key === "education" ? "all_schools" : "barangays");
 
-  let entitiesToDisplay = barangays;
+  let entitiesToDisplay = barangays.filter((b: any) => !b.district || !b.district.startsWith('School-'));
   if (targetEntity === 'primary_schools') {
     entitiesToDisplay = schools.filter((s: any) => s.district === 'School-Primary' || s.district?.toLowerCase().includes('primary'));
   } else if (targetEntity === 'secondary_schools') {

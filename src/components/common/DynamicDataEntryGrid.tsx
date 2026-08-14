@@ -9,7 +9,7 @@ import { submitForApproval, getLatestApproval, notifySuperAdminsOfDirectSave } f
 import ConfirmationModal from '@/components/common/ConfirmationModal';
 import { DataExportImport } from '@/components/common/DataExportImport';
 
-import { fetchSchools } from '@/services/api';
+import { fetchSchools, fetchBarangays } from '@/services/api';
 
 type Barangay = Database['public']['Tables']['barangays']['Row'];
 type DynamicSchema = Database['public']['Tables']['dynamic_schemas']['Row'];
@@ -47,7 +47,17 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
     enabled: targetEntity !== 'barangays'
   });
 
-  let entitiesToDisplay: any[] = barangays;
+  const { data: fetchedBarangays = [] } = useQuery({
+    queryKey: ['clean_barangays'],
+    queryFn: fetchBarangays,
+    enabled: targetEntity === 'barangays'
+  });
+
+  const cleanBarangays = (barangays && barangays.length > 0)
+    ? barangays.filter((b: any) => !b.district || !b.district.startsWith('School-'))
+    : fetchedBarangays;
+
+  let entitiesToDisplay: any[] = cleanBarangays;
   let currentEntityLabel = entityName || "Barangay";
 
   if (targetEntity === 'primary_schools') {
@@ -59,6 +69,9 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
   } else if (targetEntity === 'all_schools') {
     entitiesToDisplay = schools;
     currentEntityLabel = "School";
+  } else {
+    entitiesToDisplay = cleanBarangays;
+    currentEntityLabel = "Barangay";
   }
 
   const { data: latestApproval } = useQuery({

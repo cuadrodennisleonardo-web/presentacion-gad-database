@@ -19,18 +19,28 @@ interface DynamicBudgetChartsProps {
   subSector?: string;
 }
 
-function DynamicBudgetSection({ schema, barangays, department }: { schema: any, barangays: any[], department: string }) {
+function DynamicBudgetSection({ schema, barangays, schools = [], department }: { schema: any, barangays: any[], schools?: any[], department: string }) {
   const [year, setYear] = useState(() => getDefaultYear(`${department}_${schema.tab_key}`));
   const { data: schemaData, isLoading } = useDynamicSchemaData(schema.id, year);
 
   const sData = schema.schema as any;
+  const targetEntity = sData?.targetEntity || 'barangays';
+  let entitiesToDisplay = barangays.filter((b: any) => !b.district || !b.district.startsWith('School-'));
+  if (targetEntity === 'primary_schools') {
+    entitiesToDisplay = schools.filter((s: any) => s.district === 'School-Primary' || s.district?.toLowerCase().includes('primary'));
+  } else if (targetEntity === 'secondary_schools') {
+    entitiesToDisplay = schools.filter((s: any) => s.district === 'School-Secondary' || s.district?.toLowerCase().includes('secondary'));
+  } else if (targetEntity === 'all_schools') {
+    entitiesToDisplay = schools;
+  }
+
   const fields = (Array.isArray(sData) ? sData : (sData?.fields || [])) as FieldDef[];
   
   const statFields = fields.filter(f => f.chartType === 'stat_card');
   const chartFields = fields.filter(f => f.chartType === 'bar' || f.chartType === 'pie');
   
   const data = schemaData || [];
-  const bNames = barangays.map(b => b.name);
+  const bNames = entitiesToDisplay.map(b => b.name);
 
   return (
     <div className="mb-12">
@@ -69,7 +79,7 @@ function DynamicBudgetSection({ schema, barangays, department }: { schema: any, 
             {chartFields.map((f, i) => {
               const colorVals = Object.values(CHART_COLORS).flat() as string[];
               const colors = [colorVals[i % colorVals.length]];
-              const valData = barangays.map(b => {
+              const valData = entitiesToDisplay.map(b => {
                 const bd = data.find(d => d.barangay_id === b.id);
                 return bd?.data[f.id]?.value || 0;
               });
@@ -112,6 +122,7 @@ export default function DynamicBudgetCharts({ department, subSector }: DynamicBu
     return true;
   });
   const barangays = dashboardData?.barangays || [];
+  const schools = dashboardData?.schools || [];
 
   if (schemas.length === 0) {
     return null;
@@ -127,7 +138,7 @@ export default function DynamicBudgetCharts({ department, subSector }: DynamicBu
       </div>
       {schemas.map(schema => (
         <ErrorBoundary key={schema.id}>
-          <DynamicBudgetSection schema={schema} barangays={barangays} department={department} />
+          <DynamicBudgetSection schema={schema} barangays={barangays} schools={schools} department={department} />
         </ErrorBoundary>
       ))}
     </div>

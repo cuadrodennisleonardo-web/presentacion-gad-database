@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../config/supabase';
 import { useRole } from '../../hooks/useRole';
 import { getLatestApproval } from '../../utils/approvalUtils';
+import { fetchBarangays } from '@/services/api';
 import DataEntryLayout from '@/components/layout/DataEntryLayout';
 
 export default function JusticeDataEntry() {
@@ -23,10 +24,7 @@ export default function JusticeDataEntry() {
 
   const { data: barangays = [] } = useQuery({
     queryKey: ['barangays'],
-    queryFn: async () => {
-      const { data } = await supabase.from('barangays').select('*').order('name');
-      return data || [];
-    }
+    queryFn: fetchBarangays
   });
 
   useEffect(() => {
