@@ -556,6 +556,56 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
                   );
                 })}
               </tbody>
+              <tfoot className="bg-amber-50/80 dark:bg-amber-950/30 font-bold border-t-2 border-amber-300 dark:border-amber-800 text-gray-900 dark:text-white">
+                {(() => {
+                  const totals: Record<string, { total: number; subfields: Record<string, number> }> = {};
+                  percentageGroups.forEach(g => {
+                    totals[g.id] = { total: 0, subfields: {} };
+                    g.fields.forEach(sf => { totals[g.id].subfields[sf.id] = 0; });
+                  });
+
+                  entitiesToDisplay.forEach(b => {
+                    const bData = data[b.id] || {};
+                    percentageGroups.forEach(g => {
+                      const gData = bData[g.id] || {};
+                      totals[g.id].total += Number(gData.total || 0);
+                      g.fields.forEach(sf => {
+                        totals[g.id].subfields[sf.id] += Number(gData[sf.id] || 0);
+                      });
+                    });
+                  });
+
+                  return (
+                    <tr>
+                      <td className="whitespace-nowrap px-4 py-3 font-extrabold text-amber-800 dark:text-amber-300">Total</td>
+                      {percentageGroups.map(g => {
+                        const gTot = totals[g.id].total;
+                        return (
+                          <React.Fragment key={g.id}>
+                            <td className="border-l dark:border-gray-800 text-center font-extrabold px-2 py-3 bg-gray-100/70 dark:bg-gray-800/80 text-gray-900 dark:text-white">
+                              {gTot.toLocaleString()}
+                            </td>
+                            {g.fields.map(sf => {
+                              const sfCount = totals[g.id].subfields[sf.id];
+                              const sfPct = gTot > 0 ? ((sfCount / gTot) * 100).toFixed(1) + '%' : '--';
+                              return (
+                                <React.Fragment key={sf.id}>
+                                  <td className="border-l dark:border-gray-800 text-center font-bold px-2 py-3 text-gray-800 dark:text-gray-200">
+                                    {sfCount.toLocaleString()}
+                                  </td>
+                                  <td className="border-l dark:border-gray-800 text-center font-extrabold px-2 py-3 bg-amber-100/90 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200">
+                                    {sfPct}
+                                  </td>
+                                </React.Fragment>
+                              );
+                            })}
+                          </React.Fragment>
+                        );
+                      })}
+                    </tr>
+                  );
+                })()}
+              </tfoot>
             </table>
           </div>
         </>
@@ -665,6 +715,67 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
                   );
                 })}
               </tbody>
+              <tfoot className="bg-indigo-50/80 dark:bg-indigo-950/30 font-bold border-t-2 border-indigo-300 dark:border-indigo-800 text-gray-900 dark:text-white">
+                {(() => {
+                  const totals: Record<string, { m: number; f: number; total: number; value: number }> = {};
+                  multiGroups.forEach(mg => {
+                    mg.fields.forEach(f => {
+                      totals[f.id] = { m: 0, f: 0, total: 0, value: 0 };
+                    });
+                  });
+
+                  entitiesToDisplay.forEach(b => {
+                    const bData = data[b.id] || {};
+                    multiGroups.forEach(mg => {
+                      mg.fields.forEach(f => {
+                        const fData = bData[f.id] || {};
+                        if (f.type === 'gender_split') {
+                          const m = Number(fData.m || 0);
+                          const fVal = Number(fData.f || 0);
+                          totals[f.id].m += m;
+                          totals[f.id].f += fVal;
+                          totals[f.id].total += (m + fVal);
+                        } else {
+                          totals[f.id].value += Number(fData.value || 0);
+                        }
+                      });
+                    });
+                  });
+
+                  return (
+                    <tr>
+                      <td className="whitespace-nowrap px-4 py-3 font-extrabold text-indigo-700 dark:text-indigo-300">Total</td>
+                      {multiGroups.map(mg => (
+                        <React.Fragment key={mg.id}>
+                          {mg.fields.map(f => {
+                            if (f.type === 'gender_split') {
+                              return (
+                                <React.Fragment key={f.id}>
+                                  <td className="border-l dark:border-gray-800 text-center font-bold px-2 py-3 text-blue-700 dark:text-blue-300">
+                                    {totals[f.id].m.toLocaleString()}
+                                  </td>
+                                  <td className="text-center font-bold px-2 py-3 text-pink-700 dark:text-pink-300">
+                                    {totals[f.id].f.toLocaleString()}
+                                  </td>
+                                  <td className="text-center font-extrabold px-2 py-3 bg-indigo-100/60 dark:bg-indigo-900/50 text-indigo-900 dark:text-indigo-200">
+                                    {totals[f.id].total.toLocaleString()}
+                                  </td>
+                                </React.Fragment>
+                              );
+                            } else {
+                              return (
+                                <td key={f.id} className="border-l dark:border-gray-800 text-center font-bold px-3 py-3 text-gray-900 dark:text-white">
+                                  {totals[f.id].value.toLocaleString()}
+                                </td>
+                              );
+                            }
+                          })}
+                        </React.Fragment>
+                      ))}
+                    </tr>
+                  );
+                })()}
+              </tfoot>
             </table>
           </div>
         </>
@@ -758,6 +869,59 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
                   );
                 })}
               </tbody>
+              <tfoot className="bg-amber-50/80 dark:bg-amber-950/30 font-bold border-t-2 border-amber-300 dark:border-amber-800 text-gray-900 dark:text-white">
+                {(() => {
+                  const totals: Record<string, { m: number; f: number; total: number; value: number }> = {};
+                  fields.forEach(f => {
+                    totals[f.id] = { m: 0, f: 0, total: 0, value: 0 };
+                  });
+
+                  entitiesToDisplay.forEach(b => {
+                    const bData = data[b.id] || {};
+                    fields.forEach(f => {
+                      const fData = bData[f.id] || {};
+                      if (f.type === 'gender_split') {
+                        const m = Number(fData.m || 0);
+                        const fVal = Number(fData.f || 0);
+                        totals[f.id].m += m;
+                        totals[f.id].f += fVal;
+                        totals[f.id].total += (m + fVal);
+                      } else {
+                        totals[f.id].value += Number(fData.value || 0);
+                      }
+                    });
+                  });
+
+                  return (
+                    <tr>
+                      <td className="whitespace-nowrap px-4 py-3 font-extrabold text-brand-700 dark:text-brand-300">Total</td>
+                      {fields.map(f => {
+                        if (f.type === 'gender_split') {
+                          return (
+                            <React.Fragment key={f.id}>
+                              <td className="border-l dark:border-gray-800 text-center font-bold px-2 py-3 text-blue-700 dark:text-blue-300">
+                                {totals[f.id].m.toLocaleString()}
+                              </td>
+                              <td className="text-center font-bold px-2 py-3 text-pink-700 dark:text-pink-300">
+                                {totals[f.id].f.toLocaleString()}
+                              </td>
+                              <td className={`text-center font-extrabold px-2 py-3 bg-amber-100/80 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 ${f === fields[fields.length-1] ? 'border-r dark:border-gray-800' : ''}`}>
+                                {totals[f.id].total.toLocaleString()}
+                              </td>
+                            </React.Fragment>
+                          );
+                        } else {
+                          return (
+                            <td key={f.id} className={`border-l dark:border-gray-800 font-bold px-3 py-3 ${sData.isBudget ? 'text-left pl-8 text-emerald-700 dark:text-emerald-300' : 'text-center text-gray-900 dark:text-white'} ${f === fields[fields.length-1] ? 'border-r dark:border-gray-800' : ''}`}>
+                              {sData.isBudget ? `₱${totals[f.id].value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : totals[f.id].value.toLocaleString()}
+                            </td>
+                          );
+                        }
+                      })}
+                    </tr>
+                  );
+                })()}
+              </tfoot>
             </table>
           </div>
         </>
