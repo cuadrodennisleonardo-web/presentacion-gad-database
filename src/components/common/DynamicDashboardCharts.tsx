@@ -101,7 +101,12 @@ function DynamicSchemaSection({ schema, barangays, schools = [], department }: {
             {showTable ? "Hide Data Table" : "View Data Table"}
           </button>
           
-          <YearSelector year={year} setYear={setYear} scopeKey={`${department}_${schema.tab_key}`} />
+          <YearSelector 
+            year={year} 
+            setYear={setYear} 
+            yearOptions={targetEntity && targetEntity !== 'barangays' ? Array.from({ length: 10 }, (_, i) => { const y = new Date().getFullYear() - 5 + i; return { value: y, label: `${y}-${y + 1}` }; }) : undefined}
+            scopeKey={`${department}_${schema.tab_key}`} 
+          />
         </div>
       </div>
 

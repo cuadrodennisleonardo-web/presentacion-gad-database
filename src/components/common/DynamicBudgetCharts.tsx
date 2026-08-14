@@ -46,7 +46,12 @@ function DynamicBudgetSection({ schema, barangays, schools = [], department }: {
     <div className="mb-12">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-xl font-bold text-gray-800 dark:text-white/90">{schema.tab_name} Financial Tracking</h3>
-        <YearSelector year={year} setYear={setYear} scopeKey={`${department}_${schema.tab_key}`} />
+        <YearSelector 
+          year={year} 
+          setYear={setYear} 
+          yearOptions={targetEntity && targetEntity !== 'barangays' ? Array.from({ length: 10 }, (_, i) => { const y = new Date().getFullYear() - 5 + i; return { value: y, label: `${y}-${y + 1}` }; }) : undefined}
+          scopeKey={`${department}_${schema.tab_key}`} 
+        />
       </div>
       
       {isLoading ? (

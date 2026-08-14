@@ -80,7 +80,12 @@ export default function SocialDevelopmentDataEntry() {
   const tabLabel = nativeTabs.find(t => t.key === activeTab)?.label || 
                    dynamicSchemas.find(d => d.id === activeTab)?.tab_name || '';
 
-  const isEducation = activeTab === 'education';
+  const currentSchema = dynamicSchemas.find(d => d.id === activeTab);
+  const sData = currentSchema?.schema as any;
+  const isSchoolTarget = sData?.targetEntity && sData.targetEntity !== 'barangays';
+  const isEducationBranch = activeSubSector === 'education' || sData?.subSector === 'education';
+
+  const isEducation = activeTab === 'education' || isSchoolTarget || isEducationBranch;
   
   const educationYearOptions = Array.from({ length: 10 }, (_, i) => {
     const y = new Date().getFullYear() - 5 + i;

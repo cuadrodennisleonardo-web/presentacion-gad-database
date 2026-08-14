@@ -188,12 +188,24 @@ export default function DataEntryLayout({
             </div>
             
             <div className="shrink-0">
-              <YearSelector 
-                year={year} 
-                setYear={setYear}
-                yearOptions={yearOptions}
-                scopeKey={`${moduleName}_${activeTab}`}
-              />
+              {(() => {
+                const educationYearOptions = Array.from({ length: 10 }, (_, i) => {
+                  const y = new Date().getFullYear() - 5 + i;
+                  return { value: y, label: `${y}-${y + 1}` };
+                });
+
+                const isSchoolDynamic = activeTabData?.isDynamic && (activeTabData.schema?.schema as any)?.targetEntity && (activeTabData.schema?.schema as any)?.targetEntity !== 'barangays';
+                const resolvedYearOptions = yearOptions || (isSchoolDynamic ? educationYearOptions : undefined);
+
+                return (
+                  <YearSelector 
+                    year={year} 
+                    setYear={setYear}
+                    yearOptions={resolvedYearOptions}
+                    scopeKey={`${moduleName}_${activeTab}`}
+                  />
+                );
+              })()}
             </div>
           </div>
 
