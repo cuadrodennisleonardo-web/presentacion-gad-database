@@ -1,4 +1,5 @@
 import { supabase } from "@/config/supabase";
+import { INITIAL_DAYCARE_CENTERS } from "@/config/daycareCenters";
 
 export async function fetchBarangays() {
   const { data, error } = await supabase.from('barangays')
@@ -38,6 +39,30 @@ export async function fetchSchools() {
     }
     return a.name.localeCompare(b.name);
   });
+}
+
+export async function fetchDaycareCenters() {
+  try {
+    const { data, error } = await supabase.from('barangays')
+      .select('*')
+      .order('name');
+    
+    if (!error && data) {
+      const dbCenters = data.filter(b => b.district && (b.district.startsWith('Daycare') || b.district.startsWith('ECCD') || b.district.startsWith('CDC')));
+      if (dbCenters.length > 0) {
+        return dbCenters.map(c => ({
+          id: c.id,
+          name: c.name,
+          barangay: c.barangay,
+          district: c.district || 'Daycare'
+        }));
+      }
+    }
+  } catch (err) {
+    console.error("Error fetching daycare centers from database:", err);
+  }
+
+  return INITIAL_DAYCARE_CENTERS;
 }
 
 export async function fetchBarangayOptions() {

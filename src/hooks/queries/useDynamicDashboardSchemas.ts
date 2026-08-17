@@ -1,17 +1,18 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/config/supabase';
-import { fetchBarangays, fetchDynamicSchemas, fetchSchools } from '@/services/api';
+import { fetchBarangays, fetchDynamicSchemas, fetchSchools, fetchDaycareCenters } from '@/services/api';
 
 export function useDynamicDashboardSchemas(department: string) {
   return useQuery({
     queryKey: ['dynamic_dashboard_schemas', department],
     queryFn: async () => {
-      const [barangays, schools, schemas] = await Promise.all([
+      const [barangays, schools, daycareCenters, schemas] = await Promise.all([
         fetchBarangays(),
         fetchSchools(),
+        fetchDaycareCenters(),
         fetchDynamicSchemas(department)
       ]);
-      return { barangays, schools, schemas };
+      return { barangays, schools, daycareCenters, schemas };
     }
   });
 }

@@ -19,7 +19,7 @@ interface DynamicDashboardChartsProps {
   subSector?: string;
 }
 
-function DynamicSchemaSection({ schema, barangays, schools = [], department }: { schema: any, barangays: any[], schools?: any[], department: string }) {
+function DynamicSchemaSection({ schema, barangays, schools = [], daycareCenters = [], department }: { schema: any, barangays: any[], schools?: any[], daycareCenters?: any[], department: string }) {
   const [year, setYear] = useState(() => getDefaultYear(`${department}_${schema.tab_key}`));
   const [selectedIndicatorId, setSelectedIndicatorId] = useState<string>('all');
   const [showTable, setShowTable] = useState(false);
@@ -35,6 +35,8 @@ function DynamicSchemaSection({ schema, barangays, schools = [], department }: {
     entitiesToDisplay = schools.filter((s: any) => s.district === 'School-Secondary' || s.district?.toLowerCase().includes('secondary'));
   } else if (targetEntity === 'all_schools') {
     entitiesToDisplay = schools;
+  } else if (targetEntity === 'eccd_centers' || targetEntity === 'daycare_centers') {
+    entitiesToDisplay = daycareCenters;
   }
 
   const isPercentage = sData?.isPercentage || sData?.tableType === 'percentage';
@@ -468,6 +470,7 @@ export default function DynamicDashboardCharts({ department, subSector }: Dynami
   });
   const barangays = dashboardData?.barangays || [];
   const schools = dashboardData?.schools || [];
+  const daycareCenters = dashboardData?.daycareCenters || [];
 
   if (schemas.length === 0) {
     return (
@@ -487,7 +490,7 @@ export default function DynamicDashboardCharts({ department, subSector }: Dynami
     <div className="mt-8">
       {schemas.map(schema => (
         <ErrorBoundary key={schema.id}>
-          <DynamicSchemaSection schema={schema} barangays={barangays} schools={schools} department={department} />
+          <DynamicSchemaSection schema={schema} barangays={barangays} schools={schools} daycareCenters={daycareCenters} department={department} />
         </ErrorBoundary>
       ))}
     </div>

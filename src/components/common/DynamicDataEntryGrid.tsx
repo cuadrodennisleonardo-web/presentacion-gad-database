@@ -9,7 +9,7 @@ import { submitForApproval, getLatestApproval, notifySuperAdminsOfDirectSave } f
 import ConfirmationModal from '@/components/common/ConfirmationModal';
 import { DataExportImport } from '@/components/common/DataExportImport';
 
-import { fetchSchools, fetchBarangays } from '@/services/api';
+import { fetchSchools, fetchBarangays, fetchDaycareCenters } from '@/services/api';
 
 type Barangay = Database['public']['Tables']['barangays']['Row'];
 type DynamicSchema = Database['public']['Tables']['dynamic_schemas']['Row'];
@@ -44,7 +44,13 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
   const { data: schools = [] } = useQuery({
     queryKey: ['schools'],
     queryFn: fetchSchools,
-    enabled: targetEntity !== 'barangays'
+    enabled: targetEntity === 'primary_schools' || targetEntity === 'secondary_schools' || targetEntity === 'all_schools'
+  });
+
+  const { data: daycareCenters = [] } = useQuery({
+    queryKey: ['daycare_centers'],
+    queryFn: fetchDaycareCenters,
+    enabled: targetEntity === 'eccd_centers' || targetEntity === 'daycare_centers'
   });
 
   const { data: fetchedBarangays = [] } = useQuery({
@@ -69,6 +75,9 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
   } else if (targetEntity === 'all_schools') {
     entitiesToDisplay = schools;
     currentEntityLabel = "School";
+  } else if (targetEntity === 'eccd_centers' || targetEntity === 'daycare_centers') {
+    entitiesToDisplay = daycareCenters;
+    currentEntityLabel = "ECCD / Daycare Center";
   } else {
     entitiesToDisplay = cleanBarangays;
     currentEntityLabel = "Barangay";
@@ -488,6 +497,20 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
         <div className="py-10 text-center text-sm text-gray-500">Loading grid...</div>
       ) : hasNoFields ? (
         <div className="py-10 text-center text-sm text-gray-500">No fields defined for this table.</div>
+      ) : entitiesToDisplay.length === 0 ? (
+        <div className="py-12 px-4 text-center rounded-xl border border-dashed border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/30 space-y-2">
+          <div className="w-10 h-10 mx-auto rounded-full bg-purple-100 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold text-base">
+            i
+          </div>
+          <p className="font-semibold text-gray-800 dark:text-white">
+            No {currentEntityLabel} records found
+          </p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 max-w-md mx-auto">
+            {targetEntity.includes('eccd') || targetEntity.includes('daycare')
+              ? "You can add your Daycare Centers & ECCD facilities directly in src/config/daycareCenters.ts."
+              : `No ${currentEntityLabel.toLowerCase()} entries are available.`}
+          </p>
+        </div>
       ) : isPercentage ? (
         /* Percentage Table Render */
         <>

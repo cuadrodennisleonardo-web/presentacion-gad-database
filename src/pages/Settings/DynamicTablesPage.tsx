@@ -129,6 +129,7 @@ const PRESET_TABLE_SUGGESTIONS: TablePreset[] = [
     id: 'preset-eccd-daycare',
     department: 'Social Development',
     subSector: 'education',
+    targetEntity: 'eccd_centers',
     tabName: 'ECCD & Daycare Operations',
     description: 'Monitor early childhood care centers, daycare enrollees, and accredited child workers.',
     category: 'standard',
@@ -1169,6 +1170,7 @@ export default function DynamicTablesPage() {
                     <option value="primary_schools">Primary Schools (18 Primary Schools)</option>
                     <option value="secondary_schools">Secondary Schools (7 High Schools)</option>
                     <option value="all_schools">All Municipal Schools (25 Schools)</option>
+                    <option value="eccd_centers">ECCD & Daycare Centers</option>
                   </select>
                 </div>
               </div>

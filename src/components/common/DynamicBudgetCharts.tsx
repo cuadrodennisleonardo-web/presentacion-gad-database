@@ -19,7 +19,7 @@ interface DynamicBudgetChartsProps {
   subSector?: string;
 }
 
-function DynamicBudgetSection({ schema, barangays, schools = [], department }: { schema: any, barangays: any[], schools?: any[], department: string }) {
+function DynamicBudgetSection({ schema, barangays, schools = [], daycareCenters = [], department }: { schema: any, barangays: any[], schools?: any[], daycareCenters?: any[], department: string }) {
   const [year, setYear] = useState(() => getDefaultYear(`${department}_${schema.tab_key}`));
   const { data: schemaData, isLoading } = useDynamicSchemaData(schema.id, year);
 
@@ -32,6 +32,8 @@ function DynamicBudgetSection({ schema, barangays, schools = [], department }: {
     entitiesToDisplay = schools.filter((s: any) => s.district === 'School-Secondary' || s.district?.toLowerCase().includes('secondary'));
   } else if (targetEntity === 'all_schools') {
     entitiesToDisplay = schools;
+  } else if (targetEntity === 'eccd_centers' || targetEntity === 'daycare_centers') {
+    entitiesToDisplay = daycareCenters;
   }
 
   const fields = (Array.isArray(sData) ? sData : (sData?.fields || [])) as FieldDef[];
@@ -128,6 +130,7 @@ export default function DynamicBudgetCharts({ department, subSector }: DynamicBu
   });
   const barangays = dashboardData?.barangays || [];
   const schools = dashboardData?.schools || [];
+  const daycareCenters = dashboardData?.daycareCenters || [];
 
   if (schemas.length === 0) {
     return null;
@@ -143,7 +146,7 @@ export default function DynamicBudgetCharts({ department, subSector }: DynamicBu
       </div>
       {schemas.map(schema => (
         <ErrorBoundary key={schema.id}>
-          <DynamicBudgetSection schema={schema} barangays={barangays} schools={schools} department={department} />
+          <DynamicBudgetSection schema={schema} barangays={barangays} schools={schools} daycareCenters={daycareCenters} department={department} />
         </ErrorBoundary>
       ))}
     </div>
