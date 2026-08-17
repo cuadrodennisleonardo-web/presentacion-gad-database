@@ -361,6 +361,17 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
     return row;
   });
 
+  const headKeyMatch = (rowObj: any, searchKey: string) => {
+    if (!searchKey || !rowObj) return undefined;
+    const targetLower = searchKey.trim().toLowerCase();
+    for (const k of Object.keys(rowObj)) {
+      if (k.trim().toLowerCase() === targetLower) {
+        return rowObj[k];
+      }
+    }
+    return undefined;
+  };
+
   const handleImport = (importedData: any[]) => {
     const newData = { ...data };
     importedData.forEach(row => {
@@ -465,11 +476,6 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
     });
     setData(newData);
     toast.success('Data imported successfully. Review and save changes.');
-  };
-
-  const headKeyMatch = (row: any, name: string) => {
-    const key = Object.keys(row).find(k => k.toLowerCase() === name.toLowerCase());
-    return key ? row[key] : undefined;
   };
 
   const renderEntityCell = (b: any) => {
