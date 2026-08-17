@@ -160,6 +160,16 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
 
   const mutation = useMutation({
     mutationFn: async (changedData: Record<string, any>) => {
+      // Ensure entities exist in the barangays table to satisfy foreign key constraint dynamic_data_barangay_id_fkey
+      if (targetEntity === 'eccd_centers' || targetEntity === 'daycare_centers') {
+        const centersToEnsure = entitiesToDisplay.map(e => ({
+          id: e.id,
+          name: e.name,
+          district: e.district || 'Daycare'
+        }));
+        await supabase.from('barangays').upsert(centersToEnsure, { onConflict: 'id' });
+      }
+
       if (isSuperAdmin) {
         const upsertData = Object.keys(changedData).map(bId => {
            const newData = { ...(data[bId] || {}) };

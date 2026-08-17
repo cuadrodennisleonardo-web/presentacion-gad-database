@@ -10,6 +10,7 @@ import PageBreadcrumb from '@/components/common/PageBreadcrumb';
 import ActionModal from '@/components/common/ActionModal';
 import ReviewChangesModal from '@/components/common/ReviewChangesModal';
 import { useNotifications } from '@/context/NotificationContext';
+import { INITIAL_DAYCARE_CENTERS } from '@/config/daycareCenters';
 
 export default function ApprovalsPage() {
   const navigate = useNavigate();
@@ -159,6 +160,15 @@ export default function ApprovalsPage() {
               data: currentData
             };
           });
+
+          const daycareEntities = INITIAL_DAYCARE_CENTERS.filter(dc => Object.keys(changes).includes(dc.id)).map(dc => ({
+            id: dc.id,
+            name: dc.name,
+            district: dc.district || 'Daycare'
+          }));
+          if (daycareEntities.length > 0) {
+            await supabase.from('barangays').upsert(daycareEntities, { onConflict: 'id' });
+          }
 
           const { error: upsertError } = await supabase
             .from('dynamic_data')
