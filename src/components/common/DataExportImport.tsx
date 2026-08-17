@@ -121,15 +121,35 @@ export const DataExportImport: React.FC<DataExportImportProps> = ({ data, column
       complete: (results) => {
         try {
           const importedData = results.data.map((row: any) => {
-             // Find the barangay / school column key (handles BOM, whitespace, casing, or fallback to first column)
-             const barangayKey = Object.keys(row).find(k => {
-               const cleanK = k.replace(/^\ufeff/, '').trim().toLowerCase();
-               return cleanK === 'barangay' || cleanK === 'school' || cleanK === 'name';
-             }) || Object.keys(row)[0];
+             const cleanKeys = Object.keys(row).map(k => ({ raw: k, clean: k.replace(/^\ufeff/, '').trim().toLowerCase() }));
+
+             // Priority: Specific entity identifiers first before general "barangay"
+             const keyMatch = cleanKeys.find(k => 
+               k.clean === 'daycare center' || 
+               k.clean === 'child development center' || 
+               k.clean === 'center' || 
+               k.clean === 'school name' || 
+               k.clean === 'school' || 
+               k.clean === 'entity_name' || 
+               k.clean === 'entity' || 
+               k.clean === 'barangay_name'
+             ) || cleanKeys.find(k => 
+               k.clean === 'barangay' || 
+               k.clean === 'name'
+             ) || cleanKeys[0];
+
+             const barangayKey = keyMatch ? keyMatch.raw : Object.keys(row)[0];
+             const entityName = (row[barangayKey] || '').toString().trim();
              
-             if (!barangayKey) throw new Error("Missing entity column in CSV");
-             
-             const parsedRow: any = { barangay_name: (row[barangayKey] || '').toString().trim() };
+             // Keep ALL original row fields so downstream grids can match any custom header format!
+             const parsedRow: any = { 
+               ...row, 
+               barangay_name: entityName,
+               entity_name: entityName,
+               school_name: entityName,
+               daycare_center: entityName
+             };
+
              columns.forEach(col => {
                const matchingKey = Object.keys(row).find(k => {
                  const cleanK = k.replace(/^\ufeff/, '').trim().toLowerCase();
@@ -139,11 +159,9 @@ export const DataExportImport: React.FC<DataExportImportProps> = ({ data, column
                if (matchingKey) {
                  const val = row[matchingKey];
                  if (val !== undefined && val !== null && val !== '') {
-                   if (col.key === 'barangay_name') {
-                     parsedRow[col.key] = val.toString().trim();
-                   } else {
+                   if (col.key !== 'barangay_name') {
                      const cleanVal = typeof val === 'string' ? val.replace(/,/g, '').trim() : val;
-                     parsedRow[col.key] = isNaN(Number(cleanVal)) ? 0 : Number(cleanVal);
+                     parsedRow[col.key] = isNaN(Number(cleanVal)) ? cleanVal : Number(cleanVal);
                    }
                  }
                }
