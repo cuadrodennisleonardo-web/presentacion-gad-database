@@ -354,8 +354,24 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
   const handleImport = (importedData: any[]) => {
     const newData = { ...data };
     importedData.forEach(row => {
-      const bName = (row.barangay_name || row.entity_name || row.school_name || Object.values(row)[0] || '').toString().trim().toLowerCase();
-      const b = entitiesToDisplay.find(b => b.name.trim().toLowerCase() === bName);
+      const bName = (
+        row.barangay_name || 
+        row.entity_name || 
+        row.school_name || 
+        row.daycare_center || 
+        headKeyMatch(row, 'Daycare Center') || 
+        headKeyMatch(row, 'Center') || 
+        headKeyMatch(row, 'School') || 
+        headKeyMatch(row, 'Barangay') || 
+        Object.values(row)[0] || 
+        ''
+      ).toString().trim().toLowerCase();
+
+      const b = entitiesToDisplay.find(e => {
+        const eName = e.name.trim().toLowerCase();
+        return eName === bName || eName.includes(bName) || bName.includes(eName);
+      });
+
       if (b) {
         newData[b.id] = { ...(newData[b.id] || {}) };
 
