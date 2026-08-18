@@ -28,7 +28,13 @@ function DynamicSchemaSection({ schema, barangays, schools = [], daycareCenters 
   const sData = schema.schema as any;
   const targetEntity = sData?.targetEntity || (schema.tab_key === "education" ? "all_schools" : "barangays");
 
-  let entitiesToDisplay = barangays.filter((b: any) => !b.district || !b.district.startsWith('School-'));
+  let entitiesToDisplay = barangays.filter((b: any) => {
+    const d = (b.district || '').toLowerCase();
+    if (d.startsWith('school') || d.startsWith('daycare') || d.startsWith('eccd') || d.startsWith('cdc')) return false;
+    const lower = (b.name || '').toLowerCase();
+    if (lower.includes('development center') || lower.includes('daycare') || lower.includes('school')) return false;
+    return true;
+  });
   if (targetEntity === 'primary_schools') {
     entitiesToDisplay = schools.filter((s: any) => s.district === 'School-Primary' || s.district?.toLowerCase().includes('primary'));
   } else if (targetEntity === 'secondary_schools') {
@@ -266,7 +272,7 @@ function DynamicSchemaSection({ schema, barangays, schools = [], daycareCenters 
               const colorVals = Object.values(CHART_COLORS).flat() as string[];
               
               const series = activeIndicators.map((ind) => {
-                const pctData = barangays.map(b => {
+                const pctData = entitiesToDisplay.map(b => {
                   const bd = data.find(d => d.barangay_id === b.id);
                   const gObj = bd?.data?.[ind.groupId] || {};
                   const tot = Number(gObj.total || 0);
@@ -282,9 +288,13 @@ function DynamicSchemaSection({ schema, barangays, schools = [], daycareCenters 
 
               const chartColors = activeIndicators.map((_, i) => colorVals[i % colorVals.length]);
 
+              let entityLabel = "Barangay";
+              if (targetEntity.includes('school')) entityLabel = "School";
+              else if (targetEntity.includes('eccd') || targetEntity.includes('daycare')) entityLabel = "Daycare Center";
+
               return (
                 <MultiSeriesChart
-                  title={selectedIndicatorId === 'all' ? "Barangay Indicator Comparison (%)" : `${activeIndicators[0]?.fieldName} Percentage by Barangay`}
+                  title={selectedIndicatorId === 'all' ? `${entityLabel} Indicator Comparison (%)` : `${activeIndicators[0]?.fieldName} Percentage by ${entityLabel}`}
                   type="bar"
                   categories={bNames}
                   series={series}
@@ -301,7 +311,7 @@ function DynamicSchemaSection({ schema, barangays, schools = [], daycareCenters 
               <table className="w-full text-left text-xs text-gray-600 dark:text-gray-300">
                 <thead className="bg-gray-50 text-xs uppercase text-gray-500 dark:bg-gray-800/50">
                   <tr>
-                    <th className="px-3 py-2 font-bold">Barangay</th>
+                    <th className="px-3 py-2 font-bold">{targetEntity.includes('school') ? 'School' : (targetEntity.includes('eccd') || targetEntity.includes('daycare') ? 'Daycare Center' : 'Barangay')}</th>
                     {percentageGroups.map(g => (
                       <React.Fragment key={g.id}>
                         <th className="px-3 py-2 text-center font-bold bg-gray-100 dark:bg-gray-800">{g.totalTitle}</th>
@@ -316,7 +326,7 @@ function DynamicSchemaSection({ schema, barangays, schools = [], daycareCenters 
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                  {barangays.map(b => {
+                  {entitiesToDisplay.map(b => {
                     const bd = data.find(d => d.barangay_id === b.id);
                     const bData = bd?.data || {};
 
@@ -375,7 +385,11 @@ function DynamicSchemaSection({ schema, barangays, schools = [], daycareCenters 
                   });
                 } else {
                   data.forEach(d => {
-                    total += Number(d.data[f.id]?.value || 0);
+                    const rawVal = d.data[f.id];
+                    const valNum = (rawVal && typeof rawVal === 'object' && 'value' in rawVal)
+                      ? Number(rawVal.value || 0)
+                      : (typeof rawVal === 'number' ? rawVal : Number(rawVal || 0));
+                    total += isNaN(valNum) ? 0 : valNum;
                   });
                 }
                 return (
@@ -401,7 +415,7 @@ function DynamicSchemaSection({ schema, barangays, schools = [], daycareCenters 
                 const fData: number[] = [];
                 const totData: number[] = [];
 
-                barangays.forEach(b => {
+                entitiesToDisplay.forEach(b => {
                   const bd = data.find(d => d.barangay_id === b.id);
                   const fObj = bd?.data[f.id] || {};
                   const m = Number(fObj.m || 0);
@@ -426,17 +440,29 @@ function DynamicSchemaSection({ schema, barangays, schools = [], daycareCenters 
                   ];
                 }
               } else {
-                const valData = barangays.map(b => {
+                const valData = entitiesToDisplay.map(b => {
                   const bd = data.find(d => d.barangay_id === b.id);
-                  return bd?.data[f.id]?.value || 0;
+                  const rawVal = bd?.data[f.id];
+                  const valNum = (rawVal && typeof rawVal === 'object' && 'value' in rawVal)
+                    ? Number(rawVal.value || 0)
+                    : (typeof rawVal === 'number' ? rawVal : Number(rawVal || 0));
+                  return isNaN(valNum) ? 0 : valNum;
                 });
                 series = [{ name: f.name, data: valData }];
               }
 
+              let entityLabel = "Barangay";
+              if (targetEntity.includes('school')) entityLabel = "School";
+              else if (targetEntity.includes('eccd') || targetEntity.includes('daycare')) entityLabel = "Daycare Center";
+
+              const chartTitle = f.name.toLowerCase().includes('by') 
+                ? f.name 
+                : `${f.name} by ${entityLabel}`;
+
               return (
                 <MultiSeriesChart
                   key={f.id}
-                  title={`${f.name} by Barangay`}
+                  title={chartTitle}
                   type={f.chartType as any}
                   categories={bNames}
                   series={series}

@@ -60,7 +60,13 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
   });
 
   const cleanBarangays = (barangays && barangays.length > 0)
-    ? barangays.filter((b: any) => !b.district || !b.district.startsWith('School-'))
+    ? barangays.filter((b: any) => {
+        const d = (b.district || '').toLowerCase();
+        if (d.startsWith('school') || d.startsWith('daycare') || d.startsWith('eccd') || d.startsWith('cdc')) return false;
+        const lower = (b.name || '').toLowerCase();
+        if (lower.includes('development center') || lower.includes('daycare') || lower.includes('school')) return false;
+        return true;
+      })
     : fetchedBarangays;
 
   let entitiesToDisplay: any[] = cleanBarangays;

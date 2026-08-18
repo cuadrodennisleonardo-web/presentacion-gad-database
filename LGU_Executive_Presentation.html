@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LGU Presentacion — Municipal Database & GAD System Presentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --brand-50: #f0fdfa;
+      --brand-100: #ccfbf1;
+      --brand-500: #0e7490;
+      --brand-600: #0891b2;
+      --brand-700: #0e7490;
+      --brand-800: #155e75;
+      --brand-900: #164e63;
+      --slate-900: #0f172a;
+      --slate-800: #1e293b;
+      --slate-700: #334155;
+      --slate-600: #475569;
+      --slate-100: #f1f5f9;
+      --slate-50: #f8fafc;
+      --card-shadow: 0 10px 25px -5px rgba(14, 116, 144, 0.08), 0 8px 10px -6px rgba(14, 116, 144, 0.04);
+      --card-shadow-lg: 0 20px 30px -10px rgba(15, 23, 42, 0.15);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #f0fdfa 0%, #f8fafc 50%, #e0f2fe 100%);
+      color: var(--slate-800);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Top Navigation Header */
+    header {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(203, 213, 225, 0.6);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand-container {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .brand-logo {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, var(--brand-700), var(--brand-500));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 800;
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.25rem;
+      box-shadow: 0 4px 12px rgba(14, 116, 144, 0.25);
+    }
+
+    .brand-text h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--slate-900);
+      letter-spacing: -0.02em;
+    }
+
+    .brand-text p {
+      font-size: 0.75rem;
+      color: var(--slate-600);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .slide-counter {
+      background: var(--brand-50);
+      color: var(--brand-800);
+      border: 1px solid var(--brand-100);
+      padding: 0.4rem 1rem;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    .btn {
+      padding: 0.55rem 1.2rem;
+      border-radius: 10px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      border: none;
+      outline: none;
+    }
+
+    .btn-primary {
+      background: var(--brand-700);
+      color: white;
+      box-shadow: 0 4px 12px rgba(14, 116, 144, 0.2);
+    }
+
+    .btn-primary:hover {
+      background: var(--brand-800);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: white;
+      color: var(--slate-700);
+      border: 1px solid #cbd5e1;
+    }
+
+    .btn-secondary:hover {
+      background: var(--slate-50);
+      border-color: #94a3b8;
+    }
+
+    /* Main Presentation Slide Deck Area */
+    main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      max-width: 1350px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .slide-container {
+      background: white;
+      border-radius: 24px;
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      box-shadow: var(--card-shadow-lg);
+      width: 100%;
+      min-height: 640px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .slide {
+      display: none;
+      padding: 3.5rem;
+      animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      flex: 1;
+    }
+
+    .slide.active {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Slide Typography */
+    .slide-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.85rem;
+      background: var(--brand-50);
+      border: 1px solid var(--brand-100);
+      color: var(--brand-700);
+      font-size: 0.75rem;
+      font-weight: 700;
+      border-radius: 9999px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.75rem;
+      width: fit-content;
+    }
+
+    .slide-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 2.25rem;
+      font-weight: 800;
+      color: var(--slate-900);
+      line-height: 1.2;
+      margin-bottom: 0.6rem;
+      letter-spacing: -0.02em;
+    }
+
+    .slide-subtitle {
+      font-size: 1.05rem;
+      color: var(--slate-600);
+      line-height: 1.5;
+      margin-bottom: 2rem;
+      max-width: 850px;
+    }
+
+    /* Slide Content Layouts */
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      flex: 1;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.25rem;
+      flex: 1;
+    }
+
+    /* Cards & Features */
+    .feature-card {
+      background: var(--slate-50);
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 1.5rem;
+      transition: all 0.25s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      gap: 0.75rem;
+    }
+
+    .feature-card:hover {
+      background: white;
+      border-color: var(--brand-500);
+      box-shadow: var(--card-shadow);
+      transform: translateY(-2px);
+    }
+
+    .feature-card h3 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--slate-900);
+    }
+
+    .feature-card .subtitle {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--slate-600);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .feature-card p {
+      font-size: 0.875rem;
+      color: var(--slate-600);
+      line-height: 1.45;
+    }
+
+    .feature-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      margin-top: 0.5rem;
+    }
+
+    .feature-list li {
+      font-size: 0.85rem;
+      color: var(--slate-700);
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      line-height: 1.4;
+    }
+
+    .feature-list li::before {
+      content: "•";
+      color: var(--brand-600);
+      font-weight: 800;
+      font-size: 1.2rem;
+      line-height: 1;
+    }
+
+    /* Bottom Control Bar */
+    .deck-footer {
+      background: #f8fafc;
+      border-top: 1px solid #e2e8f0;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-dots {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .nav-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #cbd5e1;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .nav-dot.active {
+      width: 28px;
+      border-radius: 6px;
+      background: var(--brand-600);
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .grid-3, .grid-4 { grid-template-columns: 1fr; }
+      .slide { padding: 1.75rem; }
+      .slide-title { font-size: 1.75rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header Navigation -->
+  <header>
+    <div class="brand-container">
+      <div class="brand-logo">P</div>
+      <div class="brand-text">
+        <h1>Municipality of Presentacion</h1>
+        <p>Centralized Municipal Database & GAD Portal — Executive Briefing</p>
+      </div>
+    </div>
+    <div class="header-controls">
+      <span class="slide-counter" id="slideIndicator">Slide 1 / 5</span>
+      <button class="btn btn-secondary" onclick="prevSlide()">← Prev</button>
+      <button class="btn btn-primary" onclick="nextSlide()">Next →</button>
+    </div>
+  </header>
+
+  <!-- Slide Deck -->
+  <main>
+    <div class="slide-container">
+
+      <!-- SLIDE 1: Title & Executive Vision (Clean, Minimalist, No Rectangle Shape) -->
+      <div class="slide active" id="slide-1" style="background: linear-gradient(135deg, #f0fdfa, #ffffff, #e0f2fe);">
+        <div>
+          <span class="slide-badge">Executive Overview</span>
+          <h2 class="slide-title" style="font-size: 2.85rem; margin-top: 0.6rem; line-height: 1.15;">Centralized Municipal Database<br>& GAD Information System</h2>
+          <p class="slide-subtitle" style="font-size: 1.2rem; max-width: 850px; margin-top: 1rem; line-height: 1.55;">A unified digital governance platform for evidence-based planning, policy formulation, resource allocation, and gender-responsive municipal development.</p>
+        </div>
+
+        <div style="margin-top: 2rem; margin-bottom: 2rem; border-left: 3px solid #0e7490; padding-left: 1.25rem;">
+          <div style="font-size: 1.1rem; font-weight: 700; color: #0e7490; font-family: 'Outfit';">System Introduction & Live Demonstration</div>
+          <div style="font-size: 0.95rem; color: #64748B; margin-top: 0.25rem;">Presented to LGU Department Heads & Leadership • Municipality of Presentacion</div>
+        </div>
+      </div>
+
+      <!-- SLIDE 2: Objectives & The Modern Solution -->
+      <div class="slide" id="slide-2">
+        <div>
+          <span class="slide-badge">System Objectives & Value</span>
+          <h2 class="slide-title">Transforming Municipal Data Management</h2>
+          <p class="slide-subtitle">Overcoming traditional LGU operational bottlenecks through modern municipal cloud architecture.</p>
+        </div>
+
+        <div class="grid-3">
+          <div class="feature-card">
+            <h3 style="color: #991b1b;">Traditional Bottlenecks</h3>
+            <ul class="feature-list">
+              <li>Fragmented paper forms and separate Excel files in different offices</li>
+              <li>Inconsistent Sex-Disaggregated Data (SDD) required for GAD compliance</li>
+              <li>Time-consuming consolidation during AIP and annual budget planning</li>
+              <li>Risk of lost baseline records during personnel transitions</li>
+            </ul>
+          </div>
+
+          <div class="feature-card" style="border-color: var(--brand-500); background: white;">
+            <h3 style="color: var(--brand-700);">Centralized Platform</h3>
+            <ul class="feature-list">
+              <li>Single municipal repository accessible 24/7 with cloud backup</li>
+              <li>Standardized Male and Female tracking by default across all sectors</li>
+              <li>Instant 1-click PDF and CSV reports for Sangguniang Bayan sessions</li>
+              <li>Structured submission and verification flow before data commits</li>
+            </ul>
+          </div>
+
+          <div class="feature-card">
+            <h3 style="color: #047857;">Executive Impact</h3>
+            <ul class="feature-list">
+              <li>Evidence-based policy formulation and targeted resource allocation</li>
+              <li>Seamless compliance with DILG, DSWD, DepEd, and GAD mandates</li>
+              <li>Clear visibility into sector performance and community needs</li>
+              <li>Standardized records for audits and annual accomplishment reports</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 3: User Access & Role Breakdown -->
+      <div class="slide" id="slide-3">
+        <div>
+          <span class="slide-badge">Security & Governance</span>
+          <h2 class="slide-title">User Access & Permission Structure</h2>
+          <p class="slide-subtitle">Role-based access control ensuring data integrity, institutional security, and clear accountability.</p>
+        </div>
+
+        <div class="grid-3">
+          <div class="feature-card" style="background: #e0f2fe; border-color: #bae6fd;">
+            <h3 style="color: #0369a1;">Super Admin</h3>
+            <div class="subtitle">System Administrators / MPDO / IT</div>
+            <ul class="feature-list">
+              <li>Full administrative access across all sectors</li>
+              <li>Manage user accounts and department permissions</li>
+              <li>Create & edit tables via Dynamic Tables Manager</li>
+              <li>Review, approve, or reject department data submissions</li>
+              <li>Inspect complete municipal audit logs and history</li>
+            </ul>
+          </div>
+
+          <div class="feature-card" style="background: #ecfdf5; border-color: #a7f3d0;">
+            <h3 style="color: #047857;">Department Encoders</h3>
+            <div class="subtitle">Sector Heads & Data Officers</div>
+            <ul class="feature-list">
+              <li>Sector-specific data entry (MSWDO, MAO, MHO, Engineering)</li>
+              <li>Batch data importing via CSV spreadsheets</li>
+              <li>Automatic calculation of gender subtotals and ratios</li>
+              <li>Submit updated data for administrative review</li>
+              <li>Export department data to PDF and CSV tables</li>
+            </ul>
+          </div>
+
+          <div class="feature-card" style="background: #f5f3ff; border-color: #ddd6fe;">
+            <h3 style="color: #6d28d9;">Senior Viewers</h3>
+            <div class="subtitle">Executive Leadership (Mayor, SB Members)</div>
+            <ul class="feature-list">
+              <li>Read-only access to all municipal dashboards and indicators</li>
+              <li>Real-time visualization of statistical charts and gender splits</li>
+              <li>Interactive GIS map navigation and localized profile viewing</li>
+              <li>One-click PDF and CSV export for sessions and committee hearings</li>
+              <li>Secure viewing without risk of accidental data modification</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 4: Core Capabilities -->
+      <div class="slide" id="slide-4">
+        <div>
+          <span class="slide-badge">Core Platform Capabilities</span>
+          <h2 class="slide-title">Key Features of the Municipal Portal</h2>
+          <p class="slide-subtitle">State-of-the-art tools enabling the LGU to maintain, expand, and report on data effortlessly.</p>
+        </div>
+
+        <div class="grid-4">
+          <div class="feature-card">
+            <h3>Sector Dashboards</h3>
+            <p>Visual dashboards for Demographics, Social Development, Economic Development, Infrastructure, Local Governance, and Justice & Peace.</p>
+          </div>
+          <div class="feature-card">
+            <h3>Interactive GIS Map</h3>
+            <p>Official boundary map of Presentacion. Click any barangay to inspect localized population counts, registered farmers, and sector metrics.</p>
+          </div>
+          <div class="feature-card">
+            <h3>Dynamic Table Maker</h3>
+            <p>Allows creation of custom tables anytime (Gender Splits, Subtables, Ratios, Budgets) without programming or external software costs.</p>
+          </div>
+          <div class="feature-card">
+            <h3>Executive Reporting</h3>
+            <p>Instant generation of formatted PDF tables and CSV exports for Sangguniang Bayan council sessions, hearings, and national audits.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 5: Live Demo Agenda -->
+      <div class="slide" id="slide-5" style="background: #0f172a; color: white;">
+        <div>
+          <span class="slide-badge" style="background: #0284c7; color: white;">System Walkthrough</span>
+          <h2 class="slide-title" style="color: white; font-size: 2.2rem;">Live System Demonstration</h2>
+          <p class="slide-subtitle" style="color: #94a3b8;">Transitioning to the live web portal. Here is what we will explore:</p>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.75rem; flex: 1; justify-content: center;">
+          <div style="display: flex; align-items: center; gap: 1rem; background: rgba(255,255,255,0.06); padding: 0.75rem 1.25rem; border-radius: 8px;">
+            <span style="background: #0e7490; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem;">1</span>
+            <div style="font-size: 0.95rem;"><strong>Executive Overview Dashboard:</strong> Real-time municipal KPIs, gender breakdown graphs, and sector summary.</div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 1rem; background: rgba(255,255,255,0.06); padding: 0.75rem 1.25rem; border-radius: 8px;">
+            <span style="background: #0e7490; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem;">2</span>
+            <div style="font-size: 0.95rem;"><strong>Interactive Presentacion Map:</strong> Navigating territorial boundaries and localized barangay profiles.</div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 1rem; background: rgba(255,255,255,0.06); padding: 0.75rem 1.25rem; border-radius: 8px;">
+            <span style="background: #0e7490; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem;">3</span>
+            <div style="font-size: 0.95rem;"><strong>Departmental Data Entry:</strong> Structured entry grids, auto-calculating totals, and batch CSV imports.</div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 1rem; background: rgba(255,255,255,0.06); padding: 0.75rem 1.25rem; border-radius: 8px;">
+            <span style="background: #0e7490; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem;">4</span>
+            <div style="font-size: 0.95rem;"><strong>Dynamic Table Maker & 1-Click Reports:</strong> Creating custom sector tables and exporting formatted PDFs.</div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 1rem; background: rgba(255,255,255,0.06); padding: 0.75rem 1.25rem; border-radius: 8px;">
+            <span style="background: #0e7490; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem;">5</span>
+            <div style="font-size: 0.95rem;"><strong>Approvals & Audit Trail:</strong> Reviewing and safely approving department encoder submissions.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Control Bar -->
+      <div class="deck-footer">
+        <button class="btn btn-secondary" onclick="prevSlide()">← Previous Slide</button>
+        <div class="nav-dots" id="dotsContainer">
+          <div class="nav-dot active" onclick="goToSlide(0)"></div>
+          <div class="nav-dot" onclick="goToSlide(1)"></div>
+          <div class="nav-dot" onclick="goToSlide(2)"></div>
+          <div class="nav-dot" onclick="goToSlide(3)"></div>
+          <div class="nav-dot" onclick="goToSlide(4)"></div>
+        </div>
+        <button class="btn btn-primary" onclick="nextSlide()">Next Slide →</button>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const dots = document.querySelectorAll('.nav-dot');
+    const indicator = document.getElementById('slideIndicator');
+
+    function showSlide(index) {
+      slides.forEach((s, i) => {
+        s.classList.toggle('active', i === index);
+      });
+      dots.forEach((d, i) => {
+        d.classList.toggle('active', i === index);
+      });
+      indicator.textContent = `Slide ${index + 1} / ${slides.length}`;
+      currentSlide = index;
+    }
+
+    function nextSlide() {
+      if (currentSlide < slides.length - 1) {
+        showSlide(currentSlide + 1);
+      } else {
+        showSlide(0);
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 0) {
+        showSlide(currentSlide - 1);
+      } else {
+        showSlide(slides.length - 1);
+      }
+    }
+
+    function goToSlide(index) {
+      showSlide(index);
+    }
+
+    // Keyboard navigation support
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') {
+        nextSlide();
+      } else if (e.key === 'ArrowLeft') {
+        prevSlide();
+      }
+    });
+  </script>
+</body>
+</html>

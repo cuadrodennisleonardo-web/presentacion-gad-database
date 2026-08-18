@@ -7,8 +7,24 @@ export async function fetchBarangays() {
     .order('name');
   if (error) throw error;
   
-  // Filter out schools in javascript to avoid PostgREST syntax errors with nulls
-  return (data || []).filter(b => !b.district || !b.district.startsWith('School-'));
+  // Return only the genuine 18 local government barangays (filter out schools & daycare centers)
+  return (data || []).filter(b => {
+    const d = (b.district || '').toLowerCase();
+    if (d.startsWith('school') || d.startsWith('daycare') || d.startsWith('eccd') || d.startsWith('cdc')) {
+      return false;
+    }
+    const lower = b.name.toLowerCase().trim();
+    if (
+      lower.includes('development center') || 
+      lower.includes('daycare') || 
+      lower.includes('elementary school') || 
+      lower.includes('high school') ||
+      lower.includes('national high')
+    ) {
+      return false;
+    }
+    return true;
+  });
 }
 
 export async function fetchSchools() {
@@ -72,7 +88,23 @@ export async function fetchBarangayOptions() {
   if (error) throw error;
   
   return (data || [])
-    .filter(b => !b.district || !b.district.startsWith('School-'))
+    .filter(b => {
+      const d = (b.district || '').toLowerCase();
+      if (d.startsWith('school') || d.startsWith('daycare') || d.startsWith('eccd') || d.startsWith('cdc')) {
+        return false;
+      }
+      const lower = b.name.toLowerCase().trim();
+      if (
+        lower.includes('development center') || 
+        lower.includes('daycare') || 
+        lower.includes('elementary school') || 
+        lower.includes('high school') ||
+        lower.includes('national high')
+      ) {
+        return false;
+      }
+      return true;
+    })
     .map(b => ({ id: b.id, name: b.name }));
 }
 

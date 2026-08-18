@@ -30,14 +30,25 @@ export async function getBarangays(year?: number): Promise<{
     return { data: [], error: bError?.message ?? "Unknown error" };
   }
 
-  // Filter out school entries so only official barangays are displayed in the directory
+  // Filter out school and daycare entries so only official 18 barangays are displayed
   const validBarangayNames = new Set(BARANGAYS.map(b => b.toLowerCase()));
   const realBarangays = barangays.filter(brgy => {
-    const lowerName = brgy.name.toLowerCase().trim();
-    if (lowerName.includes("school") || lowerName.includes("elementary") || lowerName.includes("high school")) {
+    const d = (brgy.district || '').toLowerCase();
+    if (d.startsWith('school') || d.startsWith('daycare') || d.startsWith('eccd') || d.startsWith('cdc')) {
       return false;
     }
-    return validBarangayNames.has(lowerName) || BARANGAYS.some(b => b.toLowerCase() === lowerName || lowerName.startsWith(b.toLowerCase()));
+    const lowerName = brgy.name.toLowerCase().trim();
+    if (
+      lowerName.includes("school") || 
+      lowerName.includes("elementary") || 
+      lowerName.includes("high school") ||
+      lowerName.includes("development center") ||
+      lowerName.includes("daycare") ||
+      lowerName.includes("cdc")
+    ) {
+      return false;
+    }
+    return validBarangayNames.has(lowerName) || BARANGAYS.some(b => b.toLowerCase() === lowerName);
   });
 
   let { data: stats, error: sError } = await supabase

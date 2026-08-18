@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchBarangays, fetchSchools, fetchStats } from "@/services/api";
+import { fetchBarangays, fetchSchools, fetchStats, fetchDynamicSchemas } from "@/services/api";
+import { supabase } from "@/config/supabase";
 
 function extractStatField(st: any, prefix: string) {
   const m = Number(st?.[`${prefix}_m`] || 0);
@@ -19,11 +20,62 @@ export function useSocialDevStats(year: number) {
   return useQuery({
     queryKey: ['social_dev_stats', year],
     queryFn: async () => {
-      const [bData, sData, socData] = await Promise.all([
+      const [bData, sData, socData, dynamicSchemas] = await Promise.all([
         fetchBarangays(),
         fetchSchools(),
-        fetchStats("social_dev_stats", year)
+        fetchStats("social_dev_stats", year),
+        fetchDynamicSchemas("Social Development")
       ]);
+
+      // Collect dynamic schemas targeting schools
+      const schoolSchemaIds = (dynamicSchemas || [])
+        .filter(s => {
+          const t = s.schema?.targetEntity;
+          const tab = (s.tab_name || '').toLowerCase();
+          return t === 'primary_schools' || t === 'secondary_schools' || t === 'all_schools' || tab.includes('school') || tab.includes('education');
+        })
+        .map(s => s.id);
+
+      let dynamicRows: any[] = [];
+      if (schoolSchemaIds.length > 0) {
+        const { data: dData } = await supabase
+          .from('dynamic_data')
+          .select('*')
+          .eq('year', year)
+          .in('schema_id', schoolSchemaIds);
+        dynamicRows = dData || [];
+      }
+
+      // Map dynamic school enrollment by school ID
+      const dynamicSchoolMap = new Map<string, { m: number, f: number, total: number }>();
+      dynamicRows.forEach(row => {
+        const schoolId = row.barangay_id;
+        if (!schoolId || !row.data) return;
+        
+        let sumM = 0;
+        let sumF = 0;
+        let sumTot = 0;
+
+        Object.values(row.data).forEach((val: any) => {
+          if (val && typeof val === 'object') {
+            const m = Number(val.m || 0);
+            const f = Number(val.f || 0);
+            const tot = Number(val.total || (m + f) || 0);
+            sumM += m;
+            sumF += f;
+            sumTot += tot;
+          } else if (typeof val === 'number') {
+            sumTot += val;
+          }
+        });
+
+        const existing = dynamicSchoolMap.get(schoolId) || { m: 0, f: 0, total: 0 };
+        dynamicSchoolMap.set(schoolId, {
+          m: existing.m + sumM,
+          f: existing.f + sumF,
+          total: existing.total + sumTot
+        });
+      });
 
       const socMap = new Map(socData.map(d => [d.barangay_id, d]));
 
@@ -55,9 +107,22 @@ export function useSocialDevStats(year: number) {
         schoolNames.push(displayName);
         const st = socMap.get(s.id) || {};
         
-        const enr = extractStatField(st, 'student_enrollment');
+        let enr = extractStatField(st, 'student_enrollment');
         const drp = extractStatField(st, 'drop_out');
         const osy = extractStatField(st, 'osy');
+
+        // Merge with dynamic tables if data exists in dynamic_data
+        const dynEnr = dynamicSchoolMap.get(s.id);
+        if (dynEnr && (dynEnr.m > 0 || dynEnr.f > 0 || dynEnr.total > 0)) {
+          if (enr.total === 0 || (enr.m === 0 && enr.f === 0)) {
+            enr = {
+              m: dynEnr.m,
+              f: dynEnr.f,
+              total: dynEnr.total || (dynEnr.m + dynEnr.f),
+              isTotalOnly: dynEnr.m === 0 && dynEnr.f === 0 && dynEnr.total > 0
+            };
+          }
+        }
 
         if (enr.isTotalOnly) enrolledHasTotalOnly = true;
         
