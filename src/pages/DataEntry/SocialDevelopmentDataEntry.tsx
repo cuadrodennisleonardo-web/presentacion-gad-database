@@ -17,7 +17,7 @@ type SocialStat = Database['public']['Tables']['social_dev_stats']['Row'];
 type TabType = string;
 
 export default function SocialDevelopmentDataEntry() {
-  const { isSuperAdmin, canWrite } = useRole();
+  const { canWrite, canDirectSave } = useRole();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   
@@ -100,7 +100,7 @@ export default function SocialDevelopmentDataEntry() {
     queryFn: () => getLatestApproval('Social Development', tabLabel, year)
   });
 
-  const isLocked = latestApproval && latestApproval.status === 'pending' && !isSuperAdmin;
+  const isLocked = latestApproval && latestApproval.status === 'pending' && !canDirectSave;
 
   const { data: fetchedData, isLoading } = useDataEntryStats('Social Development', 'social_dev_stats', year);
 
@@ -265,7 +265,7 @@ export default function SocialDevelopmentDataEntry() {
 
   const mutation = useMutation({
     mutationFn: async (changedData: Record<string, any>) => {
-      if (isSuperAdmin) {
+      if (canDirectSave) {
         const upsertData = Object.keys(changedData).map(bId => {
            const rowChanges: any = {};
            Object.keys(changedData[bId]).forEach(k => {
@@ -288,7 +288,7 @@ export default function SocialDevelopmentDataEntry() {
       }
     },
     onSuccess: () => {
-      toast.success(isSuperAdmin ? `Social Development data saved directly!` : `Changes submitted for approval!`);
+      toast.success(canDirectSave ? `Social Development data saved directly!` : `Changes submitted for approval!`);
       queryClient.invalidateQueries({ queryKey: ['native_data', 'Social Development', year] });
       queryClient.invalidateQueries({ queryKey: ['latest_approval', 'Social Development', tabLabel, year] });
       queryClient.invalidateQueries({ queryKey: ['social_dev_stats', year] });
@@ -336,7 +336,7 @@ export default function SocialDevelopmentDataEntry() {
        return;
     }
 
-    if (latestApproval?.status === 'pending' && !isSuperAdmin) {
+    if (latestApproval?.status === 'pending' && !canDirectSave) {
       setPendingChanges(changedData);
       setShowConfirmModal(true);
       return;
@@ -369,7 +369,7 @@ export default function SocialDevelopmentDataEntry() {
       nativeTabs={nativeTabs}
       isLocked={isLocked}
       latestApproval={latestApproval}
-      isSuperAdmin={isSuperAdmin}
+      isSuperAdmin={canDirectSave}
       canWrite={canWrite}
       exportData={isDynamic ? undefined : entities.map(b => ({ barangay_name: b.name, ...stats[b.id] }))}
       exportColumns={isDynamic ? undefined : getExportColumns()}

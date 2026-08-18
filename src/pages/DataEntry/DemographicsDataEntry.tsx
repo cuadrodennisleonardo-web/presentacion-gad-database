@@ -16,7 +16,7 @@ import { MobileDataInput, SplitInputWrapper } from '@/components/common/MobileDa
 type PopStat = Database['public']['Tables']['population_stats']['Row'];
 
 export default function DemographicsDataEntry() {
-  const { isSuperAdmin, canWrite } = useRole();
+  const { canWrite, canDirectSave } = useRole();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   
@@ -47,7 +47,7 @@ export default function DemographicsDataEntry() {
     queryFn: () => getLatestApproval('Demographics', tabLabel, year)
   });
 
-  const isLocked = latestApproval && latestApproval.status === 'pending' && !isSuperAdmin;
+  const isLocked = latestApproval && latestApproval.status === 'pending' && !canDirectSave;
 
   const { data: fetchedData, isLoading } = useDataEntryStats('Demographics', 'population_stats', year);
 
@@ -127,7 +127,7 @@ export default function DemographicsDataEntry() {
 
   const mutation = useMutation({
     mutationFn: async (changedData: Record<string, any>) => {
-      if (isSuperAdmin) {
+      if (canDirectSave) {
         const upsertData = Object.keys(changedData).map(bId => {
            const rowChanges: any = {};
            Object.keys(changedData[bId]).forEach(k => {
@@ -162,7 +162,7 @@ export default function DemographicsDataEntry() {
       }
     },
     onSuccess: () => {
-      toast.success(isSuperAdmin ? `Demographics data saved directly!` : `Changes submitted for approval!`);
+      toast.success(canDirectSave ? `Demographics data saved directly!` : `Changes submitted for approval!`);
       queryClient.invalidateQueries({ queryKey: ['native_data', 'Demographics', year] });
       queryClient.invalidateQueries({ queryKey: ['latest_approval', 'Demographics', tabLabel, year] });
       queryClient.invalidateQueries({ queryKey: ['demographics_stats', year] });
@@ -210,7 +210,7 @@ export default function DemographicsDataEntry() {
        return;
     }
 
-    if (latestApproval?.status === 'pending' && !isSuperAdmin) {
+    if (latestApproval?.status === 'pending' && !canDirectSave) {
       setPendingChanges(changedData);
       setShowConfirmModal(true);
       return;
@@ -243,7 +243,7 @@ export default function DemographicsDataEntry() {
       nativeTabs={[{ key: 'main', label: 'Demographics Overview' }]}
       isLocked={isLocked}
       latestApproval={latestApproval}
-      isSuperAdmin={isSuperAdmin}
+      isSuperAdmin={canDirectSave}
       canWrite={canWrite}
       exportData={barangays.map(b => {
         const pRow = popStats[b.id] || {};

@@ -29,7 +29,7 @@ interface DynamicDataEntryGridProps {
 }
 
 export default function DynamicDataEntryGrid({ schema, barangays, year, entityName = "Barangay" }: DynamicDataEntryGridProps) {
-  const { isSuperAdmin, canWrite } = useRole();
+  const { canWrite, canDirectSave } = useRole();
   const { user } = useAuth();
   
   const [data, setData] = useState<Record<string, any>>({});
@@ -99,7 +99,7 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
   const percentageGroups = (sData?.groups || []) as { id: string; groupTitle?: string; totalTitle: string; fields: { id: string; name: string }[] }[];
   const multiGroups = (sData?.multiGroups || []) as { id: string; groupTitle: string; totalTitle?: string; fields: FieldDef[] }[];
   const fields = (Array.isArray(sData) ? sData : (sData?.fields || [])) as FieldDef[];
-  const isLocked = latestApproval && latestApproval.status === 'pending' && !isSuperAdmin;
+  const isLocked = latestApproval && latestApproval.status === 'pending' && !canDirectSave;
 
   const { data: fetchedData, isLoading: loading } = useQuery({
     queryKey: ['dynamic_data', schema.id, year],
@@ -176,7 +176,7 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
         await supabase.from('barangays').upsert(centersToEnsure, { onConflict: 'id' });
       }
 
-      if (isSuperAdmin) {
+      if (canDirectSave) {
         const upsertData = Object.keys(changedData).map(bId => {
            const newData = { ...(data[bId] || {}) };
            Object.keys(changedData[bId]).forEach(fieldId => {
@@ -200,7 +200,7 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
       }
     },
     onSuccess: () => {
-      if (isSuperAdmin) {
+      if (canDirectSave) {
         toast.success(`${schema.tab_name} data saved directly!`);
       } else {
         toast.success(`Changes submitted for approval!`);
@@ -274,7 +274,7 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
         return;
       }
 
-      if (latestApproval?.status === 'pending' && !isSuperAdmin) {
+      if (latestApproval?.status === 'pending' && !canDirectSave) {
         setPendingChanges(changedData);
         setShowConfirmModal(true);
         return;

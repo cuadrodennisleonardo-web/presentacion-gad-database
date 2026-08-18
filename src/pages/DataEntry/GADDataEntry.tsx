@@ -7,14 +7,14 @@ import type { Database } from '../../types/database';
 import { useRole } from '../../hooks/useRole';
 import { useAuth } from '../../hooks/useAuth';
 import { submitForApproval, getLatestApproval, notifySuperAdminsOfDirectSave } from '../../utils/approvalUtils';
-import { fetchBarangays } from '@/services/api';
+import { fetchBarangays, fetchApprovalChanges } from '@/services/api';
 import DataEntryLayout from '@/components/layout/DataEntryLayout';
 
 type GadStat = Database['public']['Tables']['gad_stats']['Row'];
 type TabType = string;
 
 export default function GADDataEntry() {
-  const { isSuperAdmin, canWrite } = useRole();
+  const { canWrite, canDirectSave } = useRole();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   
@@ -47,32 +47,34 @@ export default function GADDataEntry() {
     queryFn: () => getLatestApproval('Institutional GAD', tabLabel, year)
   });
 
-  const isLocked = latestApproval && latestApproval.status === 'pending' && !isSuperAdmin;
+  const isLocked = latestApproval && latestApproval.status === 'pending' && !canDirectSave;
 
   const { data: fetchedData, isLoading } = useQuery({
     queryKey: ['native_data', 'Institutional GAD', year],
     queryFn: async () => {
       const { data: gData, error: gError } = await supabase.from('gad_stats').select('*').eq('year', year).maybeSingle();
-      if (gError) throw gError;
-
-      let statData = gData || {};
-
+      if (gError && gError.code !== 'PGRST116') throw gError;
+      
+      const sMap = gData || {};
       const searchParams = new URLSearchParams(window.location.search);
       const resubmitId = searchParams.get('resubmit');
       
       if (resubmitId) {
-        const { data: approval } = await supabase.from('data_approvals').select('changes').eq('id', resubmitId).single();
-        if (approval && approval.changes) {
-          const changes = approval.changes as any;
-          Object.keys(changes).forEach(field => {
-            const val = changes[field];
-            statData[field] = (val && typeof val === 'object' && 'new' in val) ? val.new : val;
-          });
-          toast.success("Loaded rejected data for resubmission");
+        try {
+          const changes = await fetchApprovalChanges(resubmitId);
+          if (changes && changes['municipal']) {
+            Object.keys(changes['municipal']).forEach(field => {
+              const val = changes['municipal'][field];
+              sMap[field] = (val && typeof val === 'object' && 'new' in val) ? val.new : val;
+            });
+            toast.success("Loaded rejected GAD data for resubmission");
+          }
+        } catch (err) {
+          console.error("Failed to load resubmission changes", err);
         }
       }
 
-      return statData;
+      return sMap;
     }
   });
 
@@ -80,6 +82,9 @@ export default function GADDataEntry() {
     if (fetchedData) {
       setStat(fetchedData);
       setOriginalStat(JSON.parse(JSON.stringify(fetchedData)));
+    } else {
+      setStat({});
+      setOriginalStat({});
     }
   }, [fetchedData]);
 
@@ -100,7 +105,7 @@ export default function GADDataEntry() {
     mutationFn: async (changedData: Record<string, any>) => {
       const currentChanges = changedData['municipal'];
 
-      if (isSuperAdmin) {
+      if (canDirectSave) {
         const rowChanges: any = {};
         Object.keys(currentChanges).forEach(k => {
           rowChanges[k] = currentChanges[k].new;
@@ -123,7 +128,7 @@ export default function GADDataEntry() {
       }
     },
     onSuccess: () => {
-      toast.success(isSuperAdmin ? 'GAD data saved directly!' : 'Changes submitted for approval!');
+      toast.success(canDirectSave ? 'GAD data saved directly!' : 'Changes submitted for approval!');
       queryClient.invalidateQueries({ queryKey: ['native_data', 'Institutional GAD', year] });
       queryClient.invalidateQueries({ queryKey: ['latest_approval', 'Institutional GAD', tabLabel, year] });
       queryClient.invalidateQueries({ queryKey: ['gad_stats', year] });
@@ -171,7 +176,7 @@ export default function GADDataEntry() {
        return;
     }
 
-    if (latestApproval?.status === 'pending' && !isSuperAdmin) {
+    if (latestApproval?.status === 'pending' && !canDirectSave) {
       setPendingChanges(changedData);
       setShowConfirmModal(true);
       return;
@@ -197,7 +202,7 @@ export default function GADDataEntry() {
       nativeTabs={nativeTabs}
       isLocked={isLocked}
       latestApproval={latestApproval}
-      isSuperAdmin={isSuperAdmin}
+      isSuperAdmin={canDirectSave}
       canWrite={canWrite}
       onSave={handleSave}
       isSaving={mutation.isPending}

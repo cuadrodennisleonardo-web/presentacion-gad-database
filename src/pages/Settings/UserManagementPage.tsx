@@ -7,9 +7,10 @@ import type { Database } from '../../types/database';
 
 type UserProfile = Database['public']['Tables']['user_profiles']['Row'];
 
-const ROLES = ['superadmin', 'senior_viewer', 'dept_admin', 'dept_viewer', 'viewer'] as const;
+const ROLES = ['superadmin', 'senior_encoder', 'senior_viewer', 'dept_admin', 'dept_viewer', 'viewer'] as const;
 const ROLE_LABELS: Record<string, string> = {
   superadmin: 'Super Admin',
+  senior_encoder: 'Senior Encoder',
   senior_viewer: 'Senior Viewer',
   dept_admin: 'Department Admin',
   dept_viewer: 'Department Viewer',
@@ -180,7 +181,7 @@ export default function UserManagementPage() {
                          value={user.department || ''} 
                          onChange={(e) => handleDeptChange(user.id, e.target.value)}
                          className="rounded-lg border border-gray-300 bg-transparent px-3 py-1.5 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:text-white"
-                         disabled={user.role === 'superadmin' || user.role === 'senior_viewer'}
+                         disabled={user.role === 'superadmin' || user.role === 'senior_viewer' || user.role === 'senior_encoder'}
                        >
                          <option value="" className="dark:bg-gray-900">-- None --</option>
                          {DEPARTMENTS.map(d => (

@@ -8,7 +8,7 @@ import { fetchBarangays } from '@/services/api';
 import DataEntryLayout from '@/components/layout/DataEntryLayout';
 
 export default function EconomicDevelopmentDataEntry() {
-  const { isSuperAdmin, canWrite } = useRole();
+  const { canWrite, canDirectSave } = useRole();
   const [activeTab, setActiveTab] = useState<string>('');
   const [year, setYear] = useState(getDefaultYear('Economic Development'));
 
@@ -40,7 +40,7 @@ export default function EconomicDevelopmentDataEntry() {
     queryFn: () => getLatestApproval('Economic Development', tabLabel, year)
   });
 
-  const isLocked = latestApproval && latestApproval.status === 'pending' && !isSuperAdmin;
+  const isLocked = latestApproval && latestApproval.status === 'pending' && !canDirectSave;
 
   return (
     <DataEntryLayout
@@ -59,7 +59,7 @@ export default function EconomicDevelopmentDataEntry() {
       nativeTabs={nativeTabs}
       isLocked={!!isLocked}
       latestApproval={latestApproval}
-      isSuperAdmin={isSuperAdmin}
+      isSuperAdmin={canDirectSave}
       canWrite={canWrite}
       onSave={() => {}}
       isSaving={false}

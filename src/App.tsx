@@ -93,7 +93,7 @@ export default function App() {
                 </ProtectedRoute>
               }
             >
-              <Route path="/dashboard" element={<ProtectedRoute allowedRoles={['superadmin', 'senior_viewer', 'viewer']}><DashboardPage /></ProtectedRoute>} />
+              <Route path="/dashboard" element={<ProtectedRoute allowedRoles={['superadmin', 'senior_encoder', 'senior_viewer', 'viewer']}><DashboardPage /></ProtectedRoute>} />
               
               <Route path="/dashboard/demographics" element={<ModuleGuard module="Demographics"><DemographicsDashboard /></ModuleGuard>} />
               <Route path="/dashboard/social-development" element={<ModuleGuard module="Social Development"><SocialDevelopmentDashboard /></ModuleGuard>} />

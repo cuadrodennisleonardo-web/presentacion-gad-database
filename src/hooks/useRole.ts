@@ -19,11 +19,13 @@ export function useRole() {
         role: null as Role | null,
         department: null as Department | null,
         isSuperAdmin: false,
+        isSeniorEncoder: false,
         isSeniorViewer: false,
         isDeptAdmin: false,
         isDeptViewer: false,
         isViewer: false,
         canWrite: false,
+        canDirectSave: false,
         canManageUsers: false,
         canViewAuditLog: false,
         canAccessSensitive: false,
@@ -34,23 +36,26 @@ export function useRole() {
     }
 
     const isSuperAdmin = role === "superadmin";
+    const isSeniorEncoder = role === "senior_encoder";
     const isSeniorViewer = role === "senior_viewer";
     const isDeptAdmin = role === "dept_admin";
     const isDeptViewer = role === "dept_viewer";
     const isViewer = role === "viewer";
 
-    // Super admin and dept_admin can write
-    const canWrite = isSuperAdmin || isDeptAdmin;
+    // Super admin, senior_encoder, and dept_admin can write
+    const canWrite = isSuperAdmin || isSeniorEncoder || isDeptAdmin;
 
-    // Only superadmin can manage users
+    // Super admin and senior_encoder save directly without requiring approval workflow
+    const canDirectSave = isSuperAdmin || isSeniorEncoder;
+
+    // Only superadmin can manage users, tables, audit log, data management
     const canManageUsers = isSuperAdmin;
-
-    // Only superadmin can view audit log
     const canViewAuditLog = isSuperAdmin;
 
-    // Sensitive tables accessible to superadmin, senior_viewer, and governance dept
+    // Sensitive tables accessible to superadmin, senior_encoder, senior_viewer, and governance dept
     const canAccessSensitive =
       isSuperAdmin ||
+      isSeniorEncoder ||
       isSeniorViewer ||
       ((isDeptAdmin || isDeptViewer) && department === "Justice & Safety");
 
@@ -58,7 +63,7 @@ export function useRole() {
      * Check if user can access a module (department)
      */
     const canAccessModule = (module: Department): boolean => {
-      if (isSuperAdmin || isSeniorViewer) return true;
+      if (isSuperAdmin || isSeniorEncoder || isSeniorViewer) return true;
       if (isViewer) {
         // Viewers can see all non-sensitive
         return module !== "Justice & Safety";
@@ -73,7 +78,7 @@ export function useRole() {
      * Check if user can write to a specific table
      */
     const canWriteToTable = (table: string): boolean => {
-      if (isSuperAdmin) return true;
+      if (isSuperAdmin || isSeniorEncoder) return true;
       if (!isDeptAdmin || !department) return false;
 
       const deptTables = DEPARTMENT_TABLES[department] ?? [];
@@ -88,7 +93,7 @@ export function useRole() {
       const coreTables = ["barangays", "households", "residents"];
       if (coreTables.includes(table)) return true;
 
-      if (isSuperAdmin || isSeniorViewer) return true;
+      if (isSuperAdmin || isSeniorEncoder || isSeniorViewer) return true;
 
       // Check sensitive tables
       if ((SENSITIVE_TABLES as readonly string[]).includes(table)) {
@@ -111,11 +116,13 @@ export function useRole() {
       role,
       department,
       isSuperAdmin,
+      isSeniorEncoder,
       isSeniorViewer,
       isDeptAdmin,
       isDeptViewer,
       isViewer,
       canWrite,
+      canDirectSave,
       canManageUsers,
       canViewAuditLog,
       canAccessSensitive,

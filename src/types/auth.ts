@@ -1,6 +1,6 @@
-// ─── Role Types ─────────────────────────────────────────────
 export type Role =
   | "superadmin"
+  | "senior_encoder"
   | "senior_viewer"
   | "dept_admin"
   | "dept_viewer"

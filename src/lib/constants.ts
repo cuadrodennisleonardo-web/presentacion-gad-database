@@ -22,9 +22,9 @@ export const BARANGAYS = [
   "Tanawan",
 ] as const;
 
-// ─── Role Permissions ───────────────────────────────────────
 export const ROLES: Role[] = [
   "superadmin",
+  "senior_encoder",
   "senior_viewer",
   "dept_admin",
   "dept_viewer",
@@ -33,6 +33,7 @@ export const ROLES: Role[] = [
 
 export const ROLE_LABELS: Record<Role, string> = {
   superadmin: "Super Admin",
+  senior_encoder: "Senior Encoder",
   senior_viewer: "Senior Viewer",
   dept_admin: "Department Admin",
   dept_viewer: "Department Viewer",
