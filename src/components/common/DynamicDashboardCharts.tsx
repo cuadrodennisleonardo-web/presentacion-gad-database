@@ -6,6 +6,7 @@ import { useDynamicDashboardSchemas, useDynamicSchemaData } from '@/hooks/querie
 import YearSelector from '@/components/common/YearSelector';
 import { getDefaultYear } from '@/utils/yearUtils';
 import { getSchemaSubSector } from '@/utils/subSectorUtils';
+import { getSingleYearAgeEntities, getAgeBracketEntities } from '@/services/api';
 
 interface FieldDef {
   id: string;
@@ -28,11 +29,14 @@ function DynamicSchemaSection({ schema, barangays, schools = [], daycareCenters 
   const sData = schema.schema as any;
   const targetEntity = sData?.targetEntity || (schema.tab_key === "education" ? "all_schools" : "barangays");
 
+  const isAgeTable = targetEntity === 'age_0_to_99_plus' || targetEntity === 'age_single_year' || targetEntity === 'age_1_to_99';
+  const isAgeBracketTable = targetEntity === 'age_brackets';
+
   let entitiesToDisplay = barangays.filter((b: any) => {
     const d = (b.district || '').toLowerCase();
-    if (d.startsWith('school') || d.startsWith('daycare') || d.startsWith('eccd') || d.startsWith('cdc')) return false;
+    if (d.startsWith('school') || d.startsWith('daycare') || d.startsWith('eccd') || d.startsWith('cdc') || d.startsWith('age')) return false;
     const lower = (b.name || '').toLowerCase();
-    if (lower.includes('development center') || lower.includes('daycare') || lower.includes('school')) return false;
+    if (lower.includes('development center') || lower.includes('daycare') || lower.includes('school') || lower.startsWith('age ')) return false;
     return true;
   });
   if (targetEntity === 'primary_schools') {
@@ -43,6 +47,10 @@ function DynamicSchemaSection({ schema, barangays, schools = [], daycareCenters 
     entitiesToDisplay = schools;
   } else if (targetEntity === 'eccd_centers' || targetEntity === 'daycare_centers') {
     entitiesToDisplay = daycareCenters;
+  } else if (isAgeTable) {
+    entitiesToDisplay = getSingleYearAgeEntities();
+  } else if (isAgeBracketTable) {
+    entitiesToDisplay = getAgeBracketEntities();
   }
 
   const isPercentage = sData?.isPercentage || sData?.tableType === 'percentage';
@@ -367,6 +375,87 @@ function DynamicSchemaSection({ schema, barangays, schools = [], daycareCenters 
       ) : (
         /* Standard Table Visualizer */
         <>
+          {isAgeTable && (
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-500/10 px-2.5 py-1 rounded-lg border border-brand-200 dark:border-brand-500/20">
+                  Demographic Age Cohorts Breakdown (Municipality-Wide)
+                </span>
+              </div>
+              {(() => {
+                let toddlersSum = 0; // 0-4
+                let childrenSum = 0; // 5-14
+                let youthSum = 0;    // 15-24
+                let adultSum = 0;    // 25-59
+                let seniorSum = 0;   // 60+
+                let grandTotal = 0;
+
+                entitiesToDisplay.forEach(b => {
+                  const bd = data.find(d => d.barangay_id === b.id);
+                  const bData = bd?.data || {};
+                  const ageNum = typeof b.age === 'number' ? b.age : 0;
+                  
+                  let rowSum = 0;
+                  fields.forEach(f => {
+                    const fObj = bData[f.id] || {};
+                    if (f.type === 'gender_split') {
+                      const m = Number(fObj.m || 0);
+                      const fVal = Number(fObj.f || 0);
+                      rowSum += m + fVal;
+                    } else {
+                      const valNum = Number(fObj.value !== undefined ? fObj.value : (fObj || 0));
+                      rowSum += isNaN(valNum) ? 0 : valNum;
+                    }
+                  });
+
+                  grandTotal += rowSum;
+                  if (ageNum <= 4) toddlersSum += rowSum;
+                  else if (ageNum <= 14) childrenSum += rowSum;
+                  else if (ageNum <= 24) youthSum += rowSum;
+                  else if (ageNum <= 59) adultSum += rowSum;
+                  else seniorSum += rowSum;
+                });
+
+                const depRatio = adultSum > 0 ? (((toddlersSum + childrenSum + seniorSum) / adultSum) * 100).toFixed(1) : '0.0';
+
+                return (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                    <div className="p-3.5 rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-950/20">
+                      <span className="text-[10px] font-extrabold uppercase text-amber-700 dark:text-amber-300">Infants &amp; Toddlers (0–4)</span>
+                      <p className="mt-1 text-lg font-extrabold text-amber-900 dark:text-amber-100">{toddlersSum.toLocaleString()}</p>
+                      <span className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold">{grandTotal > 0 ? `${((toddlersSum/grandTotal)*100).toFixed(1)}%` : '0%'}</span>
+                    </div>
+                    <div className="p-3.5 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-950/20">
+                      <span className="text-[10px] font-extrabold uppercase text-blue-700 dark:text-blue-300">Children (5–14)</span>
+                      <p className="mt-1 text-lg font-extrabold text-blue-900 dark:text-blue-100">{childrenSum.toLocaleString()}</p>
+                      <span className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold">{grandTotal > 0 ? `${((childrenSum/grandTotal)*100).toFixed(1)}%` : '0%'}</span>
+                    </div>
+                    <div className="p-3.5 rounded-xl border border-purple-200 dark:border-purple-800 bg-purple-50/50 dark:bg-purple-950/20">
+                      <span className="text-[10px] font-extrabold uppercase text-purple-700 dark:text-purple-300">Youth (15–24)</span>
+                      <p className="mt-1 text-lg font-extrabold text-purple-900 dark:text-purple-100">{youthSum.toLocaleString()}</p>
+                      <span className="text-[10px] text-purple-600 dark:text-purple-400 font-semibold">{grandTotal > 0 ? `${((youthSum/grandTotal)*100).toFixed(1)}%` : '0%'}</span>
+                    </div>
+                    <div className="p-3.5 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/20">
+                      <span className="text-[10px] font-extrabold uppercase text-emerald-700 dark:text-emerald-300">Working-Age (25–59)</span>
+                      <p className="mt-1 text-lg font-extrabold text-emerald-900 dark:text-emerald-100">{adultSum.toLocaleString()}</p>
+                      <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">{grandTotal > 0 ? `${((adultSum/grandTotal)*100).toFixed(1)}%` : '0%'}</span>
+                    </div>
+                    <div className="p-3.5 rounded-xl border border-rose-200 dark:border-rose-800 bg-rose-50/50 dark:bg-rose-950/20">
+                      <span className="text-[10px] font-extrabold uppercase text-rose-700 dark:text-rose-300">Seniors (60+)</span>
+                      <p className="mt-1 text-lg font-extrabold text-rose-900 dark:text-rose-100">{seniorSum.toLocaleString()}</p>
+                      <span className="text-[10px] text-rose-600 dark:text-rose-400 font-semibold">{grandTotal > 0 ? `${((seniorSum/grandTotal)*100).toFixed(1)}%` : '0%'}</span>
+                    </div>
+                    <div className="p-3.5 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50/50 dark:bg-indigo-950/20">
+                      <span className="text-[10px] font-extrabold uppercase text-indigo-700 dark:text-indigo-300">Dependency Ratio</span>
+                      <p className="mt-1 text-lg font-extrabold text-indigo-900 dark:text-indigo-100">{depRatio}%</p>
+                      <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold">per 100 workers</span>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+
           {statFields.length > 0 && (
             <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {statFields.map(f => {
@@ -454,6 +543,8 @@ function DynamicSchemaSection({ schema, barangays, schools = [], daycareCenters 
               let entityLabel = "Barangay";
               if (targetEntity.includes('school')) entityLabel = "School";
               else if (targetEntity.includes('eccd') || targetEntity.includes('daycare')) entityLabel = "Daycare Center";
+              else if (isAgeTable) entityLabel = "Age";
+              else if (isAgeBracketTable) entityLabel = "Age Bracket";
 
               const chartTitle = f.name.toLowerCase().includes('by') 
                 ? f.name 

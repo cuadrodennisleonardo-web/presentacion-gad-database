@@ -9,7 +9,7 @@ import { submitForApproval, getLatestApproval, notifySuperAdminsOfDirectSave } f
 import ConfirmationModal from '@/components/common/ConfirmationModal';
 import { DataExportImport } from '@/components/common/DataExportImport';
 
-import { fetchSchools, fetchBarangays, fetchDaycareCenters } from '@/services/api';
+import { fetchSchools, fetchBarangays, fetchDaycareCenters, getSingleYearAgeEntities, getAgeBracketEntities } from '@/services/api';
 
 type Barangay = Database['public']['Tables']['barangays']['Row'];
 type DynamicSchema = Database['public']['Tables']['dynamic_schemas']['Row'];
@@ -36,10 +36,14 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
   const [originalData, setOriginalData] = useState<Record<string, any>>({});
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingChanges, setPendingChanges] = useState<Record<string, any> | null>(null);
+  const [filterQuery, setFilterQuery] = useState('');
   const queryClient = useQueryClient();
 
   const sData = schema.schema as any;
   const targetEntity = sData?.targetEntity || 'barangays';
+
+  const isAgeTable = targetEntity === 'age_0_to_99_plus' || targetEntity === 'age_single_year' || targetEntity === 'age_1_to_99';
+  const isAgeBracketTable = targetEntity === 'age_brackets';
 
   const { data: schools = [] } = useQuery({
     queryKey: ['schools'],
@@ -62,9 +66,9 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
   const cleanBarangays = (barangays && barangays.length > 0)
     ? barangays.filter((b: any) => {
         const d = (b.district || '').toLowerCase();
-        if (d.startsWith('school') || d.startsWith('daycare') || d.startsWith('eccd') || d.startsWith('cdc')) return false;
+        if (d.startsWith('school') || d.startsWith('daycare') || d.startsWith('eccd') || d.startsWith('cdc') || d.startsWith('age')) return false;
         const lower = (b.name || '').toLowerCase();
-        if (lower.includes('development center') || lower.includes('daycare') || lower.includes('school')) return false;
+        if (lower.includes('development center') || lower.includes('daycare') || lower.includes('school') || lower.startsWith('age ')) return false;
         return true;
       })
     : fetchedBarangays;
@@ -84,6 +88,12 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
   } else if (targetEntity === 'eccd_centers' || targetEntity === 'daycare_centers') {
     entitiesToDisplay = daycareCenters;
     currentEntityLabel = "ECCD / Daycare Center";
+  } else if (isAgeTable) {
+    entitiesToDisplay = getSingleYearAgeEntities();
+    currentEntityLabel = "Single-Year Age (Municipality)";
+  } else if (isAgeBracketTable) {
+    entitiesToDisplay = getAgeBracketEntities();
+    currentEntityLabel = "Age Group / Cohort";
   } else {
     entitiesToDisplay = cleanBarangays;
     currentEntityLabel = "Barangay";
@@ -174,6 +184,13 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
           district: e.district || 'Daycare'
         }));
         await supabase.from('barangays').upsert(centersToEnsure, { onConflict: 'id' });
+      } else if (isAgeTable || isAgeBracketTable) {
+        const agesToEnsure = entitiesToDisplay.map(e => ({
+          id: e.id,
+          name: e.name,
+          district: e.district || 'Age'
+        }));
+        await supabase.from('barangays').upsert(agesToEnsure, { onConflict: 'id' });
       }
 
       if (canDirectSave) {
@@ -484,6 +501,16 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
     toast.success('Data imported successfully. Review and save changes.');
   };
 
+  const filteredEntities = filterQuery.trim()
+    ? entitiesToDisplay.filter(e => {
+        const q = filterQuery.toLowerCase().trim();
+        const n = (e.name || '').toLowerCase();
+        const b = (e.bracket || '').toLowerCase();
+        const d = (e.district || '').toLowerCase();
+        return n.includes(q) || b.includes(q) || d.includes(q) || (e.age !== undefined && String(e.age) === q);
+      })
+    : entitiesToDisplay;
+
   const renderEntityCell = (b: any) => {
     const isPrivate = Boolean(
       b.isPrivate || 
@@ -493,9 +520,24 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
     );
 
     return (
-      <td className="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">
+      <td className="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white sticky left-0 z-10 bg-white dark:bg-gray-900">
         <div className="flex items-center justify-between gap-2">
-          <span>{b.name}</span>
+          <span className="font-semibold">{b.name}</span>
+          {b.bracket && (
+            <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-bold border shrink-0 ${
+              b.bracketKey === 'infants' || b.bracketKey === 'toddlers'
+                ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+                : b.bracketKey === 'children'
+                ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border-blue-200 dark:border-blue-800'
+                : b.bracketKey === 'youth'
+                ? 'bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border-purple-200 dark:border-purple-800'
+                : b.bracketKey === 'working_age'
+                ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+                : 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 border-rose-200 dark:border-rose-800'
+            }`}>
+              {b.bracket}
+            </span>
+          )}
           {isPrivate && (
             <span className="inline-flex items-center rounded-md bg-purple-100 dark:bg-purple-900/40 px-2 py-0.5 text-xs font-semibold text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
               (Private)
@@ -511,14 +553,40 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
   return (
     <div className="space-y-4 w-full min-w-0">
       <div className="flex flex-wrap items-center justify-between gap-3 pt-1 mb-4 w-full min-w-0">
-        {canWrite && exportData && exportColumns && (
-          <DataExportImport 
-            data={exportData} 
-            columns={exportColumns}
-            title={`${schema.tab_name} (${year})`}
-            onImport={handleImport} 
-          />
-        )}
+        <div className="flex flex-wrap items-center gap-3 flex-1 min-w-0">
+          {canWrite && exportData && exportColumns && (
+            <DataExportImport 
+              data={exportData} 
+              columns={exportColumns}
+              title={`${schema.tab_name} (${year})`}
+              onImport={handleImport} 
+            />
+          )}
+
+          {entitiesToDisplay.length > 20 && (
+            <div className="relative flex-1 min-w-[200px] max-w-xs">
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                type="text"
+                placeholder={`Filter ${currentEntityLabel.toLowerCase()}s (e.g. 60, Youth, Toddlers)...`}
+                value={filterQuery}
+                onChange={(e) => setFilterQuery(e.target.value)}
+                className="w-full pl-8 pr-7 py-1.5 text-xs rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:border-brand-500 focus:outline-none"
+              />
+              {filterQuery && (
+                <button 
+                  onClick={() => setFilterQuery('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xs font-bold"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
         {canWrite && (
           <button
             onClick={handleSaveAll}
@@ -588,7 +656,7 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
-                {entitiesToDisplay.map((b) => {
+                {filteredEntities.map((b) => {
                   const bData = data[b.id] || {};
 
                   return (
@@ -738,7 +806,7 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
-                {entitiesToDisplay.map((b) => {
+                {filteredEntities.map((b) => {
                   const bData = data[b.id] || {};
 
                   return (
@@ -894,7 +962,7 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
-                {entitiesToDisplay.map((b) => {
+                {filteredEntities.map((b) => {
                   const bData = data[b.id] || {};
                   
                   return (

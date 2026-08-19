@@ -63,10 +63,71 @@ interface TablePreset {
 
 const PRESET_TABLE_SUGGESTIONS: TablePreset[] = [
   {
+    id: 'preset-single-year-pop',
+    department: 'Demographics',
+    targetEntity: 'age_0_to_99_plus',
+    tabName: 'Single-Year Population (Age 0 to 99+)',
+    description: 'Track granular single-year population census breakdown from Age 0 to Age 99+ (101 rows) across male and female residents.',
+    category: 'standard',
+    fields: [
+      { id: 'p1', name: 'Household Population', type: 'gender_split', chartType: 'bar' }
+    ]
+  },
+  {
+    id: 'preset-age-brackets-cohorts',
+    department: 'Demographics',
+    targetEntity: 'age_brackets',
+    tabName: 'CBMS 5-Year Age Groups & Sex',
+    description: 'Track population distribution across standard 5-year age groups (0-4, 5-9 ... 80+) with Male/Female counts.',
+    category: 'standard',
+    fields: [
+      { id: 'b1', name: 'Resident Population', type: 'gender_split', chartType: 'bar' }
+    ]
+  },
+  {
+    id: 'preset-schooling-by-age',
+    department: 'Social Development',
+    subSector: 'education',
+    targetEntity: 'age_0_to_99_plus',
+    tabName: 'School Attendance by Single-Year Age',
+    description: 'Track school attendance vs out-of-school status by single-year age (Ages 3 to 24) across male and female youth.',
+    category: 'standard',
+    fields: [
+      { id: 'sch1', name: 'Currently Attending School', type: 'gender_split', chartType: 'bar' },
+      { id: 'sch2', name: 'Not Attending School (OSY)', type: 'gender_split', chartType: 'stat_card' }
+    ]
+  },
+  {
+    id: 'preset-child-labor-by-age',
+    department: 'Social Development',
+    subSector: 'welfare',
+    targetEntity: 'age_0_to_99_plus',
+    tabName: 'Child Labor & Working Children by Age',
+    description: 'Monitor working children and child laborers across single-year ages (Ages 5 to 17) by sex.',
+    category: 'standard',
+    fields: [
+      { id: 'cl1', name: 'Working Children', type: 'gender_split', chartType: 'bar' },
+      { id: 'cl2', name: 'Working Children Not in School', type: 'gender_split', chartType: 'stat_card' }
+    ]
+  },
+  {
+    id: 'preset-senior-registry-by-age',
+    department: 'Social Development',
+    subSector: 'welfare',
+    targetEntity: 'age_0_to_99_plus',
+    tabName: 'Senior Citizens Registry by Single-Year Age',
+    description: 'Track senior citizens (Ages 60 to 99+) with and without valid OSCA Senior Citizen IDs.',
+    category: 'standard',
+    fields: [
+      { id: 'sr1', name: 'With Senior Citizen ID', type: 'gender_split', chartType: 'bar' },
+      { id: 'sr2', name: 'Without Senior Citizen ID', type: 'gender_split', chartType: 'stat_card' }
+    ]
+  },
+  {
     id: 'preset-age-brackets',
     department: 'Demographics',
-    tabName: 'Age Distribution & Dependency',
-    description: 'Track population breakdown across age brackets and calculate dependency ratios.',
+    tabName: 'Age Distribution & Dependency (Barangay Level)',
+    description: 'Track population breakdown across broad age brackets (Toddlers, Children, Youth, Adults, Seniors) by barangay.',
     category: 'standard',
     fields: [
       { id: 'f1', name: 'Infants (0-11 months)', type: 'gender_split', chartType: 'bar' },
@@ -1167,10 +1228,12 @@ export default function DynamicTablesPage() {
                     className="w-full rounded-lg border border-purple-300 bg-purple-50/40 dark:bg-purple-950/20 px-3 py-2 text-sm font-semibold text-purple-900 dark:text-purple-200 focus:border-purple-500 focus:outline-none dark:border-purple-500/40"
                   >
                     <option value="barangays">Barangays (18 Barangays)</option>
+                    <option value="age_0_to_99_plus">Single-Year Age: 0 to 99+ (101 Rows - Municipality)</option>
+                    <option value="age_brackets">Age Brackets / Cohorts (5-Year &amp; Broad Brackets)</option>
                     <option value="primary_schools">Primary Schools (18 Primary Schools)</option>
                     <option value="secondary_schools">Secondary Schools (7 High Schools)</option>
                     <option value="all_schools">All Municipal Schools (25 Schools)</option>
-                    <option value="eccd_centers">ECCD & Daycare Centers</option>
+                    <option value="eccd_centers">ECCD &amp; Daycare Centers</option>
                   </select>
                 </div>
               </div>
