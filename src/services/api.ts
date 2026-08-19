@@ -92,31 +92,52 @@ export function getAgeBracketEntities() {
   ];
 }
 
+export const OFFICIAL_BARANGAY_NAMES = [
+  "Ayugao",
+  "Bagong Sirang",
+  "Baliguian",
+  "Bantugan",
+  "Bicalen",
+  "Bitaogan",
+  "Buenavista",
+  "Bulalacao",
+  "Cagnipa",
+  "Lagha",
+  "Lidong",
+  "Liwacsa",
+  "Maangas",
+  "Pagsangaan",
+  "Patrocinio",
+  "Pili",
+  "Sta. Maria",
+  "Tanawan",
+];
+
 export async function fetchBarangays() {
   const { data, error } = await supabase.from('barangays')
     .select('*')
     .order('name');
   if (error) throw error;
   
-  // Return only the genuine 18 local government barangays (filter out schools, daycare, age rows)
+  const officialSet = new Set(
+    OFFICIAL_BARANGAY_NAMES.map(n => n.toLowerCase().replace(/[^a-z0-9]/g, ''))
+  );
+
   return (data || []).filter(b => {
-    const d = (b.district || '').toLowerCase();
-    if (d.startsWith('school') || d.startsWith('daycare') || d.startsWith('eccd') || d.startsWith('cdc') || d.startsWith('age')) {
-      return false;
+    if (b.district) {
+      const d = b.district.toLowerCase();
+      if (d.startsWith('school') || d.startsWith('daycare') || d.startsWith('eccd') || d.startsWith('cdc') || d.startsWith('age')) {
+        return false;
+      }
     }
-    const lower = b.name.toLowerCase().trim();
-    if (
-      lower.includes('development center') || 
-      lower.includes('daycare') || 
-      lower.includes('elementary school') || 
-      lower.includes('high school') ||
-      lower.includes('national high') ||
-      lower.startsWith('age ') ||
-      lower.startsWith('age_')
-    ) {
-      return false;
-    }
-    return true;
+    const cleanName = (b.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (cleanName.startsWith('age')) return false;
+    if (cleanName === 'santamaria' || cleanName === 'stamariapob') return true;
+    if (cleanName === 'liwasan') return true;
+    if (cleanName === 'pagsanahan') return true;
+    if (cleanName === 'patrocino') return true;
+    
+    return officialSet.has(cleanName);
   });
 }
 
@@ -175,30 +196,8 @@ export async function fetchDaycareCenters() {
 }
 
 export async function fetchBarangayOptions() {
-  const { data, error } = await supabase.from('barangays')
-    .select('id, name, district')
-    .order('name');
-  if (error) throw error;
-  
-  return (data || [])
-    .filter(b => {
-      const d = (b.district || '').toLowerCase();
-      if (d.startsWith('school') || d.startsWith('daycare') || d.startsWith('eccd') || d.startsWith('cdc')) {
-        return false;
-      }
-      const lower = b.name.toLowerCase().trim();
-      if (
-        lower.includes('development center') || 
-        lower.includes('daycare') || 
-        lower.includes('elementary school') || 
-        lower.includes('high school') ||
-        lower.includes('national high')
-      ) {
-        return false;
-      }
-      return true;
-    })
-    .map(b => ({ id: b.id, name: b.name }));
+  const barangays = await fetchBarangays();
+  return barangays.map(b => ({ id: b.id, name: b.name }));
 }
 
 export async function fetchStats(table: string, year: number) {

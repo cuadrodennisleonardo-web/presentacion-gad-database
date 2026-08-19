@@ -9,7 +9,7 @@ import { submitForApproval, getLatestApproval, notifySuperAdminsOfDirectSave } f
 import ConfirmationModal from '@/components/common/ConfirmationModal';
 import { DataExportImport } from '@/components/common/DataExportImport';
 
-import { fetchSchools, fetchBarangays, fetchDaycareCenters, getSingleYearAgeEntities, getAgeBracketEntities } from '@/services/api';
+import { fetchSchools, fetchBarangays, fetchDaycareCenters, getSingleYearAgeEntities, getAgeBracketEntities, OFFICIAL_BARANGAY_NAMES } from '@/services/api';
 
 type Barangay = Database['public']['Tables']['barangays']['Row'];
 type DynamicSchema = Database['public']['Tables']['dynamic_schemas']['Row'];
@@ -65,11 +65,19 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
 
   const cleanBarangays = (barangays && barangays.length > 0)
     ? barangays.filter((b: any) => {
-        const d = (b.district || '').toLowerCase();
-        if (d.startsWith('school') || d.startsWith('daycare') || d.startsWith('eccd') || d.startsWith('cdc') || d.startsWith('age')) return false;
-        const lower = (b.name || '').toLowerCase();
-        if (lower.includes('development center') || lower.includes('daycare') || lower.includes('school') || lower.startsWith('age ')) return false;
-        return true;
+        if (b.district) {
+          const d = b.district.toLowerCase();
+          if (d.startsWith('school') || d.startsWith('daycare') || d.startsWith('eccd') || d.startsWith('cdc') || d.startsWith('age')) {
+            return false;
+          }
+        }
+        const cleanName = (b.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        if (cleanName.startsWith('age')) return false;
+        if (cleanName === 'santamaria' || cleanName === 'stamariapob') return true;
+        if (cleanName === 'liwasan') return true;
+        if (cleanName === 'pagsanahan') return true;
+        if (cleanName === 'patrocino') return true;
+        return OFFICIAL_BARANGAY_NAMES.some(n => n.toLowerCase().replace(/[^a-z0-9]/g, '') === cleanName);
       })
     : fetchedBarangays;
 
@@ -176,7 +184,7 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
 
   const mutation = useMutation({
     mutationFn: async (changedData: Record<string, any>) => {
-      // Ensure entities exist in the barangays table to satisfy foreign key constraint dynamic_data_barangay_id_fkey
+      // Ensure daycare entities exist in the barangays table if needed
       if (targetEntity === 'eccd_centers' || targetEntity === 'daycare_centers') {
         const centersToEnsure = entitiesToDisplay.map(e => ({
           id: e.id,
@@ -184,13 +192,6 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
           district: e.district || 'Daycare'
         }));
         await supabase.from('barangays').upsert(centersToEnsure, { onConflict: 'id' });
-      } else if (isAgeTable || isAgeBracketTable) {
-        const agesToEnsure = entitiesToDisplay.map(e => ({
-          id: e.id,
-          name: e.name,
-          district: e.district || 'Age'
-        }));
-        await supabase.from('barangays').upsert(agesToEnsure, { onConflict: 'id' });
       }
 
       if (canDirectSave) {

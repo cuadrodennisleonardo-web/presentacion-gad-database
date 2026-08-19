@@ -30,11 +30,11 @@ export async function getBarangays(year?: number): Promise<{
     return { data: [], error: bError?.message ?? "Unknown error" };
   }
 
-  // Filter out school and daycare entries so only official 18 barangays are displayed
-  const validBarangayNames = new Set(BARANGAYS.map(b => b.toLowerCase()));
+  // Filter out school, daycare, and age entries so only official 18 barangays are displayed
+  const validBarangayNames = new Set(BARANGAYS.map(b => b.toLowerCase().replace(/[^a-z0-9]/g, '')));
   const realBarangays = barangays.filter(brgy => {
     const d = (brgy.district || '').toLowerCase();
-    if (d.startsWith('school') || d.startsWith('daycare') || d.startsWith('eccd') || d.startsWith('cdc')) {
+    if (d.startsWith('school') || d.startsWith('daycare') || d.startsWith('eccd') || d.startsWith('cdc') || d.startsWith('age')) {
       return false;
     }
     const lowerName = brgy.name.toLowerCase().trim();
@@ -44,11 +44,19 @@ export async function getBarangays(year?: number): Promise<{
       lowerName.includes("high school") ||
       lowerName.includes("development center") ||
       lowerName.includes("daycare") ||
-      lowerName.includes("cdc")
+      lowerName.includes("cdc") ||
+      lowerName.startsWith("age ") ||
+      lowerName.startsWith("age_")
     ) {
       return false;
     }
-    return validBarangayNames.has(lowerName) || BARANGAYS.some(b => b.toLowerCase() === lowerName);
+    const cleanName = lowerName.replace(/[^a-z0-9]/g, '');
+    if (cleanName.startsWith('age')) return false;
+    if (cleanName === 'santamaria' || cleanName === 'stamariapob') return true;
+    if (cleanName === 'liwasan') return true;
+    if (cleanName === 'pagsanahan') return true;
+    if (cleanName === 'patrocino') return true;
+    return validBarangayNames.has(cleanName);
   });
 
   let { data: stats, error: sError } = await supabase
