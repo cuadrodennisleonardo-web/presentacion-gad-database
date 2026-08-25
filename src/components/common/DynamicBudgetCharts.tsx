@@ -25,8 +25,11 @@ function DynamicBudgetSection({ schema, barangays, schools = [], daycareCenters 
 
   const sData = schema.schema as any;
   const targetEntity = sData?.targetEntity || 'barangays';
+  const isCustomRows = targetEntity === 'custom_rows';
   let entitiesToDisplay = barangays.filter((b: any) => !b.district || !b.district.startsWith('School-'));
-  if (targetEntity === 'primary_schools') {
+  if (isCustomRows) {
+    entitiesToDisplay = (sData?.customRows || []) as { id: string; name: string }[];
+  } else if (targetEntity === 'primary_schools') {
     entitiesToDisplay = schools.filter((s: any) => s.district === 'School-Primary' || s.district?.toLowerCase().includes('primary'));
   } else if (targetEntity === 'secondary_schools') {
     entitiesToDisplay = schools.filter((s: any) => s.district === 'School-Secondary' || s.district?.toLowerCase().includes('secondary'));

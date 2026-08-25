@@ -46,11 +46,18 @@ const DEPARTMENTS = [
   'Institutional GAD'
 ];
 
+export interface CustomRowDef {
+  id: string;
+  name: string;
+}
+
 interface TablePreset {
   id: string;
   department: string;
   subSector?: string;
   targetEntity?: string;
+  customRows?: CustomRowDef[];
+  customRowLabel?: string;
   tabName: string;
   description: string;
   category: DynamicTableCategory;
@@ -416,6 +423,27 @@ const PRESET_TABLE_SUGGESTIONS: TablePreset[] = [
       { id: 'gf2', name: 'Gender-Neutral & PWD Restrooms Installed', type: 'single_value', chartType: 'bar' },
       { id: 'gf3', name: 'Gender Sensitivity Training (GST) Graduates', type: 'gender_split', chartType: 'stat_card' }
     ]
+  },
+  {
+    id: 'preset-cooperatives-associations',
+    department: 'Economic Development',
+    targetEntity: 'custom_rows',
+    customRowLabel: 'Association / Organization Name',
+    customRows: [
+      { id: 'assoc-1', name: 'Presentacion Coastal Fisherfolk Association' },
+      { id: 'assoc-2', name: 'Bantugan High-Value Crop Growers Group' },
+      { id: 'assoc-3', name: 'Maangas Organic Farmers & Producers Cooperative' },
+      { id: 'assoc-4', name: 'Sta. Maria Women Seaweed Harvesters Guild' },
+      { id: 'assoc-5', name: 'Baliguian Rice & Corn Farmers Association' }
+    ],
+    tabName: 'Farmers & Fisherfolk Cooperatives Registry',
+    description: 'Track active members, seed capital, and livelihood project status for municipal community organizations.',
+    category: 'standard',
+    fields: [
+      { id: 'c1', name: 'Active Registered Members', type: 'gender_split', chartType: 'bar' },
+      { id: 'c2', name: 'LGU Livelihood Grants Received (₱)', type: 'single_value', chartType: 'stat_card' },
+      { id: 'c3', name: 'Accredited Operations Status (1=Yes, 0=No)', type: 'single_value', chartType: 'pie' }
+    ]
   }
 ];
 
@@ -436,6 +464,14 @@ export default function DynamicTablesPage() {
   const [fields, setFields] = useState<FieldDef[]>([]);
   const [percentageGroups, setPercentageGroups] = useState<PercentageGroupDef[]>([]);
   const [multiGroupSections, setMultiGroupSections] = useState<MultiGroupSectionDef[]>([]);
+
+  // Custom Rows State
+  const [customRows, setCustomRows] = useState<CustomRowDef[]>([
+    { id: crypto.randomUUID(), name: '' }
+  ]);
+  const [customRowLabel, setCustomRowLabel] = useState('Item / Row Name');
+  const [showBulkRowsBox, setShowBulkRowsBox] = useState(false);
+  const [bulkRowsText, setBulkRowsText] = useState('');
 
   // Tabs
   const [activeTab, setActiveTab] = useState<DynamicTableCategory>('standard');
@@ -466,6 +502,10 @@ export default function DynamicTablesPage() {
     setDepartment(DEPARTMENTS[0]);
     setSubSector('all');
     setTargetEntity('barangays');
+    setCustomRows([{ id: crypto.randomUUID(), name: '' }]);
+    setCustomRowLabel('Item / Row Name');
+    setShowBulkRowsBox(false);
+    setBulkRowsText('');
     setTabName('');
     setDescription('');
     setTableCategory(activeTab);
@@ -494,6 +534,15 @@ export default function DynamicTablesPage() {
     setDepartment(preset.department);
     setSubSector(preset.subSector || 'all');
     setTargetEntity(preset.targetEntity || 'barangays');
+    if (preset.customRows && preset.customRows.length > 0) {
+      setCustomRows(preset.customRows.map(r => ({ ...r, id: crypto.randomUUID() })));
+      setCustomRowLabel(preset.customRowLabel || 'Item / Row Name');
+    } else {
+      setCustomRows([{ id: crypto.randomUUID(), name: '' }]);
+      setCustomRowLabel('Item / Row Name');
+    }
+    setShowBulkRowsBox(false);
+    setBulkRowsText('');
     setTabName(preset.tabName);
     setDescription(preset.description);
     setTableCategory(preset.category);
@@ -535,6 +584,14 @@ export default function DynamicTablesPage() {
     const sData = schema.schema as any;
     setSubSector(sData?.subSector || 'all');
     setTargetEntity(sData?.targetEntity || 'barangays');
+    if (sData?.customRows && Array.isArray(sData.customRows) && sData.customRows.length > 0) {
+      setCustomRows(sData.customRows);
+    } else {
+      setCustomRows([{ id: crypto.randomUUID(), name: '' }]);
+    }
+    setCustomRowLabel(sData?.customRowLabel || 'Item / Row Name');
+    setShowBulkRowsBox(false);
+    setBulkRowsText('');
     setTabName(schema.tab_name);
     
     if (Array.isArray(sData)) {
@@ -553,6 +610,64 @@ export default function DynamicTablesPage() {
     }
     
     setIsModalOpen(true);
+  };
+
+  // Custom Rows Helpers
+  const addCustomRow = () => {
+    setCustomRows([...customRows, { id: crypto.randomUUID(), name: '' }]);
+  };
+
+  const updateCustomRow = (index: number, name: string) => {
+    const updated = [...customRows];
+    updated[index].name = name;
+    setCustomRows(updated);
+  };
+
+  const removeCustomRow = (index: number) => {
+    if (customRows.length <= 1) {
+      toast.error('Must have at least one row');
+      return;
+    }
+    const updated = [...customRows];
+    updated.splice(index, 1);
+    setCustomRows(updated);
+  };
+
+  const moveCustomRow = (index: number, direction: 'up' | 'down') => {
+    if (direction === 'up' && index === 0) return;
+    if (direction === 'down' && index === customRows.length - 1) return;
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    const updated = [...customRows];
+    const item = updated[index];
+    updated[index] = updated[targetIndex];
+    updated[targetIndex] = item;
+    setCustomRows(updated);
+  };
+
+  const handleBulkAddRows = () => {
+    const lines = bulkRowsText
+      .split('\n')
+      .map(l => l.trim())
+      .filter(l => l.length > 0);
+
+    if (lines.length === 0) {
+      toast.error('Please enter at least one row name');
+      return;
+    }
+
+    const newRows = lines.map(line => ({
+      id: crypto.randomUUID(),
+      name: line
+    }));
+
+    setCustomRows(prev => {
+      const existing = prev.filter(r => r.name.trim().length > 0);
+      return [...existing, ...newRows];
+    });
+
+    setBulkRowsText('');
+    setShowBulkRowsBox(false);
+    toast.success(`Added ${newRows.length} custom rows!`);
   };
 
   const addField = () => {
@@ -752,12 +867,29 @@ export default function DynamicTablesPage() {
       }
     }
 
+    if (targetEntity === 'custom_rows') {
+      if (customRows.length === 0) {
+        toast.error('Please add at least one custom row');
+        return;
+      }
+      if (customRows.some(r => !r.name.trim())) {
+        toast.error('Please enter a name for all custom rows');
+        return;
+      }
+    }
+
+    const customRowPayload = targetEntity === 'custom_rows' ? {
+      customRows: customRows.map(r => ({ id: r.id, name: r.name.trim() })),
+      customRowLabel: customRowLabel.trim() || 'Item / Row Name',
+    } : {};
+
     let schemaPayload: any = {};
     if (tableCategory === 'percentage') {
       schemaPayload = {
         description,
         subSector: department === 'Social Development' ? subSector : 'all',
         targetEntity,
+        ...customRowPayload,
         tableCategory: 'percentage',
         isPercentage: true,
         tableType: 'percentage',
@@ -768,6 +900,7 @@ export default function DynamicTablesPage() {
         description,
         subSector: department === 'Social Development' ? subSector : 'all',
         targetEntity,
+        ...customRowPayload,
         tableCategory: 'multi_group',
         tableType: 'multi_group',
         multiGroups: multiGroupSections
@@ -777,6 +910,7 @@ export default function DynamicTablesPage() {
         description,
         subSector: department === 'Social Development' ? subSector : 'all',
         targetEntity,
+        ...customRowPayload,
         tableCategory,
         isBudget: tableCategory === 'budget',
         fields
@@ -1093,7 +1227,14 @@ export default function DynamicTablesPage() {
                         {schema.department}
                       </td>
                       <td className="px-6 py-4 font-medium text-brand-600 dark:text-brand-400">
-                        {schema.tab_name}
+                        <div className="flex items-center gap-2">
+                          <span>{schema.tab_name}</span>
+                          {sData?.targetEntity === 'custom_rows' && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 dark:bg-purple-950/70 dark:text-purple-300 border border-purple-200 dark:border-purple-800/40">
+                              {sData.customRows?.length || 0} Custom Rows
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4 text-xs">
                         <span className="px-2 py-0.5 rounded font-bold uppercase tracking-wider bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
@@ -1227,7 +1368,8 @@ export default function DynamicTablesPage() {
                     onChange={e => setTargetEntity(e.target.value)}
                     className="w-full rounded-lg border border-purple-300 bg-purple-50/40 dark:bg-purple-950/20 px-3 py-2 text-sm font-semibold text-purple-900 dark:text-purple-200 focus:border-purple-500 focus:outline-none dark:border-purple-500/40"
                   >
-                    <option value="barangays">Barangays (18 Barangays)</option>
+                    <option value="barangays">Barangays (18 Built-in Barangays)</option>
+                    <option value="custom_rows">✨ Custom Rows / Freeform Items (Manual Row Names)</option>
                     <option value="age_0_to_99_plus">Single-Year Age: 0 to 99+ (101 Rows - Municipality)</option>
                     <option value="age_brackets">Age Brackets / Cohorts (5-Year &amp; Broad Brackets)</option>
                     <option value="primary_schools">Primary Schools (18 Primary Schools)</option>
@@ -1242,12 +1384,145 @@ export default function DynamicTablesPage() {
                 <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Description (Optional)</label>
                 <input
                   type="text"
-                  placeholder="e.g. Track multiple education levels or sub-tables without percentages."
+                  placeholder="e.g. Track custom indicators, associations, or projects."
                   value={description}
                   onChange={e => setDescription(e.target.value)}
                   className="w-full rounded-lg border border-gray-300 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-800 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:text-white"
                 />
               </div>
+
+              {/* Custom Rows Configuration Section */}
+              {targetEntity === 'custom_rows' && (
+                <div className="p-4 rounded-xl border-2 border-purple-200 dark:border-purple-800/60 bg-purple-50/40 dark:bg-purple-950/20 space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <h3 className="text-sm font-bold text-purple-900 dark:text-purple-200 flex items-center gap-1.5">
+                        <svg className="w-4 h-4 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                        </svg>
+                        Custom Table Rows / Items (Manual Input)
+                      </h3>
+                      <p className="text-xs text-purple-700 dark:text-purple-300">
+                        Specify the rows for this table manually instead of using the built-in 18 barangays.
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowBulkRowsBox(!showBulkRowsBox)}
+                        className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-purple-300 dark:border-purple-700 text-purple-800 dark:text-purple-200 bg-white dark:bg-purple-900/40 hover:bg-purple-100 dark:hover:bg-purple-800/60 transition cursor-pointer"
+                      >
+                        {showBulkRowsBox ? 'Hide Bulk Input' : '📋 Bulk Paste Rows'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={addCustomRow}
+                        className="px-3.5 py-1.5 text-xs font-bold rounded-lg bg-purple-600 hover:bg-purple-700 text-white shadow-xs transition cursor-pointer"
+                      >
+                        + Add Row
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Row Header Label */}
+                  <div className="w-full sm:w-1/2">
+                    <label className="mb-1 block text-xs font-semibold text-purple-900 dark:text-purple-200">
+                      Row Column Header Title
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Commodity Name, Organization, Program, Facility"
+                      value={customRowLabel}
+                      onChange={e => setCustomRowLabel(e.target.value)}
+                      className="w-full rounded-lg border border-purple-300 bg-white px-3 py-2 text-xs font-semibold text-gray-800 dark:border-purple-700 dark:bg-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-purple-500"
+                    />
+                  </div>
+
+                  {/* Bulk Input Box */}
+                  {showBulkRowsBox && (
+                    <div className="p-3.5 rounded-xl border border-purple-300 dark:border-purple-700 bg-white dark:bg-gray-900 space-y-2">
+                      <label className="text-xs font-bold text-gray-700 dark:text-gray-300 block">
+                        Paste Row Names (One row name per line):
+                      </label>
+                      <textarea
+                        rows={4}
+                        placeholder={"Rice Farmers\nCorn Planters\nFisherfolk Cooperative\nLivestock Raisers"}
+                        value={bulkRowsText}
+                        onChange={e => setBulkRowsText(e.target.value)}
+                        className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-2.5 text-xs text-gray-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-purple-500"
+                      />
+                      <div className="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setShowBulkRowsBox(false)}
+                          className="px-3 py-1 text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleBulkAddRows}
+                          className="px-3.5 py-1 text-xs font-bold text-white bg-purple-600 hover:bg-purple-700 rounded-lg transition cursor-pointer"
+                        >
+                          Add Pasted Rows
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Row Items List */}
+                  <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                    {customRows.map((row, rIdx) => (
+                      <div key={row.id} className="flex items-center gap-2 p-2 rounded-lg border border-purple-200/80 dark:border-purple-800/40 bg-white dark:bg-gray-900">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-purple-100 dark:bg-purple-950/60 text-[11px] font-bold text-purple-800 dark:text-purple-300">
+                          {rIdx + 1}
+                        </span>
+                        <input
+                          type="text"
+                          placeholder={`Row Item ${rIdx + 1} Name (e.g. Cooperative A)`}
+                          value={row.name}
+                          onChange={e => updateCustomRow(rIdx, e.target.value)}
+                          className="flex-1 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-1.5 text-xs text-gray-800 dark:text-white focus:border-purple-500 focus:outline-none"
+                        />
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => moveCustomRow(rIdx, 'up')}
+                            disabled={rIdx === 0}
+                            title="Move Up"
+                            className="p-1 rounded text-gray-400 hover:text-gray-700 dark:hover:text-white disabled:opacity-20 cursor-pointer"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7" />
+                            </svg>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => moveCustomRow(rIdx, 'down')}
+                            disabled={rIdx === customRows.length - 1}
+                            title="Move Down"
+                            className="p-1 rounded text-gray-400 hover:text-gray-700 dark:hover:text-white disabled:opacity-20 cursor-pointer"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => removeCustomRow(rIdx)}
+                            title="Remove Row"
+                            className="p-1 text-gray-400 hover:text-red-500 rounded cursor-pointer"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Multi-Group Subtable Builder Form */}
               {tableCategory === 'multi_group' ? (

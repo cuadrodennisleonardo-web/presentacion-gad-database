@@ -31,6 +31,7 @@ function DynamicSchemaSection({ schema, barangays, schools = [], daycareCenters 
 
   const isAgeTable = targetEntity === 'age_0_to_99_plus' || targetEntity === 'age_single_year' || targetEntity === 'age_1_to_99';
   const isAgeBracketTable = targetEntity === 'age_brackets';
+  const isCustomRows = targetEntity === 'custom_rows';
 
   let entitiesToDisplay = barangays.filter((b: any) => {
     const d = (b.district || '').toLowerCase();
@@ -39,7 +40,9 @@ function DynamicSchemaSection({ schema, barangays, schools = [], daycareCenters 
     if (lower.includes('development center') || lower.includes('daycare') || lower.includes('school') || lower.startsWith('age ')) return false;
     return true;
   });
-  if (targetEntity === 'primary_schools') {
+  if (isCustomRows) {
+    entitiesToDisplay = (sData?.customRows || []) as { id: string; name: string }[];
+  } else if (targetEntity === 'primary_schools') {
     entitiesToDisplay = schools.filter((s: any) => s.district === 'School-Primary' || s.district?.toLowerCase().includes('primary'));
   } else if (targetEntity === 'secondary_schools') {
     entitiesToDisplay = schools.filter((s: any) => s.district === 'School-Secondary' || s.district?.toLowerCase().includes('secondary'));

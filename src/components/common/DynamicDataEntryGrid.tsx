@@ -41,6 +41,19 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
 
   const sData = schema.schema as any;
   const targetEntity = sData?.targetEntity || 'barangays';
+  const isCustomRows = targetEntity === 'custom_rows';
+
+  const [localCustomRows, setLocalCustomRows] = useState<{ id: string; name: string }[]>(() => {
+    return (sData?.customRows || []) as { id: string; name: string }[];
+  });
+  const [showAddRowModal, setShowAddRowModal] = useState(false);
+  const [newRowName, setNewRowName] = useState('');
+
+  useEffect(() => {
+    if (sData?.customRows) {
+      setLocalCustomRows(sData.customRows);
+    }
+  }, [schema.id, sData?.customRows]);
 
   const isAgeTable = targetEntity === 'age_0_to_99_plus' || targetEntity === 'age_single_year' || targetEntity === 'age_1_to_99';
   const isAgeBracketTable = targetEntity === 'age_brackets';
@@ -84,7 +97,10 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
   let entitiesToDisplay: any[] = cleanBarangays;
   let currentEntityLabel = entityName || "Barangay";
 
-  if (targetEntity === 'primary_schools') {
+  if (isCustomRows) {
+    entitiesToDisplay = localCustomRows;
+    currentEntityLabel = sData?.customRowLabel || "Item / Row Name";
+  } else if (targetEntity === 'primary_schools') {
     entitiesToDisplay = schools.filter((s: any) => s.district === 'School-Primary' || s.district?.toLowerCase().includes('primary'));
     currentEntityLabel = "Primary School";
   } else if (targetEntity === 'secondary_schools') {
@@ -182,10 +198,53 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
     });
   };
 
+  const handleAddNewCustomRow = async () => {
+    if (!newRowName.trim()) {
+      toast.error('Please enter a row name');
+      return;
+    }
+    const newRow = {
+      id: crypto.randomUUID(),
+      name: newRowName.trim()
+    };
+    const updatedRows = [...localCustomRows, newRow];
+    setLocalCustomRows(updatedRows);
+    setNewRowName('');
+    setShowAddRowModal(false);
+
+    try {
+      const currentSchema = (typeof schema.schema === 'object' && schema.schema !== null) ? schema.schema as any : {};
+      await supabase.from('dynamic_schemas').update({
+        schema: {
+          ...currentSchema,
+          customRows: updatedRows
+        }
+      }).eq('id', schema.id);
+
+      await supabase.from('barangays').upsert([{
+        id: newRow.id,
+        name: newRow.name,
+        district: 'Custom-Row'
+      }], { onConflict: 'id' });
+
+      queryClient.invalidateQueries({ queryKey: ['dynamic_schemas'] });
+      toast.success(`Row "${newRow.name}" added successfully!`);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to save new row');
+    }
+  };
+
   const mutation = useMutation({
     mutationFn: async (changedData: Record<string, any>) => {
-      // Ensure daycare entities exist in the barangays table if needed
-      if (targetEntity === 'eccd_centers' || targetEntity === 'daycare_centers') {
+      // Ensure custom rows or daycare entities exist in the barangays table if needed
+      if (isCustomRows) {
+        const customRowsToEnsure = entitiesToDisplay.map(e => ({
+          id: e.id,
+          name: e.name,
+          district: 'Custom-Row'
+        }));
+        await supabase.from('barangays').upsert(customRowsToEnsure, { onConflict: 'id' });
+      } else if (targetEntity === 'eccd_centers' || targetEntity === 'daycare_centers') {
         const centersToEnsure = entitiesToDisplay.map(e => ({
           id: e.id,
           name: e.name,
@@ -564,6 +623,19 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
             />
           )}
 
+          {isCustomRows && canWrite && (
+            <button
+              type="button"
+              onClick={() => setShowAddRowModal(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-800/50 transition cursor-pointer"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+              </svg>
+              <span>Add Row</span>
+            </button>
+          )}
+
           {entitiesToDisplay.length > 20 && (
             <div className="relative flex-1 min-w-[200px] max-w-xs">
               <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -615,8 +687,24 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
           <p className="text-xs text-gray-500 dark:text-gray-400 max-w-md mx-auto">
             {targetEntity.includes('eccd') || targetEntity.includes('daycare')
               ? "You can add your Daycare Centers & ECCD facilities directly in src/config/daycareCenters.ts."
+              : isCustomRows
+              ? `No custom rows defined for this table yet. Click the button below to add your first ${currentEntityLabel.toLowerCase()}.`
               : `No ${currentEntityLabel.toLowerCase()} entries are available.`}
           </p>
+          {isCustomRows && canWrite && (
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => setShowAddRowModal(true)}
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl bg-purple-600 hover:bg-purple-700 text-white shadow-sm transition cursor-pointer"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                </svg>
+                <span>Add First {currentEntityLabel}</span>
+              </button>
+            </div>
+          )}
         </div>
       ) : isPercentage ? (
         /* Percentage Table Render */
@@ -1092,6 +1180,45 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
         title="Submit Changes for Approval"
         message="Your changes will be submitted to the Superadmin for approval before updating the database. Proceed?"
       />
+
+      {/* Add Custom Row Modal */}
+      {showAddRowModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+          <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-5 shadow-2xl dark:border-gray-800 dark:bg-gray-900">
+            <h3 className="text-base font-bold text-gray-900 dark:text-white mb-1">
+              Add New {currentEntityLabel}
+            </h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+              Enter the name of the new custom row item for this table.
+            </p>
+            <input
+              type="text"
+              placeholder={`e.g. New ${currentEntityLabel}`}
+              value={newRowName}
+              onChange={e => setNewRowName(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') handleAddNewCustomRow(); }}
+              autoFocus
+              className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-brand-500 focus:outline-none mb-4"
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => { setShowAddRowModal(false); setNewRowName(''); }}
+                className="px-3.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-lg dark:text-gray-300 dark:hover:bg-gray-800 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleAddNewCustomRow}
+                className="px-4 py-1.5 text-xs font-bold text-white bg-brand-500 hover:bg-brand-600 rounded-lg shadow-sm cursor-pointer"
+              >
+                Add Row
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

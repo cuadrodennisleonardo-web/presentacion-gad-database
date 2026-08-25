@@ -122,6 +122,14 @@ export default function ReviewChangesModal({ isOpen, onClose, approval }: Review
                 }
               });
             } else if (sData) {
+              if (sData.customRows && Array.isArray(sData.customRows)) {
+                sData.customRows.forEach((r: any) => {
+                  if (r.id && r.name) {
+                    setBarangayMap(prev => ({ ...prev, [r.id]: r.name }));
+                  }
+                });
+              }
+
               if (sData.isPercentage || sData.tableType === 'percentage') {
                 (sData.groups || []).forEach((g: any) => {
                   if (g.id && g.totalTitle) {

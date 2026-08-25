@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PageMeta from '@/components/common/PageMeta';
 import PageBreadcrumb from '@/components/common/PageBreadcrumb';
 import { DataExportImport, ExportColumn } from '@/components/common/DataExportImport';
@@ -6,7 +6,10 @@ import ConfirmationModal from '@/components/common/ConfirmationModal';
 import DynamicDataEntryGrid from '@/components/common/DynamicDataEntryGrid';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import YearSelector from '@/components/common/YearSelector';
+import TabSequenceModal from '@/components/common/TabSequenceModal';
 import { getSchemaSubSector } from '@/utils/subSectorUtils';
+import { supabase } from '@/config/supabase';
+import { toast } from 'react-hot-toast';
 import type { Database } from '@/types/database';
 
 type DynamicSchema = Database['public']['Tables']['dynamic_schemas']['Row'];
@@ -85,7 +88,7 @@ export default function DataEntryLayout({
   nativeTabs,
   isLocked,
   latestApproval: _latestApproval,
-  isSuperAdmin: _isSuperAdmin,
+  isSuperAdmin = false,
   canWrite,
   exportData,
   exportColumns,
@@ -100,13 +103,23 @@ export default function DataEntryLayout({
   children
 }: DataEntryLayoutProps) {
   
+  const [showSequenceModal, setShowSequenceModal] = useState(false);
+  const [tabOrderOverride, setTabOrderOverride] = useState<string[] | null>(() => {
+    try {
+      const saved = localStorage.getItem(`tab_order_${moduleName}`);
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
   const allTabs = [
     ...nativeTabs.map(t => ({ key: t.key, label: t.label, isDynamic: false, schema: undefined })),
     ...dynamicSchemas.map(ds => ({ key: ds.id, label: ds.tab_name, isDynamic: true, schema: ds }))
   ];
 
   // Filter tabs if a sub-sector is selected
-  const tabs = allTabs.filter(t => {
+  const rawFilteredTabs = allTabs.filter(t => {
     if (!subSectors || subSectors.length === 0 || activeSubSector === 'all') return true;
     const selectedSub = subSectors.find(s => s.id === activeSubSector);
     if (!selectedSub) return true;
@@ -119,6 +132,67 @@ export default function DataEntryLayout({
     return selectedSub.keys.includes(t.key);
   });
 
+  // Sort tabs according to customized sequence or tab_order
+  const tabs = (() => {
+    if (tabOrderOverride && tabOrderOverride.length > 0) {
+      return [...rawFilteredTabs].sort((a, b) => {
+        const indexA = tabOrderOverride.indexOf(a.key);
+        const indexB = tabOrderOverride.indexOf(b.key);
+        if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+        if (indexA !== -1) return -1;
+        if (indexB !== -1) return 1;
+        return 0;
+      });
+    }
+
+    return [...rawFilteredTabs].sort((a, b) => {
+      const orderA = (a.schema?.schema as any)?.tab_order ?? (a.isDynamic ? 100 : 0);
+      const orderB = (b.schema?.schema as any)?.tab_order ?? (b.isDynamic ? 100 : 0);
+      return orderA - orderB;
+    });
+  })();
+
+  const handleSaveSequence = async (orderedKeys: string[]) => {
+    setTabOrderOverride(orderedKeys);
+    try {
+      localStorage.setItem(`tab_order_${moduleName}`, JSON.stringify(orderedKeys));
+    } catch (e) {
+      console.error(e);
+    }
+    toast.success('Table sequence updated successfully!');
+
+    // If superadmin, also persist tab_order into dynamic_schemas in Supabase
+    if (isSuperAdmin) {
+      try {
+        const updatePromises = orderedKeys.map(async (key, index) => {
+          const ds = dynamicSchemas.find(d => d.id === key);
+          if (ds) {
+            const currentSchema = (typeof ds.schema === 'object' && ds.schema !== null) ? ds.schema as any : {};
+            await supabase.from('dynamic_schemas').update({
+              schema: {
+                ...currentSchema,
+                tab_order: index + 1
+              }
+            }).eq('id', ds.id);
+          }
+        });
+        await Promise.all(updatePromises);
+      } catch (err) {
+        console.error('Failed to sync tab order to server:', err);
+      }
+    }
+  };
+
+  const handleResetSequence = () => {
+    setTabOrderOverride(null);
+    try {
+      localStorage.removeItem(`tab_order_${moduleName}`);
+    } catch (e) {
+      console.error(e);
+    }
+    toast.success('Table sequence reset to default.');
+  };
+
   const activeTabData = allTabs.find(t => t.key === activeTab);
 
   const displayTitle = activeTabData?.isDynamic ? `${activeTabData.label} Grid` : gridTitle;
@@ -126,9 +200,12 @@ export default function DataEntryLayout({
   let displayDescription = gridDescription;
   if (activeTabData?.isDynamic && activeTabData.schema) {
     const sData = activeTabData.schema.schema as any;
+    const isCustom = sData?.targetEntity === 'custom_rows';
+    const rowCount = isCustom ? (sData?.customRows?.length || 0) : barangays.length;
+    const rowLabel = isCustom ? (sData?.customRowLabel || 'custom items') : `${rowCount} barangays`;
     displayDescription = Array.isArray(sData) 
       ? `Manage custom data for ${barangays.length} barangays.` 
-      : (sData?.description || `Manage custom data for ${barangays.length} barangays.`);
+      : (sData?.description || `Manage custom data for ${rowLabel}.`);
   }
 
   return (
@@ -159,22 +236,50 @@ export default function DataEntryLayout({
           </div>
         )}
 
-        {/* Tab Headers */}
-        <div className="flex border-b border-gray-200 dark:border-gray-800 overflow-x-auto no-scrollbar w-full min-w-0">
-          {tabs.map(t => (
-            <button
-              key={t.key}
-              className={`px-6 py-4 text-sm font-medium outline-none transition whitespace-nowrap cursor-pointer ${
-                activeTab === t.key
-                  ? 'border-b-2 border-brand-500 text-brand-600 dark:text-brand-400 font-bold'
-                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-              }`}
-              onClick={() => setActiveTab(t.key)}
-            >
-              {t.label}
-            </button>
-          ))}
+        {/* Tab Headers with Sequence Customizer Button */}
+        <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 w-full min-w-0 bg-gray-50/40 dark:bg-gray-800/20">
+          <div className="flex overflow-x-auto no-scrollbar flex-1 min-w-0">
+            {tabs.map(t => (
+              <button
+                key={t.key}
+                className={`px-6 py-4 text-sm font-medium outline-none transition whitespace-nowrap cursor-pointer ${
+                  activeTab === t.key
+                    ? 'border-b-2 border-brand-500 text-brand-600 dark:text-brand-400 font-bold bg-white dark:bg-gray-900/50'
+                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:bg-white/60 dark:hover:bg-gray-800/60'
+                }`}
+                onClick={() => setActiveTab(t.key)}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          {tabs.length > 1 && (
+            <div className="px-3.5 py-2 shrink-0 flex items-center border-l border-gray-200 dark:border-gray-800">
+              <button
+                type="button"
+                onClick={() => setShowSequenceModal(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:text-brand-600 bg-white hover:bg-brand-50 rounded-xl border border-gray-200 hover:border-brand-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:text-brand-400 dark:hover:bg-gray-700 dark:border-gray-700 transition shadow-xs cursor-pointer"
+                title="Customize table tab sequence"
+              >
+                <svg className="w-3.5 h-3.5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                </svg>
+                <span>Reorder Tables</span>
+              </button>
+            </div>
+          )}
         </div>
+
+        {/* Tab Sequence Customizer Modal */}
+        <TabSequenceModal
+          isOpen={showSequenceModal}
+          onClose={() => setShowSequenceModal(false)}
+          tabs={tabs}
+          onSaveSequence={handleSaveSequence}
+          onResetSequence={handleResetSequence}
+          moduleName={moduleName}
+        />
 
         <div className="p-5 lg:p-6 space-y-4 w-full min-w-0">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between w-full min-w-0">
