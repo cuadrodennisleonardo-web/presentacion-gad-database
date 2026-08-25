@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import PageMeta from '@/components/common/PageMeta';
 import PageBreadcrumb from '@/components/common/PageBreadcrumb';
 import { DataExportImport, ExportColumn } from '@/components/common/DataExportImport';
@@ -19,6 +19,13 @@ export interface SubSector {
   id: string;
   label: string;
   keys: string[];
+}
+
+interface TabItem {
+  key: string;
+  label: string;
+  isDynamic?: boolean;
+  schema?: DynamicSchema;
 }
 
 interface DataEntryLayoutProps {
@@ -113,13 +120,13 @@ export default function DataEntryLayout({
     }
   });
 
-  const allTabs = [
-    ...nativeTabs.map(t => ({ key: t.key, label: t.label, isDynamic: false, schema: undefined })),
-    ...dynamicSchemas.map(ds => ({ key: ds.id, label: ds.tab_name, isDynamic: true, schema: ds }))
+  const allTabs: TabItem[] = [
+    ...nativeTabs.map(t => ({ key: t.key, label: t.label, isDynamic: false, schema: undefined as DynamicSchema | undefined })),
+    ...dynamicSchemas.map(ds => ({ key: ds.id, label: ds.tab_name, isDynamic: true, schema: ds as DynamicSchema | undefined }))
   ];
 
   // Filter tabs if a sub-sector is selected
-  const rawFilteredTabs = allTabs.filter(t => {
+  const rawFilteredTabs: TabItem[] = allTabs.filter(t => {
     if (!subSectors || subSectors.length === 0 || activeSubSector === 'all') return true;
     const selectedSub = subSectors.find(s => s.id === activeSubSector);
     if (!selectedSub) return true;
@@ -132,10 +139,10 @@ export default function DataEntryLayout({
     return selectedSub.keys.includes(t.key);
   });
 
-  // Sort tabs according to customized sequence or tab_order
-  const tabs = (() => {
+  // Memoize tabs to prevent unnecessary re-render reference changes
+  const tabs: TabItem[] = useMemo(() => {
     if (tabOrderOverride && tabOrderOverride.length > 0) {
-      return [...rawFilteredTabs].sort((a, b) => {
+      return [...rawFilteredTabs].sort((a: TabItem, b: TabItem) => {
         const indexA = tabOrderOverride.indexOf(a.key);
         const indexB = tabOrderOverride.indexOf(b.key);
         if (indexA !== -1 && indexB !== -1) return indexA - indexB;
@@ -145,12 +152,12 @@ export default function DataEntryLayout({
       });
     }
 
-    return [...rawFilteredTabs].sort((a, b) => {
+    return [...rawFilteredTabs].sort((a: TabItem, b: TabItem) => {
       const orderA = (a.schema?.schema as any)?.tab_order ?? (a.isDynamic ? 100 : 0);
       const orderB = (b.schema?.schema as any)?.tab_order ?? (b.isDynamic ? 100 : 0);
       return orderA - orderB;
     });
-  })();
+  }, [rawFilteredTabs, tabOrderOverride]);
 
   const handleSaveSequence = async (orderedKeys: string[]) => {
     setTabOrderOverride(orderedKeys);
@@ -191,6 +198,85 @@ export default function DataEntryLayout({
       console.error(e);
     }
     toast.success('Table sequence reset to default.');
+  };
+
+  const tabsContainerRef = useRef<HTMLDivElement>(null);
+  const prevActiveTabRef = useRef<string>(activeTab);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+  const [hiddenRightCount, setHiddenRightCount] = useState(0);
+
+  const checkScrollability = useCallback(() => {
+    const el = tabsContainerRef.current;
+    if (!el) return;
+    const hasLeft = el.scrollLeft > 6;
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    const hasRight = el.scrollLeft < maxScroll - 6;
+    setCanScrollLeft(hasLeft);
+    setCanScrollRight(hasRight);
+
+    // Calculate count of tabs that are currently outside visible view on the right
+    const visibleRightEdge = el.scrollLeft + el.clientWidth;
+    const tabElements = Array.from(el.querySelectorAll<HTMLElement>('[data-tab-item]'));
+    let hiddenCount = 0;
+    tabElements.forEach(tEl => {
+      if (tEl.offsetLeft + tEl.offsetWidth > visibleRightEdge + 10) {
+        hiddenCount++;
+      }
+    });
+    setHiddenRightCount(hiddenCount);
+  }, []);
+
+  useEffect(() => {
+    const el = tabsContainerRef.current;
+    if (!el) return;
+
+    checkScrollability();
+    el.addEventListener('scroll', checkScrollability, { passive: true });
+    window.addEventListener('resize', checkScrollability);
+
+    const observer = new ResizeObserver(() => {
+      checkScrollability();
+    });
+    observer.observe(el);
+
+    return () => {
+      el.removeEventListener('scroll', checkScrollability);
+      window.removeEventListener('resize', checkScrollability);
+      observer.disconnect();
+    };
+  }, [checkScrollability, tabs]);
+
+  // Smoothly scroll active tab into view ONLY when activeTab actually changes
+  useEffect(() => {
+    if (prevActiveTabRef.current !== activeTab) {
+      prevActiveTabRef.current = activeTab;
+      const el = tabsContainerRef.current;
+      if (!el) return;
+
+      const activeEl = el.querySelector<HTMLElement>(`[data-tab-key="${activeTab}"]`);
+      if (activeEl) {
+        activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
+      const timer = setTimeout(checkScrollability, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [activeTab, checkScrollability]);
+
+  const handleScrollLeft = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (tabsContainerRef.current) {
+      tabsContainerRef.current.scrollBy({ left: -280, behavior: 'smooth' });
+    }
+  };
+
+  const handleScrollRight = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (tabsContainerRef.current) {
+      tabsContainerRef.current.scrollBy({ left: 280, behavior: 'smooth' });
+    }
   };
 
   const activeTabData = allTabs.find(t => t.key === activeTab);
@@ -236,26 +322,90 @@ export default function DataEntryLayout({
           </div>
         )}
 
-        {/* Tab Headers with Sequence Customizer Button */}
+        {/* Tab Headers with Scroll Indicators and Sequence Customizer Button */}
         <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 w-full min-w-0 bg-gray-50/40 dark:bg-gray-800/20">
-          <div className="flex overflow-x-auto no-scrollbar flex-1 min-w-0">
-            {tabs.map(t => (
-              <button
-                key={t.key}
-                className={`px-6 py-4 text-sm font-medium outline-none transition whitespace-nowrap cursor-pointer ${
-                  activeTab === t.key
-                    ? 'border-b-2 border-brand-500 text-brand-600 dark:text-brand-400 font-bold bg-white dark:bg-gray-900/50'
-                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:bg-white/60 dark:hover:bg-gray-800/60'
-                }`}
-                onClick={() => setActiveTab(t.key)}
-              >
-                {t.label}
-              </button>
-            ))}
+          
+          {/* Scrollable Tabs Wrapper with Left & Right Gradient Overlays */}
+          <div className="relative flex-1 min-w-0 flex items-center overflow-hidden">
+            
+            {/* Left Scroll Navigation Button & Gradient Mask */}
+            {canScrollLeft && (
+              <div className="absolute left-0 top-0 bottom-0 z-20 flex items-center pl-2 pr-6 bg-gradient-to-r from-white via-white/95 to-transparent dark:from-gray-900 dark:via-gray-900/95 pointer-events-none">
+                <button
+                  type="button"
+                  onClick={handleScrollLeft}
+                  className="pointer-events-auto h-7 w-7 rounded-full bg-white dark:bg-gray-800 shadow-md border border-gray-200 dark:border-gray-700 flex items-center justify-center text-gray-700 dark:text-gray-200 hover:text-brand-600 hover:border-brand-300 dark:hover:text-brand-400 hover:scale-105 active:scale-95 transition cursor-pointer"
+                  title="Scroll left for previous tables"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+              </div>
+            )}
+
+            {/* Scrollable Tabs Container */}
+            <div 
+              ref={tabsContainerRef}
+              className="flex overflow-x-auto no-scrollbar w-full min-w-0"
+            >
+              {tabs.map(t => (
+                <button
+                  key={t.key}
+                  data-tab-item="true"
+                  data-tab-key={t.key}
+                  className={`px-6 py-4 text-sm font-medium outline-none transition whitespace-nowrap cursor-pointer shrink-0 ${
+                    activeTab === t.key
+                      ? 'border-b-2 border-brand-500 text-brand-600 dark:text-brand-400 font-bold bg-white dark:bg-gray-900/50'
+                      : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:bg-white/60 dark:hover:bg-gray-800/60'
+                  }`}
+                  onClick={() => setActiveTab(t.key)}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Right Scroll Indicator & Gradient Mask */}
+            {canScrollRight && (
+              <div className="absolute right-0 top-0 bottom-0 z-20 flex items-center pl-8 pr-2 bg-gradient-to-l from-white via-white/95 to-transparent dark:from-gray-900 dark:via-gray-900/95 pointer-events-none">
+                <button
+                  type="button"
+                  onClick={handleScrollRight}
+                  className="pointer-events-auto flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-500 hover:bg-brand-600 text-white shadow-md text-xs font-bold hover:scale-105 active:scale-95 transition cursor-pointer"
+                  title="Scroll right to view more hidden tables"
+                >
+                  <span className="text-[11px] font-bold">
+                    {hiddenRightCount > 0 ? `${hiddenRightCount} more table${hiddenRightCount > 1 ? 's' : ''}` : 'More tables'}
+                  </span>
+                  <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            )}
           </div>
 
-          {tabs.length > 1 && (
-            <div className="px-3.5 py-2 shrink-0 flex items-center border-l border-gray-200 dark:border-gray-800">
+          {/* Right Toolbar Actions */}
+          <div className="px-3.5 py-2 shrink-0 flex items-center gap-2 border-l border-gray-200 dark:border-gray-800 bg-white/90 dark:bg-gray-900/90 z-20">
+            {tabs.length > 4 && (
+              <div className="hidden md:flex items-center">
+                <select
+                  value={activeTab}
+                  onChange={e => setActiveTab(e.target.value)}
+                  className="px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:outline-none focus:border-brand-500 max-w-[140px] truncate cursor-pointer"
+                  title="Jump directly to any table"
+                >
+                  {tabs.map((t, idx) => (
+                    <option key={t.key} value={t.key}>
+                      {idx + 1}. {t.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {tabs.length > 1 && (
               <button
                 type="button"
                 onClick={() => setShowSequenceModal(true)}
@@ -265,10 +415,11 @@ export default function DataEntryLayout({
                 <svg className="w-3.5 h-3.5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
                 </svg>
-                <span>Reorder Tables</span>
+                <span className="hidden sm:inline">Reorder Tables</span>
+                <span className="sm:hidden">Reorder</span>
               </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Tab Sequence Customizer Modal */}
