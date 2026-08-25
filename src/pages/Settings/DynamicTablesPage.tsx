@@ -1369,7 +1369,7 @@ export default function DynamicTablesPage() {
                     className="w-full rounded-lg border border-purple-300 bg-purple-50/40 dark:bg-purple-950/20 px-3 py-2 text-sm font-semibold text-purple-900 dark:text-purple-200 focus:border-purple-500 focus:outline-none dark:border-purple-500/40"
                   >
                     <option value="barangays">Barangays (18 Built-in Barangays)</option>
-                    <option value="custom_rows">✨ Custom Rows / Freeform Items (Manual Row Names)</option>
+                    <option value="custom_rows">Custom Rows / Freeform Items (Manual Row Names)</option>
                     <option value="age_0_to_99_plus">Single-Year Age: 0 to 99+ (101 Rows - Municipality)</option>
                     <option value="age_brackets">Age Brackets / Cohorts (5-Year &amp; Broad Brackets)</option>
                     <option value="primary_schools">Primary Schools (18 Primary Schools)</option>
@@ -1410,9 +1410,12 @@ export default function DynamicTablesPage() {
                       <button
                         type="button"
                         onClick={() => setShowBulkRowsBox(!showBulkRowsBox)}
-                        className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-purple-300 dark:border-purple-700 text-purple-800 dark:text-purple-200 bg-white dark:bg-purple-900/40 hover:bg-purple-100 dark:hover:bg-purple-800/60 transition cursor-pointer"
+                        className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-purple-300 dark:border-purple-700 text-purple-800 dark:text-purple-200 bg-white dark:bg-purple-900/40 hover:bg-purple-100 dark:hover:bg-purple-800/60 transition cursor-pointer flex items-center gap-1.5"
                       >
-                        {showBulkRowsBox ? 'Hide Bulk Input' : '📋 Bulk Paste Rows'}
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        <span>{showBulkRowsBox ? 'Hide Bulk Input' : 'Bulk Paste Rows'}</span>
                       </button>
                       <button
                         type="button"

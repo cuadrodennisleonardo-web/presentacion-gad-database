@@ -117,7 +117,7 @@ export default function TabSequenceModal({
         <div className="my-5 max-h-[60vh] overflow-y-auto space-y-2 pr-1">
           <div className="text-xs font-semibold uppercase text-gray-400 dark:text-gray-500 mb-2 px-1 flex items-center justify-between">
             <span>Tab Order (Top to Bottom = Left to Right)</span>
-            <span className="text-[10px] lowercase text-gray-400 font-normal">drag or use ⬆️ ⬇️</span>
+            <span className="text-[10px] lowercase text-gray-400 font-normal">drag or use move buttons</span>
           </div>
 
           {orderedTabs.map((tab, idx) => {
