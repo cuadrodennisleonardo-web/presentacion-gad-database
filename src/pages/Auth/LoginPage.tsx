@@ -1,18 +1,37 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router";
 import { useAuth } from "@/hooks/useAuth";
 import PageMeta from "@/components/common/PageMeta";
 import { ThemeToggleButton } from "@/components/common/ThemeToggleButton";
 import { PresentacionAdminMap } from "@/components/maps/PresentacionAdminMap";
+import { getBarangays } from "@/services/barangayService";
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [barangayStatsMap, setBarangayStatsMap] = useState<Record<string, { population: number; households: number }>>({});
   const { signIn, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    async function loadStats() {
+      const { data } = await getBarangays();
+      if (data && data.length > 0) {
+        const map: Record<string, { population: number; households: number }> = {};
+        data.forEach(b => {
+          map[b.name] = {
+            population: b.population_count,
+            households: b.household_count
+          };
+        });
+        setBarangayStatsMap(map);
+      }
+    }
+    loadStats();
+  }, []);
 
   const from = (location.state as { from?: { pathname: string } })?.from?.pathname;
 
@@ -84,7 +103,7 @@ const LoginPage: React.FC = () => {
                   18 Barangays
                 </span>
               </div>
-              <PresentacionAdminMap />
+              <PresentacionAdminMap barangayStatsMap={barangayStatsMap} />
             </div>
           </div>
 

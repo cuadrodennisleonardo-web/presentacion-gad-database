@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { getBarangays } from "@/services/barangayService";
 
 export interface BarangayStatInfo {
   population?: number;
@@ -40,6 +41,42 @@ export const PresentacionAdminMap: React.FC<PresentacionAdminMapProps> = ({
   className = "w-full h-auto",
 }) => {
   const [hoveredBarangay, setHoveredBarangay] = useState<string | null>(null);
+  const [internalStatsMap, setInternalStatsMap] = useState<Record<string, BarangayStatInfo>>({});
+
+  useEffect(() => {
+    // If stats map is already supplied with data from parent, skip fetching
+    if (barangayStatsMap && Object.keys(barangayStatsMap).length > 0) {
+      return;
+    }
+
+    let isMounted = true;
+    async function loadStats() {
+      try {
+        const { data } = await getBarangays();
+        if (data && data.length > 0 && isMounted) {
+          const map: Record<string, BarangayStatInfo> = {};
+          data.forEach((b: any) => {
+            map[b.name] = {
+              population: b.population_count,
+              households: b.household_count,
+            };
+          });
+          setInternalStatsMap(map);
+        }
+      } catch (err) {
+        console.error("Failed to load map barangay stats:", err);
+      }
+    }
+    loadStats();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [barangayStatsMap]);
+
+  const effectiveStatsMap = (barangayStatsMap && Object.keys(barangayStatsMap).length > 0)
+    ? barangayStatsMap
+    : internalStatsMap;
 
   const normalize = (name: string) => name.toLowerCase().replace(/[^a-z0-9]/g, "");
 
@@ -96,9 +133,9 @@ export const PresentacionAdminMap: React.FC<PresentacionAdminMapProps> = ({
   const activeKey = activeBarangayName ? normalize(activeBarangayName) : null;
   const activeCoords = activeKey ? BARANGAY_COORDS[activeKey] : null;
 
-  // Find matching stats in barangayStatsMap (try normalized keys or exact keys)
+  // Find matching stats in effectiveStatsMap (try normalized keys or exact keys)
   const activeStats = activeKey
-    ? Object.entries(barangayStatsMap).find(
+    ? Object.entries(effectiveStatsMap).find(
         ([key]) => normalize(key) === activeKey
       )?.[1]
     : null;
