@@ -15,7 +15,7 @@ import { INITIAL_DAYCARE_CENTERS } from '@/config/daycareCenters';
 export default function ApprovalsPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { isSuperAdmin } = useRole();
+  const { canApprove } = useRole();
   const queryClient = useQueryClient();
 
   const [selectedApproval, setSelectedApproval] = useState<any>(null);
@@ -345,7 +345,7 @@ export default function ApprovalsPage() {
                   </button>
                 </div>
 
-                {isSuperAdmin && (
+                {canApprove && (
                   <div className="flex items-center gap-3 border-t border-gray-100 pt-4 dark:border-gray-800">
                     <button
                       onClick={() => handleApproveClick(approval)}

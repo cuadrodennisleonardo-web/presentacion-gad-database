@@ -113,6 +113,7 @@ const AppSidebar: React.FC = () => {
   const location = useLocation();
   const {
     isSuperAdmin,
+    canApprove,
     canManageUsers,
     canViewAuditLog,
     canAccessModule,
@@ -129,7 +130,7 @@ const AppSidebar: React.FC = () => {
   const [pendingApprovalsCount, setPendingApprovalsCount] = useState(0);
 
   useEffect(() => {
-    if (isSuperAdmin) {
+    if (canApprove) {
       const fetchPendingCount = async () => {
         const { count } = await supabase
           .from('data_approvals')
@@ -148,7 +149,7 @@ const AppSidebar: React.FC = () => {
         supabase.removeChannel(channel);
       };
     }
-  }, [isSuperAdmin]);
+  }, [canApprove]);
 
   // Build role-aware navigation
   const navItems: NavItem[] = useMemo(() => {
@@ -258,13 +259,17 @@ const AppSidebar: React.FC = () => {
         name: "User Management",
         path: "/users",
       });
-      if (isSuperAdmin) {
-        items.push({
-          icon: <TableIcon />,
-          name: "Dynamic Tables",
-          path: "/settings/dynamic-tables",
-        });
-      }
+    }
+
+    if (isSuperAdmin) {
+      items.push({
+        icon: <TableIcon />,
+        name: "Dynamic Tables",
+        path: "/settings/dynamic-tables",
+      });
+    }
+
+    if (canApprove) {
       items.push({
         icon: <ApprovalsIcon />,
         name: "Data Approvals",
@@ -278,6 +283,7 @@ const AppSidebar: React.FC = () => {
         path: "/approvals",
       });
     }
+
     if (canViewAuditLog) {
       items.push({
         icon: <AuditLogIcon />,
@@ -305,7 +311,7 @@ const AppSidebar: React.FC = () => {
     });
 
     return items;
-  }, [canManageUsers, canViewAuditLog, pendingApprovalsCount]);
+  }, [canManageUsers, isSuperAdmin, canApprove, role, canViewAuditLog, pendingApprovalsCount]);
 
   const isActive = useCallback(
     (path: string) => location.pathname === path,

@@ -17,7 +17,7 @@ type SocialStat = Database['public']['Tables']['social_dev_stats']['Row'];
 type TabType = string;
 
 export default function SocialDevelopmentDataEntry() {
-  const { canWrite, canDirectSave } = useRole();
+  const { canWrite, canDirectSave, isSuperAdmin } = useRole();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   
@@ -369,7 +369,7 @@ export default function SocialDevelopmentDataEntry() {
       nativeTabs={nativeTabs}
       isLocked={isLocked}
       latestApproval={latestApproval}
-      isSuperAdmin={canDirectSave}
+      isSuperAdmin={isSuperAdmin}
       canWrite={canWrite}
       exportData={isDynamic ? undefined : entities.map(b => ({ barangay_name: b.name, ...stats[b.id] }))}
       exportColumns={isDynamic ? undefined : getExportColumns()}

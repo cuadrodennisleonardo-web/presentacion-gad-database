@@ -16,7 +16,7 @@ import { MobileDataInput, SplitInputWrapper } from '@/components/common/MobileDa
 type PopStat = Database['public']['Tables']['population_stats']['Row'];
 
 export default function DemographicsDataEntry() {
-  const { canWrite, canDirectSave } = useRole();
+  const { canWrite, canDirectSave, isSuperAdmin } = useRole();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   
@@ -243,7 +243,7 @@ export default function DemographicsDataEntry() {
       nativeTabs={[{ key: 'main', label: 'Demographics Overview' }]}
       isLocked={isLocked}
       latestApproval={latestApproval}
-      isSuperAdmin={canDirectSave}
+      isSuperAdmin={isSuperAdmin}
       canWrite={canWrite}
       exportData={barangays.map(b => {
         const pRow = popStats[b.id] || {};

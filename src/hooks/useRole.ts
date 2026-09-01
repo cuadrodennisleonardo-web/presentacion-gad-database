@@ -26,6 +26,7 @@ export function useRole() {
         isViewer: false,
         canWrite: false,
         canDirectSave: false,
+        canApprove: false,
         canManageUsers: false,
         canViewAuditLog: false,
         canAccessSensitive: false,
@@ -47,6 +48,9 @@ export function useRole() {
 
     // Super admin and senior_encoder save directly without requiring approval workflow
     const canDirectSave = isSuperAdmin || isSeniorEncoder;
+
+    // Super admin and senior_encoder can approve and reject submissions
+    const canApprove = isSuperAdmin || isSeniorEncoder;
 
     // Only superadmin can manage users, tables, audit log, data management
     const canManageUsers = isSuperAdmin;
@@ -123,6 +127,7 @@ export function useRole() {
       isViewer,
       canWrite,
       canDirectSave,
+      canApprove,
       canManageUsers,
       canViewAuditLog,
       canAccessSensitive,

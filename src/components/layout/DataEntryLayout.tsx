@@ -405,7 +405,7 @@ export default function DataEntryLayout({
               </div>
             )}
 
-            {tabs.length > 1 && (
+            {isSuperAdmin && tabs.length > 1 && (
               <button
                 type="button"
                 onClick={() => setShowSequenceModal(true)}

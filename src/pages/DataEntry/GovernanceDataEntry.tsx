@@ -8,7 +8,7 @@ import { fetchBarangays } from '@/services/api';
 import DataEntryLayout from '@/components/layout/DataEntryLayout';
 
 export default function GovernanceDataEntry() {
-  const { canWrite, canDirectSave } = useRole();
+  const { canWrite, canDirectSave, isSuperAdmin } = useRole();
   const [activeTab, setActiveTab] = useState<string>('');
   const [year, setYear] = useState(getDefaultYear('Local Governance'));
 
@@ -59,7 +59,7 @@ export default function GovernanceDataEntry() {
       nativeTabs={nativeTabs}
       isLocked={!!isLocked}
       latestApproval={latestApproval}
-      isSuperAdmin={canDirectSave}
+      isSuperAdmin={isSuperAdmin}
       canWrite={canWrite}
       onSave={() => {}}
       isSaving={false}

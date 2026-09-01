@@ -14,7 +14,7 @@ type GadStat = Database['public']['Tables']['gad_stats']['Row'];
 type TabType = string;
 
 export default function GADDataEntry() {
-  const { canWrite, canDirectSave } = useRole();
+  const { canWrite, canDirectSave, isSuperAdmin } = useRole();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   
@@ -202,7 +202,7 @@ export default function GADDataEntry() {
       nativeTabs={nativeTabs}
       isLocked={isLocked}
       latestApproval={latestApproval}
-      isSuperAdmin={canDirectSave}
+      isSuperAdmin={isSuperAdmin}
       canWrite={canWrite}
       onSave={handleSave}
       isSaving={mutation.isPending}

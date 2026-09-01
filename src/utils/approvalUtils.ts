@@ -23,11 +23,14 @@ export async function submitForApproval(
 
   if (error) throw error;
   
-  // Create notifications for all superadmins
-  const { data: admins } = await supabase.from('user_profiles').select('id').eq('role', 'superadmin');
+  // Create notifications for all approvers (superadmins and senior encoders)
+  const { data: approvers } = await supabase
+    .from('user_profiles')
+    .select('id')
+    .in('role', ['superadmin', 'senior_encoder']);
   
-  if (admins && admins.length > 0) {
-    const notifications = admins.map(a => ({
+  if (approvers && approvers.length > 0) {
+    const notifications = approvers.map(a => ({
       user_id: a.id,
       title: 'New Data Approval Request',
       message: `New data submitted for ${moduleName} (${tabName}) requires your approval.`,

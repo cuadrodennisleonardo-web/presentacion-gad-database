@@ -106,7 +106,7 @@ export default function App() {
               <Route path="/barangays" element={<BarangayListPage />} />
               <Route path="/barangays/:id" element={<BarangayViewPage />} />
               <Route path="/users" element={<ProtectedRoute allowedRoles={['superadmin']}><UserManagementPage /></ProtectedRoute>} />
-              <Route path="/approvals" element={<ProtectedRoute allowedRoles={['superadmin', 'dept_admin']}><ApprovalsPage /></ProtectedRoute>} />
+              <Route path="/approvals" element={<ProtectedRoute allowedRoles={['superadmin', 'senior_encoder', 'dept_admin']}><ApprovalsPage /></ProtectedRoute>} />
               <Route path="/audit-logs" element={<ProtectedRoute allowedRoles={['superadmin']}><AuditLogPage /></ProtectedRoute>} />
               <Route path="/settings" element={<ProfilePage />} />
               <Route path="/settings/dynamic-tables" element={<ProtectedRoute allowedRoles={['superadmin']}><DynamicTablesPage /></ProtectedRoute>} />

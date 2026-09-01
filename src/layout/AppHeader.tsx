@@ -14,7 +14,7 @@ const AppHeader: React.FC = () => {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
   const { user, signOut } = useAuth();
-  const { role, isSuperAdmin, canManageUsers, canViewAuditLog, canAccessModule, department } = useRole();
+  const { role, isSuperAdmin, canApprove, canManageUsers, canViewAuditLog, canAccessModule, department } = useRole();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const navigate = useNavigate();
 
@@ -131,9 +131,13 @@ const AppHeader: React.FC = () => {
 
     if (canManageUsers) {
       items.push({ name: "User Management", path: "/users", category: "Administration", keywords: "users accounts roles superadmin admin viewers create user password email" });
-      items.push({ name: "Data Approvals", path: "/approvals", category: "Administration", keywords: "approvals pending submissions requests review approve reject" });
+    }
+    if (isSuperAdmin) {
       items.push({ name: "Dynamic Tables", path: "/settings/dynamic-tables", category: "Administration", keywords: "dynamic tables schema custom fields tabs create table" });
       items.push({ name: "Data Management", path: "/settings/data-management", category: "Administration", keywords: "data management delete reset tables wipe clear remove data" });
+    }
+    if (canApprove) {
+      items.push({ name: "Data Approvals", path: "/approvals", category: "Administration", keywords: "approvals pending submissions requests review approve reject" });
     } else if (role === 'dept_admin') {
       items.push({ name: "My Submissions & Approvals", path: "/approvals", category: "Menu", keywords: "approvals submissions status pending" });
     }
@@ -145,7 +149,7 @@ const AppHeader: React.FC = () => {
     items.push({ name: "Profile & Account Settings", path: "/settings", category: "Account", keywords: "profile settings account password email name theme" });
 
     return items;
-  }, [role, isSuperAdmin, canManageUsers, canViewAuditLog, canAccessModule, department]);
+  }, [role, isSuperAdmin, canApprove, canManageUsers, canViewAuditLog, canAccessModule, department]);
 
   const filteredSearchItems = useMemo(() => {
     if (!searchQuery) return [];
