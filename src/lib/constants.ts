@@ -67,7 +67,7 @@ export const SENSITIVE_TABLES = [
 ] as const;
 
 // ─── Inactivity Settings ───────────────────────────────────
-export const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
+export const INACTIVITY_TIMEOUT_MS = 2 * 60 * 60 * 1000; // 2 hours (120 minutes)
 
 // ─── Pagination ─────────────────────────────────────────────
 export const DEFAULT_PAGE_SIZE = 20;

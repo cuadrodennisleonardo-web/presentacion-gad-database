@@ -7,7 +7,7 @@ import { useInactivityTimeout } from "@/hooks/useInactivityTimeout";
 
 const LayoutContent: React.FC = () => {
   const { isExpanded, isHovered, isMobileOpen } = useSidebar();
-  useInactivityTimeout(); // Auto-logout after 30 min of inactivity
+  useInactivityTimeout(); // Auto-logout after 2 hours of inactivity
 
   return (
     <div className="min-h-screen xl:flex">
