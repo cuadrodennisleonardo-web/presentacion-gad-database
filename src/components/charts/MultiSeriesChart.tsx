@@ -1,11 +1,11 @@
-import React from "react";
+import React, { useMemo } from "react";
 import ReactApexChart from "react-apexcharts";
 import { ApexOptions } from "apexcharts";
 
 interface MultiSeriesChartProps {
   title: string;
   categories?: string[];
-  series: any[];
+  series: any;
   colors?: string[];
   type?: "bar" | "line" | "area" | "pie" | "donut";
   stacked?: boolean;
@@ -15,7 +15,7 @@ interface MultiSeriesChartProps {
 
 const MultiSeriesChart: React.FC<MultiSeriesChartProps> = ({ 
   title, 
-  categories, 
+  categories = [], 
   series, 
   colors,
   type = "bar",
@@ -25,30 +25,94 @@ const MultiSeriesChart: React.FC<MultiSeriesChartProps> = ({
 }) => {
   const isPieOrDonut = type === "pie" || type === "donut";
 
-  let isZeroPie = false;
-  if (isPieOrDonut && Array.isArray(series)) {
-    const sum = series.reduce((a, b) => Number(a) + Number(b), 0);
-    if (sum === 0) {
-      isZeroPie = true;
-    }
-  }
+  // Normalize series and categories based on chart type
+  const { normalizedSeries, normalizedLabels, hasValidData } = useMemo(() => {
+    if (isPieOrDonut) {
+      let nums: number[] = [];
+      let labs: string[] = categories ? [...categories] : [];
 
-  const hasManyCategories = !isPieOrDonut && categories && categories.length > 12;
+      if (Array.isArray(series)) {
+        if (series.length > 0 && typeof series[0] === 'object' && series[0] !== null && 'data' in series[0]) {
+          // Multi-series like [{ name: "Male", data: [...] }, { name: "Female", data: [...] }]
+          if (series.length > 1) {
+            nums = series.map((s: any) => {
+              const d = Array.isArray(s.data) ? s.data : [];
+              return d.reduce((a: number, b: number) => a + (Number(b) || 0), 0);
+            });
+            labs = series.map((s: any) => s.name || "Series");
+          } else {
+            // Single series: [{ name: "Field", data: [1, 2, 3] }]
+            nums = (series[0]?.data || []).map((v: any) => Number(v) || 0);
+          }
+        } else {
+          // Direct numeric array [10, 20, 30]
+          nums = series.map((v: any) => Number(v) || 0);
+        }
+      }
+
+      const total = nums.reduce((a, b) => a + b, 0);
+      const valid = nums.length > 0 && total > 0 && !isNaN(total);
+
+      return {
+        normalizedSeries: nums,
+        normalizedLabels: labs.length > 0 ? labs : nums.map((_, i) => `Item ${i + 1}`),
+        hasValidData: valid,
+      };
+    } else {
+      // Bar / Line / Area Chart
+      let sList: { name: string; data: number[] }[] = [];
+      const safeCats = Array.isArray(categories) ? categories : [];
+
+      if (Array.isArray(series)) {
+        if (series.length > 0 && typeof series[0] === 'object' && series[0] !== null && 'data' in series[0]) {
+          sList = series.map((s: any) => ({
+            name: String(s.name || "Series"),
+            data: Array.isArray(s.data) ? s.data.map((v: any) => (isNaN(Number(v)) ? 0 : Number(v))) : [],
+          }));
+        } else {
+          // Direct numbers array passed to bar chart
+          sList = [{
+            name: title,
+            data: series.map((v: any) => (isNaN(Number(v)) ? 0 : Number(v))),
+          }];
+        }
+      }
+
+      const hasCategories = safeCats.length > 0;
+      const hasSeriesData = sList.length > 0 && sList.some(s => s.data && s.data.length > 0);
+
+      return {
+        normalizedSeries: sList,
+        normalizedLabels: safeCats,
+        hasValidData: hasCategories && hasSeriesData,
+      };
+    }
+  }, [isPieOrDonut, series, categories, title]);
+
+  const hasManyCategories = !isPieOrDonut && normalizedLabels && normalizedLabels.length > 12;
   const chartHeight = hasManyCategories ? Math.max(height, 420) : height;
 
-  const options: ApexOptions = {
+  const defaultColors = ["#3b82f6", "#ec4899", "#10b981", "#f59e0b", "#8b5cf6", "#06b6d4", "#f43f5e"];
+
+  const options: ApexOptions = useMemo(() => ({
     chart: {
       type: type,
       stacked: !isPieOrDonut ? stacked : false,
       toolbar: { show: false },
       fontFamily: "Outfit, sans-serif",
+      animations: { enabled: true },
     },
-    colors: colors || ["#3b82f6", "#ec4899", "#10b981", "#f59e0b", "#8b5cf6"],
+    colors: colors && colors.length > 0 ? colors : defaultColors,
     plotOptions: {
       bar: {
         borderRadius: 4,
         horizontal: false,
-        columnWidth: categories && categories.length > 15 ? "70%" : "55%",
+        columnWidth: normalizedLabels && normalizedLabels.length > 15 ? "70%" : "55%",
+      },
+      pie: {
+        donut: {
+          size: "65%",
+        },
       },
     },
     dataLabels: {
@@ -56,12 +120,13 @@ const MultiSeriesChart: React.FC<MultiSeriesChartProps> = ({
     },
     stroke: {
       curve: "smooth",
-      width: type === "bar" ? 0 : 2,
+      width: type === "bar" || isPieOrDonut ? 0 : 2,
     },
-    ...(isPieOrDonut && categories && categories.length > 0 ? { labels: categories } : {}),
+    ...(isPieOrDonut && normalizedLabels && normalizedLabels.length > 0 ? { labels: normalizedLabels } : {}),
     xaxis: !isPieOrDonut ? {
-      categories: categories || [],
-      tickAmount: categories ? categories.length : undefined,
+      type: "category",
+      categories: normalizedLabels || [],
+      tickAmount: normalizedLabels && normalizedLabels.length > 0 ? normalizedLabels.length : undefined,
       axisBorder: { show: false },
       axisTicks: { show: false },
       labels: {
@@ -78,28 +143,30 @@ const MultiSeriesChart: React.FC<MultiSeriesChartProps> = ({
       title: { text: isCurrency ? "Amount (₱)" : "Count" },
       labels: {
         formatter: (val) => {
-          if (isCurrency) return "₱" + val.toLocaleString();
-          return val.toString();
+          if (val === undefined || val === null || isNaN(val)) return "0";
+          if (isCurrency) return "₱" + Number(val).toLocaleString();
+          return Number(val).toLocaleString();
         }
       }
     } : undefined,
     tooltip: {
       y: {
         formatter: (val) => {
-          if (isCurrency) return "₱" + val.toLocaleString();
-          return val.toString();
+          if (val === undefined || val === null || isNaN(val)) return "0";
+          if (isCurrency) return "₱" + Number(val).toLocaleString();
+          return Number(val).toLocaleString();
         }
       }
     },
     legend: {
-      position: 'top',
-      horizontalAlign: 'right'
+      position: isPieOrDonut ? 'bottom' : 'top',
+      horizontalAlign: isPieOrDonut ? 'center' : 'right'
     },
     grid: {
       strokeDashArray: 4,
       borderColor: "var(--color-gray-200)",
     },
-  };
+  }), [type, isPieOrDonut, stacked, colors, normalizedLabels, hasManyCategories, isCurrency]);
 
   return (
     <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-sm dark:border-gray-800 dark:bg-white/[0.02]">
@@ -108,12 +175,12 @@ const MultiSeriesChart: React.FC<MultiSeriesChartProps> = ({
           {title}
         </h2>
       </div>
-      {isZeroPie ? (
-        <div style={{ height: chartHeight }} className="flex w-full items-center justify-center text-sm font-medium text-gray-500 dark:text-gray-400">
+      {!hasValidData ? (
+        <div style={{ height: chartHeight }} className="flex w-full items-center justify-center text-sm font-medium text-gray-400 dark:text-gray-500 bg-gray-50/50 dark:bg-gray-900/20 rounded-xl border border-dashed border-gray-200 dark:border-gray-800">
           No Data Recorded
         </div>
       ) : (
-        <ReactApexChart options={options} series={series} type={type} height={chartHeight} />
+        <ReactApexChart options={options} series={normalizedSeries} type={type} height={chartHeight} />
       )}
     </div>
   );

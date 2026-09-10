@@ -40,25 +40,20 @@ export const ROLE_LABELS: Record<Role, string> = {
   viewer: "Viewer",
 };
 
-// ─── Department Names ───────────────────────────────────────
 export const DEPARTMENTS: Department[] = [
-  "Demographics",
   "Social Development",
   "Economic Development",
   "Infrastructure",
-  "Local Governance",
-  "Justice & Safety",
-  "Institutional GAD",
+  "Environment",
+  "Institutional",
 ];
 
 export const DEPARTMENT_TABLES: Record<Department, string[]> = {
-  Demographics: ["population_stats"],
-  "Social Development": ["social_dev_stats", "population_stats"],
+  "Social Development": ["social_dev_stats", "population_stats", "justice_stats"],
   "Economic Development": ["econ_dev_stats"],
-  Infrastructure: ["infra_stats"],
-  "Local Governance": ["governance_stats"],
-  "Justice & Safety": ["justice_stats"],
-  "Institutional GAD": ["gad_stats"],
+  "Infrastructure": ["infra_stats"],
+  "Environment": [],
+  "Institutional": ["governance_stats", "gad_stats"],
 };
 
 // ─── Sensitive Tables ───────────────────────────────────────

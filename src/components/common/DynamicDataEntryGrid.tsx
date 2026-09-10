@@ -282,7 +282,13 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
       } else {
         toast.success(`Changes submitted for approval!`);
       }
-      queryClient.invalidateQueries({ queryKey: ['dynamic_data', schema.id, year] });
+      queryClient.invalidateQueries({ queryKey: ['dynamic_data'] });
+      queryClient.invalidateQueries({ queryKey: ['dynamic_schema_data'] });
+      queryClient.invalidateQueries({ queryKey: ['dynamic_dashboard_schemas'] });
+      queryClient.invalidateQueries({ queryKey: ['main_dashboard_stats'] });
+      queryClient.invalidateQueries({ queryKey: ['demographics_stats'] });
+      queryClient.invalidateQueries({ queryKey: ['social_dev_stats'] });
+      queryClient.invalidateQueries({ queryKey: ['barangay_dynamic_data'] });
       queryClient.invalidateQueries({ queryKey: ['latest_approval', schema.department, schema.tab_name, year] });
       setShowConfirmModal(false);
     },

@@ -180,7 +180,11 @@ export default function ApprovalsPage() {
           // Native table approval
           let tableName = '';
 
-          if (approval.module === 'Demographics' || approval.module === 'Demographics & Population') {
+          if (
+            approval.module === 'Demographics' ||
+            approval.module === 'Demographics & Population' ||
+            (approval.module === 'Social Development' && (approval.tab === 'Demography' || approval.tab === 'Population' || approval.tab === 'Population & Households'))
+          ) {
             tableName = 'population_stats';
           } else if (approval.module === 'Social Development') {
             tableName = 'social_dev_stats';
@@ -200,8 +204,9 @@ export default function ApprovalsPage() {
             throw new Error("Could not determine target table for module: " + approval.module);
           }
 
-          // Fields that are computed/virtual — must NOT be sent to the DB
-          const EXCLUDED_FIELDS = ['total_population', 'total_households'];
+          // Fields that are computed/virtual on other tables — must NOT be sent to those tables
+          const isPopStats = tableName === 'population_stats';
+          const EXCLUDED_FIELDS = isPopStats ? [] : ['total_population', 'total_households'];
 
           const upsertData = Object.keys(changes).map(barangayId => {
             const rowChanges: any = {};
@@ -209,7 +214,7 @@ export default function ApprovalsPage() {
             Object.keys(changes[barangayId]).forEach(k => {
               const val = changes[barangayId][k];
               const newVal = (val && typeof val === 'object' && 'new' in val) ? val.new : val;
-              if (k === 'total_households') {
+              if (k === 'total_households' && !isPopStats) {
                 rowChanges['household_heads_total'] = newVal;
                 return;
               }

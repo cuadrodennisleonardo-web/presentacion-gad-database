@@ -56,12 +56,12 @@ export function useRole() {
     const canManageUsers = isSuperAdmin;
     const canViewAuditLog = isSuperAdmin;
 
-    // Sensitive tables accessible to superadmin, senior_encoder, senior_viewer, and governance dept
+    // Sensitive data accessible to superadmin, senior_encoder, senior_viewer, and Social Development dept (GBV/VAWC)
     const canAccessSensitive =
       isSuperAdmin ||
       isSeniorEncoder ||
       isSeniorViewer ||
-      ((isDeptAdmin || isDeptViewer) && department === "Justice & Safety");
+      ((isDeptAdmin || isDeptViewer) && department === "Social Development");
 
     /**
      * Check if user can access a module (department)
@@ -69,8 +69,7 @@ export function useRole() {
     const canAccessModule = (module: Department): boolean => {
       if (isSuperAdmin || isSeniorEncoder || isSeniorViewer) return true;
       if (isViewer) {
-        // Viewers can see all non-sensitive
-        return module !== "Justice & Safety";
+        return true;
       }
       if (isDeptAdmin || isDeptViewer) {
         return department === module;

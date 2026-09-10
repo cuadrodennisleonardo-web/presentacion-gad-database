@@ -174,24 +174,20 @@ export default function DataManagementPage() {
   const [confirmText, setConfirmText] = useState('');
 
   const DEPARTMENTS = [
-    'Demographics',
     'Social Development',
     'Economic Development',
     'Infrastructure',
-    'Local Governance',
-    'Justice & Safety',
-    'Institutional GAD'
+    'Environment',
+    'Institutional'
   ];
 
   const getNativeTableName = (dept: string) => {
     switch (dept) {
-      case 'Demographics': return 'population_stats';
       case 'Social Development': return 'social_dev_stats';
       case 'Economic Development': return 'econ_dev_stats';
       case 'Infrastructure': return 'infra_stats';
-      case 'Local Governance': return 'governance_stats';
-      case 'Justice & Safety': return 'justice_stats';
-      case 'Institutional GAD': return 'gad_stats';
+      case 'Environment': return '';
+      case 'Institutional': return 'gad_stats';
       default: return '';
     }
   };

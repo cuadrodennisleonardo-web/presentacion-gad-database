@@ -1,5 +1,5 @@
 import { useEffect, Suspense, lazy } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "react-hot-toast";
 import { useAuthStore } from "./store/authStore";
@@ -23,26 +23,31 @@ const ProfilePage = lazy(() => import("./pages/Settings/ProfilePage"));
 const AuditLogPage = lazy(() => import("./pages/Settings/AuditLogPage"));
 const DynamicTablesPage = lazy(() => import("./pages/Settings/DynamicTablesPage"));
 const DataManagementPage = lazy(() => import("./pages/Settings/DataManagementPage"));
+const FeedbackManagementPage = lazy(() => import("./pages/Feedback/FeedbackManagementPage"));
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
 const PublicLandingPage = lazy(() => import("./pages/PublicLandingPage"));
 
-// Data Entry Hub
-const DemographicsDataEntry = lazy(() => import("./pages/DataEntry/DemographicsDataEntry"));
-const SocialDevelopmentDataEntry = lazy(() => import("./pages/DataEntry/SocialDevelopmentDataEntry"));
-const EconomicDevelopmentDataEntry = lazy(() => import("./pages/DataEntry/EconomicDevelopmentDataEntry"));
-const InfrastructureDataEntry = lazy(() => import("./pages/DataEntry/InfrastructureDataEntry"));
-const GovernanceDataEntry = lazy(() => import("./pages/DataEntry/GovernanceDataEntry"));
-const JusticeDataEntry = lazy(() => import("./pages/DataEntry/JusticeDataEntry"));
-const GADDataEntry = lazy(() => import("./pages/DataEntry/GADDataEntry"));
+// Sector Hubs (Data Entry Hubs)
+const SocialDevelopmentHub = lazy(() => import("./pages/DataEntry/SocialDevelopmentHub"));
+const EconomicDevelopmentHub = lazy(() => import("./pages/DataEntry/EconomicDevelopmentHub"));
+const InfrastructureHub = lazy(() => import("./pages/DataEntry/InfrastructureHub"));
+const EnvironmentHub = lazy(() => import("./pages/DataEntry/EnvironmentHub"));
+const InstitutionalHub = lazy(() => import("./pages/DataEntry/InstitutionalHub"));
+const SubsectorDataEntry = lazy(() => import("./pages/DataEntry/SubsectorDataEntry"));
 
-// Department Dashboards
-const DemographicsDashboard = lazy(() => import("./pages/Dashboard/DemographicsDashboard"));
+// Sector Dashboards
 const SocialDevelopmentDashboard = lazy(() => import("./pages/Dashboard/SocialDevelopmentDashboard"));
 const EconomicDevelopmentDashboard = lazy(() => import("./pages/Dashboard/EconomicDevelopmentDashboard"));
 const InfrastructureDashboard = lazy(() => import("./pages/Dashboard/InfrastructureDashboard"));
-const GovernanceDashboard = lazy(() => import("./pages/Dashboard/GovernanceDashboard"));
-const JusticeDashboard = lazy(() => import("./pages/Dashboard/JusticeDashboard"));
-const GADDashboard = lazy(() => import("./pages/Dashboard/GADDashboard"));
+const EnvironmentDashboard = lazy(() => import("./pages/Dashboard/EnvironmentDashboard"));
+const InstitutionalDashboard = lazy(() => import("./pages/Dashboard/InstitutionalDashboard"));
+
+// GAD Reports (Annex D, Annex E, GFPS, Compliance, HGDG)
+const GPBFormPage = lazy(() => import("./pages/GADReports/GPBFormPage"));
+const GADARPage = lazy(() => import("./pages/GADReports/GADARPage"));
+const GFPSTrackerPage = lazy(() => import("./pages/GADReports/GFPSTrackerPage"));
+const ComplianceDashboardPage = lazy(() => import("./pages/GADReports/ComplianceDashboardPage"));
+const HGDGScoringPage = lazy(() => import("./pages/GADReports/HGDGScoringPage"));
 
 const SuspenseFallback = () => (
   <div className="flex h-[50vh] w-full items-center justify-center">
@@ -79,56 +84,157 @@ export default function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <Router>
-        <ScrollToTop />
-        <Suspense fallback={<SuspenseFallback />}>
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
+          <ScrollToTop />
+          <Suspense fallback={<SuspenseFallback />}>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
 
-            <Route
-              element={
-                <ProtectedRoute>
-                  <NotificationProvider>
-                    <AppLayout />
-                  </NotificationProvider>
-                </ProtectedRoute>
-              }
-            >
-              <Route path="/dashboard" element={<ProtectedRoute allowedRoles={['superadmin', 'senior_encoder', 'senior_viewer', 'viewer']}><DashboardPage /></ProtectedRoute>} />
-              
-              <Route path="/dashboard/demographics" element={<ModuleGuard module="Demographics"><DemographicsDashboard /></ModuleGuard>} />
-              <Route path="/dashboard/social-development" element={<ModuleGuard module="Social Development"><SocialDevelopmentDashboard /></ModuleGuard>} />
-              <Route path="/dashboard/economic-development" element={<ModuleGuard module="Economic Development"><EconomicDevelopmentDashboard /></ModuleGuard>} />
-              <Route path="/dashboard/infrastructure" element={<ModuleGuard module="Infrastructure"><InfrastructureDashboard /></ModuleGuard>} />
-              <Route path="/dashboard/governance" element={<ModuleGuard module="Local Governance"><GovernanceDashboard /></ModuleGuard>} />
-              <Route path="/dashboard/justice-safety" element={<ModuleGuard module="Justice & Safety"><JusticeDashboard /></ModuleGuard>} />
-              <Route path="/dashboard/gad" element={<ModuleGuard module="Institutional GAD"><GADDashboard /></ModuleGuard>} />
+              <Route
+                element={
+                  <ProtectedRoute>
+                    <NotificationProvider>
+                      <AppLayout />
+                    </NotificationProvider>
+                  </ProtectedRoute>
+                }
+              >
+                {/* Main Overview Dashboard */}
+                <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute allowedRoles={['superadmin', 'senior_encoder', 'senior_viewer', 'viewer']}>
+                      <DashboardPage />
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route path="/barangays" element={<BarangayListPage />} />
-              <Route path="/barangays/:id" element={<BarangayViewPage />} />
-              <Route path="/users" element={<ProtectedRoute allowedRoles={['superadmin']}><UserManagementPage /></ProtectedRoute>} />
-              <Route path="/approvals" element={<ProtectedRoute allowedRoles={['superadmin', 'senior_encoder', 'dept_admin']}><ApprovalsPage /></ProtectedRoute>} />
-              <Route path="/audit-logs" element={<ProtectedRoute allowedRoles={['superadmin']}><AuditLogPage /></ProtectedRoute>} />
-              <Route path="/settings" element={<ProfilePage />} />
-              <Route path="/settings/dynamic-tables" element={<ProtectedRoute allowedRoles={['superadmin']}><DynamicTablesPage /></ProtectedRoute>} />
-              <Route path="/settings/data-management" element={<ProtectedRoute allowedRoles={['superadmin']}><DataManagementPage /></ProtectedRoute>} />
+                {/* 5 Sector Dashboards */}
+                <Route
+                  path="/dashboard/social-development"
+                  element={
+                    <ModuleGuard module="Social Development">
+                      <SocialDevelopmentDashboard />
+                    </ModuleGuard>
+                  }
+                />
+                <Route
+                  path="/dashboard/economic-development"
+                  element={
+                    <ModuleGuard module="Economic Development">
+                      <EconomicDevelopmentDashboard />
+                    </ModuleGuard>
+                  }
+                />
+                <Route
+                  path="/dashboard/infrastructure"
+                  element={
+                    <ModuleGuard module="Infrastructure">
+                      <InfrastructureDashboard />
+                    </ModuleGuard>
+                  }
+                />
+                <Route
+                  path="/dashboard/environment"
+                  element={
+                    <ModuleGuard module="Environment">
+                      <EnvironmentDashboard />
+                    </ModuleGuard>
+                  }
+                />
+                <Route
+                  path="/dashboard/institutional"
+                  element={
+                    <ModuleGuard module="Institutional">
+                      <InstitutionalDashboard />
+                    </ModuleGuard>
+                  }
+                />
 
-              <Route path="/data-entry/demographics" element={<ModuleGuard module="Demographics"><DemographicsDataEntry /></ModuleGuard>} />
-              <Route path="/data-entry/social-development" element={<ModuleGuard module="Social Development"><SocialDevelopmentDataEntry /></ModuleGuard>} />
-              <Route path="/data-entry/economic-development" element={<ModuleGuard module="Economic Development"><EconomicDevelopmentDataEntry /></ModuleGuard>} />
-              <Route path="/data-entry/infrastructure" element={<ModuleGuard module="Infrastructure"><InfrastructureDataEntry /></ModuleGuard>} />
-              <Route path="/data-entry/governance" element={<ModuleGuard module="Local Governance"><GovernanceDataEntry /></ModuleGuard>} />
-              <Route path="/data-entry/justice-safety" element={<ModuleGuard module="Justice & Safety"><JusticeDataEntry /></ModuleGuard>} />
-              <Route path="/data-entry/gad" element={<ModuleGuard module="Institutional GAD"><GADDataEntry /></ModuleGuard>} />
-            </Route>
+                {/* Barangays & Administration */}
+                <Route path="/barangays" element={<BarangayListPage />} />
+                <Route path="/barangays/:id" element={<BarangayViewPage />} />
+                <Route path="/users" element={<ProtectedRoute allowedRoles={['superadmin']}><UserManagementPage /></ProtectedRoute>} />
+                <Route path="/approvals" element={<ProtectedRoute allowedRoles={['superadmin', 'senior_encoder', 'dept_admin']}><ApprovalsPage /></ProtectedRoute>} />
+                <Route path="/audit-logs" element={<ProtectedRoute allowedRoles={['superadmin']}><AuditLogPage /></ProtectedRoute>} />
+                <Route path="/settings" element={<ProfilePage />} />
+                <Route path="/settings/dynamic-tables" element={<ProtectedRoute allowedRoles={['superadmin']}><DynamicTablesPage /></ProtectedRoute>} />
+                <Route path="/settings/data-management" element={<ProtectedRoute allowedRoles={['superadmin']}><DataManagementPage /></ProtectedRoute>} />
 
-            <Route path="/login-redirect" element={<HomeRedirect />} />
-            <Route path="/" element={<PublicLandingPage />} />
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
-        </Suspense>
-      </Router>
-      <RealtimeSyncManager />
-      <Toaster position="top-right" />
+                {/* 5 Sector Hubs */}
+                <Route
+                  path="/data-entry/social-development"
+                  element={
+                    <ModuleGuard module="Social Development">
+                      <SocialDevelopmentHub />
+                    </ModuleGuard>
+                  }
+                />
+                <Route
+                  path="/data-entry/economic-development"
+                  element={
+                    <ModuleGuard module="Economic Development">
+                      <EconomicDevelopmentHub />
+                    </ModuleGuard>
+                  }
+                />
+                <Route
+                  path="/data-entry/infrastructure"
+                  element={
+                    <ModuleGuard module="Infrastructure">
+                      <InfrastructureHub />
+                    </ModuleGuard>
+                  }
+                />
+                <Route
+                  path="/data-entry/environment"
+                  element={
+                    <ModuleGuard module="Environment">
+                      <EnvironmentHub />
+                    </ModuleGuard>
+                  }
+                />
+                <Route
+                  path="/data-entry/institutional"
+                  element={
+                    <ModuleGuard module="Institutional">
+                      <InstitutionalHub />
+                    </ModuleGuard>
+                  }
+                />
+
+                {/* Subsector Data Entry Route (e.g. /data-entry/social-development/health) */}
+                <Route
+                  path="/data-entry/:sectorSlug/:subsectorId"
+                  element={<SubsectorDataEntry />}
+                />
+
+                {/* GAD Reports Routes */}
+                <Route path="/gad-reports" element={<Navigate to="/gad-reports/gpb" replace />} />
+                <Route path="/gad-reports/gpb" element={<GPBFormPage />} />
+                <Route path="/gad-reports/gad-ar" element={<GADARPage />} />
+                <Route path="/gad-reports/gfps" element={<GFPSTrackerPage />} />
+                <Route path="/gad-reports/compliance" element={<ComplianceDashboardPage />} />
+                <Route path="/gad-reports/hgdg" element={<HGDGScoringPage />} />
+
+                {/* Feedback, Critiques & Suggestions Hub (Superadmin Only) */}
+                <Route
+                  path="/feedback"
+                  element={
+                    <ProtectedRoute allowedRoles={['superadmin']}>
+                      <FeedbackManagementPage />
+                    </ProtectedRoute>
+                  }
+                />
+              </Route>
+
+              <Route path="/login-redirect" element={<HomeRedirect />} />
+              <Route path="/" element={<PublicLandingPage />} />
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+          </Suspense>
+        </Router>
+        <RealtimeSyncManager />
+        <Toaster position="top-right" />
       </QueryClientProvider>
     </ErrorBoundary>
   );

@@ -3,6 +3,7 @@ import { Outlet } from "react-router";
 import AppHeader from "./AppHeader";
 import Backdrop from "./Backdrop";
 import AppSidebar from "./AppSidebar";
+import FeedbackWidget from "@/components/feedback/FeedbackWidget";
 import { useInactivityTimeout } from "@/hooks/useInactivityTimeout";
 
 const LayoutContent: React.FC = () => {
@@ -25,6 +26,8 @@ const LayoutContent: React.FC = () => {
           <Outlet />
         </div>
       </div>
+      {/* Global Reviewer Feedback & Critique Trigger */}
+      <FeedbackWidget />
     </div>
   );
 };

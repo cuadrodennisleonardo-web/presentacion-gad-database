@@ -17,11 +17,27 @@ interface FieldDef {
 interface DynamicBudgetChartsProps {
   department: string;
   subSector?: string;
+  year?: number;
 }
 
-function DynamicBudgetSection({ schema, barangays, schools = [], daycareCenters = [], department }: { schema: any, barangays: any[], schools?: any[], daycareCenters?: any[], department: string }) {
-  const [year, setYear] = useState(() => getDefaultYear(`${department}_${schema.tab_key}`));
-  const { data: schemaData, isLoading } = useDynamicSchemaData(schema.id, year);
+function DynamicBudgetSection({ 
+  schema, 
+  barangays, 
+  schools = [], 
+  daycareCenters = [], 
+  department,
+  parentYear
+}: { 
+  schema: any; 
+  barangays: any[]; 
+  schools?: any[]; 
+  daycareCenters?: any[]; 
+  department: string;
+  parentYear?: number;
+}) {
+  const [localYear, setLocalYear] = useState<number | null>(null);
+  const resolvedYear = localYear || parentYear || getDefaultYear(`${department}_${schema.tab_key}`);
+  const { data: schemaData, isLoading } = useDynamicSchemaData(schema.id, resolvedYear);
 
   const sData = schema.schema as any;
   const targetEntity = sData?.targetEntity || 'barangays';
@@ -52,8 +68,8 @@ function DynamicBudgetSection({ schema, barangays, schools = [], daycareCenters 
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-xl font-bold text-gray-800 dark:text-white/90">{schema.tab_name} Financial Tracking</h3>
         <YearSelector 
-          year={year} 
-          setYear={setYear} 
+          year={resolvedYear} 
+          setYear={setLocalYear} 
           yearOptions={targetEntity && targetEntity !== 'barangays' ? Array.from({ length: 10 }, (_, i) => { const y = new Date().getFullYear() - 5 + i; return { value: y, label: `${y}-${y + 1}` }; }) : undefined}
           scopeKey={`${department}_${schema.tab_key}`} 
         />
@@ -73,7 +89,13 @@ function DynamicBudgetSection({ schema, barangays, schools = [], daycareCenters 
               {statFields.map(f => {
                 let total = 0;
                 data.forEach(d => {
-                  total += d.data[f.id]?.value || 0;
+                  const rawVal = d.data?.[f.id];
+                  const valNum = (rawVal && typeof rawVal === 'object' && 'value' in rawVal)
+                    ? Number(rawVal.value || 0)
+                    : (rawVal && typeof rawVal === 'object' && 'total' in rawVal)
+                    ? Number(rawVal.total || 0)
+                    : (typeof rawVal === 'number' ? rawVal : Number(rawVal || 0));
+                  total += isNaN(valNum) ? 0 : valNum;
                 });
                 return (
                   <div key={f.id} className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-white/[0.02]">
@@ -91,15 +113,22 @@ function DynamicBudgetSection({ schema, barangays, schools = [], daycareCenters 
               const colors = [colorVals[i % colorVals.length]];
               const valData = entitiesToDisplay.map(b => {
                 const bd = data.find(d => d.barangay_id === b.id);
-                return bd?.data[f.id]?.value || 0;
+                const rawVal = bd?.data?.[f.id];
+                const valNum = (rawVal && typeof rawVal === 'object' && 'value' in rawVal)
+                  ? Number(rawVal.value || 0)
+                  : (rawVal && typeof rawVal === 'object' && 'total' in rawVal)
+                  ? Number(rawVal.total || 0)
+                  : (typeof rawVal === 'number' ? rawVal : Number(rawVal || 0));
+                return isNaN(valNum) ? 0 : valNum;
               });
-              const series = [{ name: f.name, data: valData }];
+              const chartType: "bar" | "pie" = (f.chartType as any) || "bar";
+              const series = chartType === 'pie' ? valData : [{ name: f.name, data: valData }];
 
               return (
                 <MultiSeriesChart
                   key={f.id}
                   title={`${f.name} Allocation`}
-                  type={f.chartType as any}
+                  type={chartType}
                   categories={bNames}
                   series={series}
                   colors={colors}
@@ -114,7 +143,7 @@ function DynamicBudgetSection({ schema, barangays, schools = [], daycareCenters 
   );
 }
 
-export default function DynamicBudgetCharts({ department, subSector }: DynamicBudgetChartsProps) {
+export default function DynamicBudgetCharts({ department, subSector, year }: DynamicBudgetChartsProps) {
   const { data: dashboardData, isLoading } = useDynamicDashboardSchemas(department);
 
   if (isLoading) {
@@ -149,7 +178,14 @@ export default function DynamicBudgetCharts({ department, subSector }: DynamicBu
       </div>
       {schemas.map(schema => (
         <ErrorBoundary key={schema.id}>
-          <DynamicBudgetSection schema={schema} barangays={barangays} schools={schools} daycareCenters={daycareCenters} department={department} />
+          <DynamicBudgetSection 
+            schema={schema} 
+            barangays={barangays} 
+            schools={schools} 
+            daycareCenters={daycareCenters} 
+            department={department}
+            parentYear={year}
+          />
         </ErrorBoundary>
       ))}
     </div>

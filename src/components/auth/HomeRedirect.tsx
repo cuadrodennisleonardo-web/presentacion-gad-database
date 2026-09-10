@@ -7,20 +7,16 @@ const HomeRedirect: React.FC = () => {
 
   if (role === "dept_admin" || role === "dept_viewer") {
     switch (department) {
-      case "Demographics":
-        return <Navigate to="/dashboard/demographics" replace />;
       case "Social Development":
         return <Navigate to="/dashboard/social-development" replace />;
       case "Economic Development":
         return <Navigate to="/dashboard/economic-development" replace />;
       case "Infrastructure":
         return <Navigate to="/dashboard/infrastructure" replace />;
-      case "Local Governance":
-        return <Navigate to="/dashboard/governance" replace />;
-      case "Justice & Safety":
-        return <Navigate to="/dashboard/justice-safety" replace />;
-      case "Institutional GAD":
-        return <Navigate to="/dashboard/gad" replace />;
+      case "Environment":
+        return <Navigate to="/dashboard/environment" replace />;
+      case "Institutional":
+        return <Navigate to="/dashboard/institutional" replace />;
       default:
         // Fallback if department is somehow missing or unknown
         return <Navigate to="/dashboard" replace />;

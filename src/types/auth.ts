@@ -10,10 +10,8 @@ export type Department =
   | "Social Development"
   | "Economic Development"
   | "Infrastructure"
-  | "Local Governance"
-  | "Institutional GAD"
-  | "Demographics"
-  | "Justice & Safety";
+  | "Environment"
+  | "Institutional";
 
 export interface UserProfile {
   id: string;

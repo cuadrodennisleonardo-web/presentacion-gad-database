@@ -84,6 +84,22 @@ const TableIcon = () => (
   </svg>
 );
 
+const ReportsIcon = () => (
+  <svg className="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <polyline points="14 2 14 8 20 8" />
+    <line x1="16" y1="13" x2="8" y2="13" />
+    <line x1="16" y1="17" x2="8" y2="17" />
+    <polyline points="10 9 9 9 8 9" />
+  </svg>
+);
+
+const FeedbackIcon = () => (
+  <svg className="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+  </svg>
+);
+
 const ChevronDownIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg className={className} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" strokeWidth="1.67" strokeLinecap="round" strokeLinejoin="round" />
@@ -128,6 +144,7 @@ const AppSidebar: React.FC = () => {
   const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>({});
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [pendingApprovalsCount, setPendingApprovalsCount] = useState(0);
+  const [pendingFeedbackCount, setPendingFeedbackCount] = useState(0);
 
   useEffect(() => {
     if (canApprove) {
@@ -151,6 +168,32 @@ const AppSidebar: React.FC = () => {
     }
   }, [canApprove]);
 
+  useEffect(() => {
+    if (isSuperAdmin) {
+      const fetchPendingFeedback = async () => {
+        try {
+          const { count } = await supabase
+            .from('feedback_comments')
+            .select('*', { count: 'exact', head: true })
+            .eq('status', 'pending');
+          setPendingFeedbackCount(count || 0);
+        } catch {
+          // Table might not exist yet
+        }
+      };
+
+      fetchPendingFeedback();
+
+      const channel = supabase.channel('feedback_sidebar_changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'feedback_comments' }, fetchPendingFeedback)
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [isSuperAdmin]);
+
   // Build role-aware navigation
   const navItems: NavItem[] = useMemo(() => {
     const items: NavItem[] = [];
@@ -158,11 +201,7 @@ const AppSidebar: React.FC = () => {
 
     const getDeptPath = (dept?: string | null) => {
       if (!dept) return "";
-      if (dept === "Institutional GAD") return "gad";
-      if (dept === "Demographics") return "demographics";
-      if (dept === "Justice & Safety") return "justice-safety";
-      if (dept === "Local Governance") return "governance";
-      return dept.toLowerCase().replace(" ", "-");
+      return dept.toLowerCase().replace(/\s+/g, "-");
     };
 
     if (isDeptUser) {
@@ -172,7 +211,7 @@ const AppSidebar: React.FC = () => {
       // 1. Dept Dashboard
       items.push({
         icon: <SocialDevIcon />,
-        name: "Dept Dashboard",
+        name: "Sector Dashboard",
         path: `/dashboard/${deptPath}`,
       });
 
@@ -188,6 +227,19 @@ const AppSidebar: React.FC = () => {
         icon: <BarangaysIcon />,
         name: "Barangays",
         path: "/barangays",
+      });
+
+      // 4. GAD Reports
+      items.push({
+        icon: <ReportsIcon />,
+        name: "GAD Reports",
+        subItems: [
+          { name: "GAD Plan & Budget (GPB)", path: "/gad-reports/gpb" },
+          { name: "Accomplishment Report (AR)", path: "/gad-reports/gad-ar" },
+          { name: "GFPS Directory", path: "/gad-reports/gfps" },
+          { name: "MCW Compliance", path: "/gad-reports/compliance" },
+          { name: "HGDG Scoring", path: "/gad-reports/hgdg" },
+        ],
       });
     } else {
       // --- SUPERADMIN / OTHER VIEW (Hierarchical) ---
@@ -206,17 +258,15 @@ const AppSidebar: React.FC = () => {
         path: "/barangays",
       });
 
-      // Data Entry Hub with sub-items
-      if (isSuperAdmin || canAccessModule("Demographics") || canAccessModule("Social Development") || canAccessModule("Economic Development") || canAccessModule("Infrastructure") || canAccessModule("Local Governance") || canAccessModule("Justice & Safety") || canAccessModule("Institutional GAD")) {
+      // Data Entry Hub with sub-items (5 JMC Sectors)
+      if (isSuperAdmin || canAccessModule("Social Development") || canAccessModule("Economic Development") || canAccessModule("Infrastructure") || canAccessModule("Environment") || canAccessModule("Institutional")) {
         const dataEntrySubItems = [];
         
-        if (canAccessModule("Demographics")) dataEntrySubItems.push({ name: "Demographics", path: "/data-entry/demographics" });
         if (canAccessModule("Social Development")) dataEntrySubItems.push({ name: "Social Development", path: "/data-entry/social-development" });
         if (canAccessModule("Economic Development")) dataEntrySubItems.push({ name: "Economic Development", path: "/data-entry/economic-development" });
         if (canAccessModule("Infrastructure")) dataEntrySubItems.push({ name: "Infrastructure", path: "/data-entry/infrastructure" });
-        if (canAccessModule("Local Governance")) dataEntrySubItems.push({ name: "Local Governance", path: "/data-entry/governance" });
-        if (canAccessModule("Justice & Safety")) dataEntrySubItems.push({ name: "Justice & Safety", path: "/data-entry/justice-safety" });
-        if (canAccessModule("Institutional GAD")) dataEntrySubItems.push({ name: "Institutional GAD", path: "/data-entry/gad" });
+        if (canAccessModule("Environment")) dataEntrySubItems.push({ name: "Environment", path: "/data-entry/environment" });
+        if (canAccessModule("Institutional")) dataEntrySubItems.push({ name: "Institutional", path: "/data-entry/institutional" });
 
         if (dataEntrySubItems.length > 0) {
           items.push({
@@ -227,23 +277,34 @@ const AppSidebar: React.FC = () => {
         }
       }
 
-      // Dept Dashboards Hub with sub-items
+      // Sector Dashboards Hub with sub-items
       const dashboardSubItems = [];
-      if (canAccessModule("Demographics")) dashboardSubItems.push({ name: "Demographics", path: "/dashboard/demographics" });
       if (canAccessModule("Social Development")) dashboardSubItems.push({ name: "Social Development", path: "/dashboard/social-development" });
       if (canAccessModule("Economic Development")) dashboardSubItems.push({ name: "Economic Development", path: "/dashboard/economic-development" });
       if (canAccessModule("Infrastructure")) dashboardSubItems.push({ name: "Infrastructure", path: "/dashboard/infrastructure" });
-      if (canAccessModule("Local Governance")) dashboardSubItems.push({ name: "Local Governance", path: "/dashboard/governance" });
-      if (canAccessModule("Justice & Safety")) dashboardSubItems.push({ name: "Justice & Safety", path: "/dashboard/justice-safety" });
-      if (canAccessModule("Institutional GAD")) dashboardSubItems.push({ name: "Institutional GAD", path: "/dashboard/gad" });
+      if (canAccessModule("Environment")) dashboardSubItems.push({ name: "Environment", path: "/dashboard/environment" });
+      if (canAccessModule("Institutional")) dashboardSubItems.push({ name: "Institutional", path: "/dashboard/institutional" });
 
       if (dashboardSubItems.length > 0) {
         items.push({
           icon: <SocialDevIcon />,
-          name: "Dept Dashboards",
+          name: "Sector Dashboards",
           subItems: dashboardSubItems,
         });
       }
+
+      // GAD Reports (Annex D, E, GFPS, Compliance, HGDG)
+      items.push({
+        icon: <ReportsIcon />,
+        name: "GAD Reports",
+        subItems: [
+          { name: "GAD Plan & Budget (GPB)", path: "/gad-reports/gpb" },
+          { name: "Accomplishment Report (AR)", path: "/gad-reports/gad-ar" },
+          { name: "GFPS Directory", path: "/gad-reports/gfps" },
+          { name: "MCW Compliance", path: "/gad-reports/compliance" },
+          { name: "HGDG Scoring", path: "/gad-reports/hgdg" },
+        ],
+      });
     }
 
     return items;
@@ -266,6 +327,15 @@ const AppSidebar: React.FC = () => {
         icon: <TableIcon />,
         name: "Dynamic Tables",
         path: "/settings/dynamic-tables",
+      });
+    }
+
+    if (isSuperAdmin) {
+      items.push({
+        icon: <FeedbackIcon />,
+        name: "Feedback & Ideas",
+        path: "/feedback",
+        badge: pendingFeedbackCount > 0,
       });
     }
 

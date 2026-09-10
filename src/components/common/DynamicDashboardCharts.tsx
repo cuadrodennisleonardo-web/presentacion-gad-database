@@ -18,13 +18,29 @@ interface FieldDef {
 interface DynamicDashboardChartsProps {
   department: string;
   subSector?: string;
+  year?: number;
 }
 
-function DynamicSchemaSection({ schema, barangays, schools = [], daycareCenters = [], department }: { schema: any, barangays: any[], schools?: any[], daycareCenters?: any[], department: string }) {
-  const [year, setYear] = useState(() => getDefaultYear(`${department}_${schema.tab_key}`));
+function DynamicSchemaSection({ 
+  schema, 
+  barangays, 
+  schools = [], 
+  daycareCenters = [], 
+  department,
+  parentYear 
+}: { 
+  schema: any; 
+  barangays: any[]; 
+  schools?: any[]; 
+  daycareCenters?: any[]; 
+  department: string;
+  parentYear?: number;
+}) {
+  const [localYear, setLocalYear] = useState<number | null>(null);
+  const resolvedYear = localYear || parentYear || getDefaultYear(`${department}_${schema.id || schema.tab_name}`);
   const [selectedIndicatorId, setSelectedIndicatorId] = useState<string>('all');
   const [showTable, setShowTable] = useState(false);
-  const { data: schemaData, isLoading } = useDynamicSchemaData(schema.id, year);
+  const { data: schemaData, isLoading } = useDynamicSchemaData(schema.id, resolvedYear);
   
   const sData = schema.schema as any;
   const targetEntity = sData?.targetEntity || (schema.tab_key === "education" ? "all_schools" : "barangays");
@@ -121,10 +137,10 @@ function DynamicSchemaSection({ schema, barangays, schools = [], daycareCenters 
           </button>
           
           <YearSelector 
-            year={year} 
-            setYear={setYear} 
+            year={resolvedYear} 
+            setYear={(y) => setLocalYear(y)} 
             yearOptions={targetEntity && targetEntity !== 'barangays' ? Array.from({ length: 10 }, (_, i) => { const y = new Date().getFullYear() - 5 + i; return { value: y, label: `${y}-${y + 1}` }; }) : undefined}
-            scopeKey={`${department}_${schema.tab_key}`} 
+            scopeKey={`${department}_${schema.id || schema.tab_name}`} 
           />
         </div>
       </div>
@@ -497,9 +513,11 @@ function DynamicSchemaSection({ schema, barangays, schools = [], daycareCenters 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             {chartFields.map((f, i) => {
               const colorVals = Object.values(CHART_COLORS).flat() as string[];
+              const chartType: "bar" | "pie" = (f.chartType as any) || "bar";
               
-              let series: any[] = [];
-              let chartColors = [colorVals[i % colorVals.length], colorVals[(i + 1) % colorVals.length]];
+              let series: any = [];
+              let chartCategories: string[] = bNames;
+              let chartColors: string[] = [colorVals[i % colorVals.length], colorVals[(i + 1) % colorVals.length]];
 
               if (f.type === 'gender_split') {
                 let hasTotalOnly = false;
@@ -522,14 +540,30 @@ function DynamicSchemaSection({ schema, barangays, schools = [], daycareCenters 
                   totData.push(isTot || (rawTot > 0 && m + fVal === 0) ? Number(rawTot) : m + fVal);
                 });
 
-                if (hasTotalOnly) {
-                  series = [{ name: "Total", data: totData }];
-                  chartColors = ["#3b82f6"];
+                if (chartType === 'pie') {
+                  const totalM = mData.reduce((a, b) => a + b, 0);
+                  const totalF = fData.reduce((a, b) => a + b, 0);
+                  const totalTot = totData.reduce((a, b) => a + b, 0);
+
+                  if (hasTotalOnly) {
+                    series = [totalTot];
+                    chartCategories = ["Total"];
+                    chartColors = ["#3b82f6"];
+                  } else {
+                    series = [totalM, totalF];
+                    chartCategories = ["Male", "Female"];
+                    chartColors = [CHART_COLORS.male || "#3b82f6", CHART_COLORS.female || "#ec4899"];
+                  }
                 } else {
-                  series = [
-                    { name: "Male", data: mData },
-                    { name: "Female", data: fData }
-                  ];
+                  if (hasTotalOnly) {
+                    series = [{ name: "Total", data: totData }];
+                    chartColors = ["#3b82f6"];
+                  } else {
+                    series = [
+                      { name: "Male", data: mData },
+                      { name: "Female", data: fData }
+                    ];
+                  }
                 }
               } else {
                 const valData = entitiesToDisplay.map(b => {
@@ -540,7 +574,13 @@ function DynamicSchemaSection({ schema, barangays, schools = [], daycareCenters 
                     : (typeof rawVal === 'number' ? rawVal : Number(rawVal || 0));
                   return isNaN(valNum) ? 0 : valNum;
                 });
-                series = [{ name: f.name, data: valData }];
+
+                if (chartType === 'pie') {
+                  series = valData;
+                  chartCategories = bNames;
+                } else {
+                  series = [{ name: f.name, data: valData }];
+                }
               }
 
               let entityLabel = "Barangay";
@@ -549,7 +589,9 @@ function DynamicSchemaSection({ schema, barangays, schools = [], daycareCenters 
               else if (isAgeTable) entityLabel = "Age";
               else if (isAgeBracketTable) entityLabel = "Age Bracket";
 
-              const chartTitle = f.name.toLowerCase().includes('by') 
+              const chartTitle = chartType === 'pie' && f.type === 'gender_split'
+                ? `${f.name} (Male vs Female Distribution)`
+                : f.name.toLowerCase().includes('by') 
                 ? f.name 
                 : `${f.name} by ${entityLabel}`;
 
@@ -557,8 +599,8 @@ function DynamicSchemaSection({ schema, barangays, schools = [], daycareCenters 
                 <MultiSeriesChart
                   key={f.id}
                   title={chartTitle}
-                  type={f.chartType as any}
-                  categories={bNames}
+                  type={chartType}
+                  categories={chartCategories}
                   series={series}
                   colors={chartColors}
                 />
@@ -571,7 +613,7 @@ function DynamicSchemaSection({ schema, barangays, schools = [], daycareCenters 
   );
 }
 
-export default function DynamicDashboardCharts({ department, subSector }: DynamicDashboardChartsProps) {
+export default function DynamicDashboardCharts({ department, subSector, year }: DynamicDashboardChartsProps) {
   const { data: dashboardData, isLoading } = useDynamicDashboardSchemas(department);
 
   if (isLoading) {
@@ -610,7 +652,14 @@ export default function DynamicDashboardCharts({ department, subSector }: Dynami
     <div className="mt-8">
       {schemas.map(schema => (
         <ErrorBoundary key={schema.id}>
-          <DynamicSchemaSection schema={schema} barangays={barangays} schools={schools} daycareCenters={daycareCenters} department={department} />
+          <DynamicSchemaSection 
+            schema={schema} 
+            barangays={barangays} 
+            schools={schools} 
+            daycareCenters={daycareCenters} 
+            department={department}
+            parentYear={year}
+          />
         </ErrorBoundary>
       ))}
     </div>

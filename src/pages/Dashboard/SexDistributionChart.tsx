@@ -84,6 +84,21 @@ const SexDistributionChart: React.FC<SexDistributionChartProps> = ({
 
   const series = [male, female];
 
+  if (male === 0 && female === 0) {
+    return (
+      <div className="flex h-[300px] w-full flex-col items-center justify-center text-center p-4">
+        <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-400 mb-2">
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+          </svg>
+        </div>
+        <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">No Population Data</p>
+        <p className="text-xs text-gray-400 mt-0.5">Demography data has not been entered yet.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="h-[300px] w-full">
       <Chart options={options} series={series} type="donut" height="100%" />

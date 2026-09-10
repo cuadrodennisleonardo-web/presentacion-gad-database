@@ -570,6 +570,7 @@ export interface Database {
           id: string
           department: string
           tab_name: string
+          subsector: string | null
           schema: Json
           created_at: string | null
           updated_at: string | null
@@ -578,6 +579,7 @@ export interface Database {
           id?: string
           department: string
           tab_name: string
+          subsector?: string | null
           schema?: Json
           created_at?: string | null
           updated_at?: string | null
@@ -586,6 +588,7 @@ export interface Database {
           id?: string
           department?: string
           tab_name?: string
+          subsector?: string | null
           schema?: Json
           created_at?: string | null
           updated_at?: string | null
@@ -619,6 +622,235 @@ export interface Database {
           month_updated?: string
           schema_id?: string
           data?: Json
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
+      subsectors: {
+        Row: {
+          id: string
+          sector: string
+          name: string
+          description: string | null
+          icon: string | null
+          sort_order: number | null
+          is_barangay_level: boolean | null
+          created_at: string | null
+        }
+        Insert: {
+          id: string
+          sector: string
+          name: string
+          description?: string | null
+          icon?: string | null
+          sort_order?: number | null
+          is_barangay_level?: boolean | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          sector?: string
+          name?: string
+          description?: string | null
+          icon?: string | null
+          sort_order?: number | null
+          is_barangay_level?: boolean | null
+          created_at?: string | null
+        }
+      }
+      gpb_entries: {
+        Row: {
+          id: string
+          year: number
+          gender_issue: string
+          cause: string | null
+          gad_objective: string | null
+          relevant_ppa: string | null
+          gad_activity: string
+          performance_indicator: string | null
+          performance_target: string | null
+          gad_budget: number | null
+          budget_source: string | null
+          opr: string | null
+          status: string | null
+          actual_result: string | null
+          actual_cost: number | null
+          variance_remarks: string | null
+          created_by: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          year: number
+          gender_issue: string
+          cause?: string | null
+          gad_objective?: string | null
+          relevant_ppa?: string | null
+          gad_activity: string
+          performance_indicator?: string | null
+          performance_target?: string | null
+          gad_budget?: number | null
+          budget_source?: string | null
+          opr?: string | null
+          status?: string | null
+          actual_result?: string | null
+          actual_cost?: number | null
+          variance_remarks?: string | null
+          created_by?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          year?: number
+          gender_issue?: string
+          cause?: string | null
+          gad_objective?: string | null
+          relevant_ppa?: string | null
+          gad_activity?: string
+          performance_indicator?: string | null
+          performance_target?: string | null
+          gad_budget?: number | null
+          budget_source?: string | null
+          opr?: string | null
+          status?: string | null
+          actual_result?: string | null
+          actual_cost?: number | null
+          variance_remarks?: string | null
+          created_by?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
+      gfps_members: {
+        Row: {
+          id: string
+          name: string
+          position: string | null
+          office: string | null
+          role_in_gfps: string
+          committee: string | null
+          contact_number: string | null
+          email: string | null
+          year: number
+          is_active: boolean | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          position?: string | null
+          office?: string | null
+          role_in_gfps: string
+          committee?: string | null
+          contact_number?: string | null
+          email?: string | null
+          year: number
+          is_active?: boolean | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          position?: string | null
+          office?: string | null
+          role_in_gfps?: string
+          committee?: string | null
+          contact_number?: string | null
+          email?: string | null
+          year?: number
+          is_active?: boolean | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
+      compliance_status: {
+        Row: {
+          id: string
+          year: number
+          indicator_id: string
+          indicator_title: string
+          status: string
+          evidence_notes: string | null
+          document_url: string | null
+          score: number | null
+          updated_by: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          year: number
+          indicator_id: string
+          indicator_title: string
+          status?: string
+          evidence_notes?: string | null
+          document_url?: string | null
+          score?: number | null
+          updated_by?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          year?: number
+          indicator_id?: string
+          indicator_title?: string
+          status?: string
+          evidence_notes?: string | null
+          document_url?: string | null
+          score?: number | null
+          updated_by?: string | null
+          updated_at?: string | null
+        }
+      }
+      hgdg_scores: {
+        Row: {
+          id: string
+          year: number
+          program_name: string
+          implementing_office: string | null
+          checklist_type: string | null
+          raw_score: number
+          gender_rating: string
+          budget_attribution_pct: number
+          program_budget: number
+          attributed_gad_budget: number
+          assessment_notes: string | null
+          assessed_by: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          year: number
+          program_name: string
+          implementing_office?: string | null
+          checklist_type?: string | null
+          raw_score?: number
+          gender_rating: string
+          budget_attribution_pct?: number
+          program_budget?: number
+          attributed_gad_budget?: number
+          assessment_notes?: string | null
+          assessed_by?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          year?: number
+          program_name?: string
+          implementing_office?: string | null
+          checklist_type?: string | null
+          raw_score?: number
+          gender_rating?: string
+          budget_attribution_pct?: number
+          program_budget?: number
+          attributed_gad_budget?: number
+          assessment_notes?: string | null
+          assessed_by?: string | null
           created_at?: string | null
           updated_at?: string | null
         }

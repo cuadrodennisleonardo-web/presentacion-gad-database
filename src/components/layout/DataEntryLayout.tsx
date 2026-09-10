@@ -71,6 +71,11 @@ interface DataEntryLayoutProps {
   setShowConfirmModal: (show: boolean) => void;
   onConfirmSave: () => void;
   
+  backButton?: {
+    label: string;
+    onClick: () => void;
+  };
+
   children: React.ReactNode;
 }
 
@@ -107,6 +112,7 @@ export default function DataEntryLayout({
   showConfirmModal,
   setShowConfirmModal,
   onConfirmSave,
+  backButton,
   children
 }: DataEntryLayoutProps) {
   
@@ -297,7 +303,21 @@ export default function DataEntryLayout({
   return (
     <>
       <PageMeta title={pageTitle} description={pageDescription} />
-      <PageBreadcrumb pageTitle={breadcrumbTitle} rootLabel="Menu" rootPath={null} />
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <PageBreadcrumb pageTitle={breadcrumbTitle} rootLabel="Menu" rootPath={null} />
+        {backButton && (
+          <button
+            type="button"
+            onClick={backButton.onClick}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-700 shadow-xs transition hover:text-brand-600 dark:hover:text-brand-400 cursor-pointer shrink-0 self-start sm:self-auto"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            <span>{backButton.label}</span>
+          </button>
+        )}
+      </div>
       
       <div className="w-full max-w-full min-w-0 overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
         {/* Optional Sub-Sector Pills Bar */}

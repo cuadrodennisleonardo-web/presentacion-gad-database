@@ -52,49 +52,46 @@ const AppHeader: React.FC = () => {
 
     const ALL_DEPARTMENTS: { name: Department; indicators: { name: string; keywords: string }[] }[] = [
       {
-        name: "Demographics",
-        indicators: [
-          { name: "Total Population & Total Households", keywords: "population total households demographics residents census" }
-        ]
-      },
-      {
         name: "Social Development",
         indicators: [
-          { name: "Education & Student Enrollment", keywords: "student enrollment dropouts osy school education" },
-          { name: "Health & Malnourished Children", keywords: "health malnourished nutrition teenage pregnancy maternal mortality" },
-          { name: "Social Welfare (PWD, 4Ps, Senior Citizens, Solo Parents)", keywords: "pwd 4ps senior citizens solo parents welfare disability" }
+          { name: "Demography & Vital Statistics", keywords: "population households demographics age sex marital status" },
+          { name: "Education & Literacy", keywords: "student enrollment dropouts osy school education tvet literacy" },
+          { name: "Health & Nutrition", keywords: "health malnourished nutrition maternal mortality immunization" },
+          { name: "Protection from Violence (GBV/VAWC)", keywords: "vawc protection gbv crisis bpo shelter safety violence" },
+          { name: "Social Protection & Welfare", keywords: "pwd 4ps senior citizens solo parents welfare disaster relief" }
         ]
       },
       {
         name: "Economic Development",
         indicators: [
-          { name: "Labor Force & Employment", keywords: "employment labor employed unemployed jobs work" },
-          { name: "Agriculture & Fisheries (Farmers, Fisherfolks)", keywords: "farmers fisherfolks agriculture fishing crops fish" },
-          { name: "Commerce & Trade (Business Owners, Vendors)", keywords: "business owners ambulant vendors commerce trade market stores" }
+          { name: "Income & Poverty Statistics", keywords: "poverty subsistence income threshold employment" },
+          { name: "Labor Force & Employment", keywords: "employment labor employed unemployed jobs work wages ofw" },
+          { name: "Agriculture & Fisheries", keywords: "farmers fisherfolks agriculture crops fish aquatic land carp" },
+          { name: "Industry & Women MSMEs", keywords: "msme women entrepreneurs microcredit commerce business" }
         ]
       },
       {
         name: "Infrastructure",
         indicators: [
-          { name: "Utilities & Housing (Safe Water, Sanitary Toilets, Informal Settlers)", keywords: "safe water sanitary toilets informal settlers utilities housing infrastructure water toilet" }
+          { name: "Water & Utilities Access", keywords: "safe water potable electricity lighting sanitation infrastructure" },
+          { name: "Roads, Bridges & Transport", keywords: "roads bridges farm to market transport access connectivity" },
+          { name: "Public Safety & Social Infra", keywords: "street lighting classrooms evacuation centers health stations" }
         ]
       },
       {
-        name: "Local Governance",
+        name: "Environment",
         indicators: [
-          { name: "Local Governance & Officials (Elected, Appointed Heads)", keywords: "elected officials appointed department heads governance leadership barangay officials" }
+          { name: "Protected Areas & Resource Base", keywords: "environment protected area watershed conservation ecology" },
+          { name: "Solid Waste Management", keywords: "solid waste mrf recycling segregation sanitary toilets sanitation" },
+          { name: "Land Use & Water Quality", keywords: "land use clup water quality pollution river watershed" }
         ]
       },
       {
-        name: "Justice & Safety",
+        name: "Institutional",
         indicators: [
-          { name: "Justice & Protection (VAWC, CICL, Sexual Assault)", keywords: "vawc cicl sexual assault justice protection cases police safety crime" }
-        ]
-      },
-      {
-        name: "Institutional GAD",
-        indicators: [
-          { name: "Institutional GAD Budget & Trainings", keywords: "gad budget allocated utilized trainings participants institutional" }
+          { name: "Local Fiscal Management (5% GAD Budget)", keywords: "gad budget statutory 5 percent revenue allocation utilization" },
+          { name: "Capacity Development & GAD Trainings", keywords: "gender sensitivity training gst capacity dev literacy" },
+          { name: "Participation & GFPS Functionality", keywords: "gfps local special bodies women leaders elected officials" }
         ]
       }
     ];

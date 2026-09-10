@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/config/supabase';
 import { toast } from 'react-hot-toast';
 import PageBreadcrumb from '@/components/common/PageBreadcrumb';
@@ -37,13 +39,11 @@ export interface MultiGroupSectionDef {
 }
 
 const DEPARTMENTS = [
-  'Demographics',
   'Social Development',
   'Economic Development',
   'Infrastructure',
-  'Local Governance',
-  'Justice & Safety',
-  'Institutional GAD'
+  'Environment',
+  'Institutional'
 ];
 
 export interface CustomRowDef {
@@ -71,7 +71,8 @@ interface TablePreset {
 const PRESET_TABLE_SUGGESTIONS: TablePreset[] = [
   {
     id: 'preset-single-year-pop',
-    department: 'Demographics',
+    department: 'Social Development',
+    subSector: 'demography',
     targetEntity: 'age_0_to_99_plus',
     tabName: 'Single-Year Population (Age 0 to 99+)',
     description: 'Track granular single-year population census breakdown from Age 0 to Age 99+ (101 rows) across male and female residents.',
@@ -82,7 +83,8 @@ const PRESET_TABLE_SUGGESTIONS: TablePreset[] = [
   },
   {
     id: 'preset-age-brackets-cohorts',
-    department: 'Demographics',
+    department: 'Social Development',
+    subSector: 'demography',
     targetEntity: 'age_brackets',
     tabName: 'CBMS 5-Year Age Groups & Sex',
     description: 'Track population distribution across standard 5-year age groups (0-4, 5-9 ... 80+) with Male/Female counts.',
@@ -107,7 +109,7 @@ const PRESET_TABLE_SUGGESTIONS: TablePreset[] = [
   {
     id: 'preset-child-labor-by-age',
     department: 'Social Development',
-    subSector: 'welfare',
+    subSector: 'girl-children',
     targetEntity: 'age_0_to_99_plus',
     tabName: 'Child Labor & Working Children by Age',
     description: 'Monitor working children and child laborers across single-year ages (Ages 5 to 17) by sex.',
@@ -120,7 +122,7 @@ const PRESET_TABLE_SUGGESTIONS: TablePreset[] = [
   {
     id: 'preset-senior-registry-by-age',
     department: 'Social Development',
-    subSector: 'welfare',
+    subSector: 'senior-citizens',
     targetEntity: 'age_0_to_99_plus',
     tabName: 'Senior Citizens Registry by Single-Year Age',
     description: 'Track senior citizens (Ages 60 to 99+) with and without valid OSCA Senior Citizen IDs.',
@@ -132,7 +134,8 @@ const PRESET_TABLE_SUGGESTIONS: TablePreset[] = [
   },
   {
     id: 'preset-age-brackets',
-    department: 'Demographics',
+    department: 'Social Development',
+    subSector: 'demography',
     tabName: 'Age Distribution & Dependency (Barangay Level)',
     description: 'Track population breakdown across broad age brackets (Toddlers, Children, Youth, Adults, Seniors) by barangay.',
     category: 'standard',
@@ -146,7 +149,8 @@ const PRESET_TABLE_SUGGESTIONS: TablePreset[] = [
   },
   {
     id: 'preset-civil-status',
-    department: 'Demographics',
+    department: 'Social Development',
+    subSector: 'demography',
     tabName: 'Civil Status Demographics',
     description: 'Record civil status distribution across male and female population.',
     category: 'standard',
@@ -160,6 +164,7 @@ const PRESET_TABLE_SUGGESTIONS: TablePreset[] = [
   {
     id: 'preset-education-levels',
     department: 'Social Development',
+    subSector: 'education',
     tabName: 'Education Enrollment by Level',
     description: 'Multi-subtable tracking student enrollment and dropouts across Elementary, High School, and Higher Ed subtables.',
     category: 'multi_group',
@@ -265,6 +270,7 @@ const PRESET_TABLE_SUGGESTIONS: TablePreset[] = [
   {
     id: 'preset-health-immunization',
     department: 'Social Development',
+    subSector: 'health',
     tabName: 'Health & Immunization Coverage',
     description: 'Track infant immunization, communicable diseases, and registered health cases.',
     category: 'standard',
@@ -277,6 +283,7 @@ const PRESET_TABLE_SUGGESTIONS: TablePreset[] = [
   {
     id: 'preset-monthly-dengue',
     department: 'Social Development',
+    subSector: 'health',
     tabName: 'Monthly Dengue & Disease Outbreaks',
     description: 'Record monthly (Jan-Dec) disease cases to detect peak outbreak seasons.',
     category: 'time_series',
@@ -288,6 +295,7 @@ const PRESET_TABLE_SUGGESTIONS: TablePreset[] = [
   {
     id: 'preset-agri-crops',
     department: 'Economic Development',
+    subSector: 'agriculture-land',
     tabName: 'Agriculture & Crop Production',
     description: 'Track registered crop farmers, RSBSA listings, and total land cultivated.',
     category: 'standard',
@@ -301,6 +309,7 @@ const PRESET_TABLE_SUGGESTIONS: TablePreset[] = [
   {
     id: 'preset-fisheries',
     department: 'Economic Development',
+    subSector: 'fishery',
     tabName: 'Fisheries & Coastal Aquaculture',
     description: 'Record motorized/non-motorized boat owners, fishpond operators, and mangrove guardians.',
     category: 'standard',
@@ -313,6 +322,7 @@ const PRESET_TABLE_SUGGESTIONS: TablePreset[] = [
   {
     id: 'preset-quarterly-crops',
     department: 'Economic Development',
+    subSector: 'agriculture-land',
     tabName: 'Quarterly Harvest Yields (Metric Tons)',
     description: 'Monitor quarterly agricultural harvests to analyze seasonal crop productivity.',
     category: 'time_series',
@@ -324,6 +334,7 @@ const PRESET_TABLE_SUGGESTIONS: TablePreset[] = [
   {
     id: 'preset-electrification',
     department: 'Infrastructure',
+    subSector: 'water-utilities',
     tabName: 'Household Electrification Access',
     description: 'Monitor power grid connectivity, off-grid solar systems, and unserved households.',
     category: 'standard',
@@ -336,6 +347,7 @@ const PRESET_TABLE_SUGGESTIONS: TablePreset[] = [
   {
     id: 'preset-infra-projects',
     department: 'Infrastructure',
+    subSector: 'roads-bridges',
     tabName: 'Barangay Capital & Infra Projects',
     description: 'Track municipal infrastructure projects, target budgets, start/end dates, and completion status.',
     category: 'project_tracker',
@@ -348,6 +360,7 @@ const PRESET_TABLE_SUGGESTIONS: TablePreset[] = [
   {
     id: 'preset-evacuation-geo',
     department: 'Infrastructure',
+    subSector: 'social-support-infra',
     tabName: 'Evacuation Centers & Water Points GPS',
     description: 'Record evacuation facilities with GPS Coordinates (Lat/Lng), capacity, and operational status.',
     category: 'geo_registry',
@@ -358,7 +371,8 @@ const PRESET_TABLE_SUGGESTIONS: TablePreset[] = [
   },
   {
     id: 'preset-waste-sanitation',
-    department: 'Infrastructure',
+    department: 'Environment',
+    subSector: 'solid-waste',
     tabName: 'Solid Waste & Sanitation Compliance',
     description: 'Percentage-based monitoring of household waste segregation and toilet sanitation.',
     category: 'percentage',
@@ -378,7 +392,8 @@ const PRESET_TABLE_SUGGESTIONS: TablePreset[] = [
   },
   {
     id: 'preset-governance-bdc',
-    department: 'Local Governance',
+    department: 'Institutional',
+    subSector: 'participation',
     tabName: 'Barangay Councils & Youth (SK)',
     description: 'Track active Barangay Development Council members and Sangguniang Kabataan officials.',
     category: 'standard',
@@ -390,7 +405,8 @@ const PRESET_TABLE_SUGGESTIONS: TablePreset[] = [
   },
   {
     id: 'preset-lupon-disputes',
-    department: 'Justice & Safety',
+    department: 'Institutional',
+    subSector: 'peace-dev',
     tabName: 'Katarungang Pambarangay Disputes',
     description: 'Record barangay disputes filed, settled amicably, and referred to court.',
     category: 'standard',
@@ -402,7 +418,8 @@ const PRESET_TABLE_SUGGESTIONS: TablePreset[] = [
   },
   {
     id: 'preset-gad-budget-util',
-    department: 'Institutional GAD',
+    department: 'Institutional',
+    subSector: 'fiscal-mgmt',
     tabName: 'Barangay GAD Budget Utilization',
     description: 'Track mandatory 5% GAD budget allocation and actual project expenditure per barangay.',
     category: 'budget',
@@ -414,7 +431,8 @@ const PRESET_TABLE_SUGGESTIONS: TablePreset[] = [
   },
   {
     id: 'preset-gad-facilities',
-    department: 'Institutional GAD',
+    department: 'Institutional',
+    subSector: 'capacity-dev',
     tabName: 'Gender-Responsive LGU Facilities',
     description: 'Monitor operational lactation stations, gender-neutral restrooms, and GST training graduates.',
     category: 'standard',
@@ -427,6 +445,7 @@ const PRESET_TABLE_SUGGESTIONS: TablePreset[] = [
   {
     id: 'preset-cooperatives-associations',
     department: 'Economic Development',
+    subSector: 'industry-msme',
     targetEntity: 'custom_rows',
     customRowLabel: 'Association / Organization Name',
     customRows: [
@@ -482,9 +501,31 @@ export default function DynamicTablesPage() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
+  const [searchParams] = useSearchParams();
+
+  // Fetch all subsectors for dropdown
+  const { data: allSubsectors = [] } = useQuery({
+    queryKey: ['subsectors_all'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('subsectors').select('*').order('sort_order', { ascending: true });
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
   useEffect(() => {
     fetchSchemas();
   }, []);
+
+  useEffect(() => {
+    const urlDept = searchParams.get('dept');
+    const urlSub = searchParams.get('subsector');
+    if (urlDept) {
+      setDepartment(urlDept);
+      if (urlSub) setSubSector(urlSub);
+      setIsModalOpen(true);
+    }
+  }, [searchParams]);
 
   const fetchSchemas = async () => {
     setLoading(true);
@@ -582,7 +623,7 @@ export default function DynamicTablesPage() {
     setDepartment(schema.department);
     
     const sData = schema.schema as any;
-    setSubSector(sData?.subSector || 'all');
+    setSubSector(schema.subsector || sData?.subSector || 'all');
     setTargetEntity(sData?.targetEntity || 'barangays');
     if (sData?.customRows && Array.isArray(sData.customRows) && sData.customRows.length > 0) {
       setCustomRows(sData.customRows);
@@ -884,10 +925,12 @@ export default function DynamicTablesPage() {
     } : {};
 
     let schemaPayload: any = {};
+    const effectiveSubSector = subSector !== 'all' ? subSector : undefined;
+
     if (tableCategory === 'percentage') {
       schemaPayload = {
         description,
-        subSector: department === 'Social Development' ? subSector : 'all',
+        subSector: effectiveSubSector,
         targetEntity,
         ...customRowPayload,
         tableCategory: 'percentage',
@@ -898,7 +941,7 @@ export default function DynamicTablesPage() {
     } else if (tableCategory === 'multi_group') {
       schemaPayload = {
         description,
-        subSector: department === 'Social Development' ? subSector : 'all',
+        subSector: effectiveSubSector,
         targetEntity,
         ...customRowPayload,
         tableCategory: 'multi_group',
@@ -908,7 +951,7 @@ export default function DynamicTablesPage() {
     } else {
       schemaPayload = {
         description,
-        subSector: department === 'Social Development' ? subSector : 'all',
+        subSector: effectiveSubSector,
         targetEntity,
         ...customRowPayload,
         tableCategory,
@@ -923,6 +966,7 @@ export default function DynamicTablesPage() {
         .update({
           department,
           tab_name: tabName,
+          subsector: subSector !== 'all' ? subSector : null,
           schema: schemaPayload
         })
         .eq('id', editingSchema.id);
@@ -940,6 +984,7 @@ export default function DynamicTablesPage() {
         .insert([{
           department,
           tab_name: tabName,
+          subsector: subSector !== 'all' ? subSector : null,
           schema: schemaPayload
         }]);
 
@@ -1015,14 +1060,14 @@ export default function DynamicTablesPage() {
 
       {/* SUGGESTED PRESET TABLE TEMPLATES SECTION */}
       {showPresets && (
-        <div className="mb-8 rounded-2xl border border-brand-200/80 dark:border-brand-500/30 bg-gradient-to-r from-brand-50/60 via-indigo-50/20 to-white dark:from-brand-950/30 dark:via-gray-900 dark:to-gray-900 p-6 shadow-sm">
+        <div className="mb-8 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800/90 p-6 shadow-sm">
           {/* Header Row */}
-          <div className="flex flex-col gap-1.5 pb-4 border-b border-brand-100 dark:border-gray-800">
+          <div className="flex flex-col gap-1.5 pb-4 border-b border-gray-100 dark:border-gray-800">
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-500/10 px-3 py-1 text-[11px] font-bold text-brand-700 dark:text-brand-300 border border-brand-500/20">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 dark:bg-blue-900/30 px-3 py-1 text-[11px] font-bold text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/40">
                 <span>Recommended LGU Presets</span>
               </span>
-              <span className="text-xs text-brand-600 dark:text-brand-400 font-semibold">
+              <span className="text-xs text-blue-600 dark:text-blue-400 font-semibold">
                 • 1-Click Auto-Fill
               </span>
             </div>
@@ -1310,31 +1355,31 @@ export default function DynamicTablesPage() {
                   <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-gray-300">Department</label>
                   <select
                     value={department}
-                    onChange={e => setDepartment(e.target.value)}
+                    onChange={e => {
+                      setDepartment(e.target.value);
+                      setSubSector('all');
+                    }}
                     className="w-full rounded-lg border border-gray-300 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-800 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:text-white"
                   >
                     {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
                   </select>
                 </div>
 
-                {department === 'Social Development' && (
-                  <div>
-                    <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-gray-300">
-                      Sub-Sector Branch
-                    </label>
-                    <select
-                      value={subSector}
-                      onChange={e => setSubSector(e.target.value)}
-                      className="w-full rounded-lg border border-brand-300 bg-brand-50/50 dark:bg-brand-950/30 px-3 py-2 text-sm font-semibold text-brand-700 dark:text-brand-300 focus:border-brand-500 focus:outline-none dark:border-brand-500/40"
-                    >
-                      <option value="all">General / All Sub-Sectors</option>
-                      <option value="education">Education &amp; Youth</option>
-                      <option value="health">Health &amp; Nutrition</option>
-                      <option value="welfare">Social Welfare</option>
-                      <option value="housing">Housing &amp; Basic Utilities</option>
-                    </select>
-                  </div>
-                )}
+                <div>
+                  <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-gray-300">
+                    Sub-Sector
+                  </label>
+                  <select
+                    value={subSector}
+                    onChange={e => setSubSector(e.target.value)}
+                    className="w-full rounded-lg border border-brand-300 bg-brand-50/50 dark:bg-brand-950/30 px-3 py-2 text-sm font-semibold text-brand-700 dark:text-brand-300 focus:border-brand-500 focus:outline-none dark:border-brand-500/40"
+                  >
+                    <option value="all">General / Sector-Wide</option>
+                    {allSubsectors.filter(s => s.sector === department).map(s => (
+                      <option key={s.id} value={s.id}>{s.name} ({s.is_barangay_level ? 'Barangay' : 'Municipal'})</option>
+                    ))}
+                  </select>
+                </div>
                 <div>
                   <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-gray-300">Table Type Category</label>
                   <select

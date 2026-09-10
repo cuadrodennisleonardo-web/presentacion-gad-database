@@ -29,6 +29,11 @@ export function useRealtimeSync(currentUserEmail?: string) {
           if (table === 'data_approvals') {
             queryClient.invalidateQueries({ queryKey: ['approvals'] });
             queryClient.invalidateQueries({ queryKey: ['latest_approval'] });
+            queryClient.invalidateQueries({ queryKey: ['dynamic_data'] });
+            queryClient.invalidateQueries({ queryKey: ['dynamic_schema_data'] });
+            queryClient.invalidateQueries({ queryKey: ['main_dashboard_stats'] });
+            queryClient.invalidateQueries({ queryKey: ['demographics_stats'] });
+            queryClient.invalidateQueries({ queryKey: ['social_dev_stats'] });
             
             if (payload.eventType === 'INSERT') {
               const newRecord = payload.new as any;
@@ -49,6 +54,12 @@ export function useRealtimeSync(currentUserEmail?: string) {
             queryClient.invalidateQueries({ queryKey: [queryKey] });
             // Invalidate the Data Entry query
             queryClient.invalidateQueries({ queryKey: ['native_data', moduleName] });
+
+            if (table === 'population_stats') {
+              queryClient.invalidateQueries({ queryKey: ['population_stats'] });
+              queryClient.invalidateQueries({ queryKey: ['barangays'] });
+              queryClient.invalidateQueries({ queryKey: ['main_dashboard_stats'] });
+            }
             
             if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
               // We don't have the user who made the change in the payload directly unless it's in the row (e.g. updated_by).
@@ -59,6 +70,16 @@ export function useRealtimeSync(currentUserEmail?: string) {
           // Dynamic tables change
           if (table === 'dynamic_data') {
             queryClient.invalidateQueries({ queryKey: ['dynamic_data'] });
+            queryClient.invalidateQueries({ queryKey: ['dynamic_schema_data'] });
+            queryClient.invalidateQueries({ queryKey: ['dynamic_dashboard_schemas'] });
+            queryClient.invalidateQueries({ queryKey: ['main_dashboard_stats'] });
+            queryClient.invalidateQueries({ queryKey: ['demographics_stats'] });
+            queryClient.invalidateQueries({ queryKey: ['social_dev_stats'] });
+            queryClient.invalidateQueries({ queryKey: ['economic_stats'] });
+            queryClient.invalidateQueries({ queryKey: ['infrastructure_stats'] });
+            queryClient.invalidateQueries({ queryKey: ['governance_stats'] });
+            queryClient.invalidateQueries({ queryKey: ['justice_stats'] });
+            queryClient.invalidateQueries({ queryKey: ['barangay_dynamic_data'] });
             if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
               toast(`A dynamic table data was updated!`, { id: `sync-${table}` });
             }
@@ -66,8 +87,20 @@ export function useRealtimeSync(currentUserEmail?: string) {
 
           if (table === 'dynamic_schemas') {
             queryClient.invalidateQueries({ queryKey: ['dynamic_schemas'] });
+            queryClient.invalidateQueries({ queryKey: ['dynamic_dashboard_schemas'] });
             if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
               toast(`Dynamic tables definition updated!`, { id: `sync-${table}` });
+            }
+          }
+
+          // Feedback comments change
+          if (table === 'feedback_comments') {
+            queryClient.invalidateQueries({ queryKey: ['feedback_comments'] });
+            if (payload.eventType === 'INSERT') {
+              const record = payload.new as any;
+              if (record.author_email !== currentUserEmail) {
+                toast(`New critique / suggestion posted by ${record.author_name || 'a reviewer'}`, { id: 'feedback-new-toast' });
+              }
             }
           }
         }
