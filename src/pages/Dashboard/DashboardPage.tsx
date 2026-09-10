@@ -136,40 +136,14 @@ const DashboardPage: React.FC = () => {
     return `${timeGreeting}! Welcome to the Presentacion Municipal GAD Database`;
   };
 
-  const statCards = [
-    {
-      title: "Total Population",
-      value: stats?.residents || 0,
-      icon: "users",
-      color: "text-blue-600 dark:text-blue-400",
-      bg: "bg-blue-50 dark:bg-blue-900/30",
-      link: "/data-entry/social-development/demography",
-    },
-    {
-      title: "Total Households",
-      value: stats?.households || 0,
-      icon: "home",
-      color: "text-indigo-600 dark:text-indigo-400",
-      bg: "bg-indigo-50 dark:bg-indigo-900/30",
-      link: "/data-entry/social-development/demography",
-    },
-    {
-      title: "Registered PWDs",
-      value: stats?.pwds || 0,
-      icon: "check-circle",
-      color: "text-emerald-600 dark:text-emerald-400",
-      bg: "bg-emerald-50 dark:bg-emerald-900/30",
-      link: "/data-entry/social-development/social-protection",
-    },
-    {
-      title: "Total Barangays",
-      value: 18,
-      icon: "map",
-      color: "text-purple-600 dark:text-purple-400",
-      bg: "bg-purple-50 dark:bg-purple-900/30",
-      link: "/barangays",
-    },
-  ];
+  const totalPop = stats?.residents || 0;
+  const malePop = stats?.sexDist.male || 0;
+  const femalePop = stats?.sexDist.female || 0;
+  const malePct = totalPop > 0 ? ((malePop / totalPop) * 100).toFixed(0) : "0";
+  const femalePct = totalPop > 0 ? ((femalePop / totalPop) * 100).toFixed(0) : "0";
+  const totalHh = stats?.households || 0;
+  const avgHhSize = totalHh > 0 ? (totalPop / totalHh).toFixed(1) : "0.0";
+  const utilizationRate = totalGpbBudget > 0 ? ((totalGpbActual / totalGpbBudget) * 100).toFixed(1) : "0.0";
 
   if (isLoading) {
     return (
@@ -186,99 +160,294 @@ const DashboardPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-8 pb-12">
+    <div className="space-y-5 pb-10">
       <PageMeta
         title="Main Dashboard"
         description="Overview of Presentacion municipal statistics & JMC 2013-01 Compliance"
       />
       <PageBreadcrumb pageTitle="Dashboard" hideNav={true} />
 
-      {/* Hero Welcome Banner */}
-      <div className="rounded-2xl bg-white dark:bg-gray-800/90 p-6 sm:p-7 shadow-sm border border-gray-100 dark:border-gray-800">
-        <div className="max-w-3xl">
-          <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 dark:bg-blue-900/30 px-3 py-1 text-xs font-semibold text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/40 mb-3">
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400" />
-            PCW-DILG-DBM-NEDA JMC 2013-01 Architecture
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white mb-2">
-            {getGreeting()}
-          </h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base leading-relaxed">
-            Sex-disaggregated database and gender mainstreaming monitoring system for the Municipality of Presentacion, Camarines Sur.
-          </p>
-        </div>
-      </div>
-
-      {/* High-Level Stat Cards */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
-        {statCards.map((card) => (
-          <Link
-            key={card.title}
-            to={card.link}
-            className="group relative overflow-hidden rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800/80 p-5 transition-all hover:-translate-y-1 hover:shadow-md"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  {card.title}
-                </p>
-                <p className="mt-2 text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
-                  {card.value.toLocaleString()}
-                </p>
-              </div>
-              <div
-                className={`flex h-12 w-12 items-center justify-center rounded-xl ${card.bg} ${card.color} transition-transform group-hover:scale-110`}
-              >
-                {card.icon === "users" && (
-                  <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                )}
-                {card.icon === "home" && (
-                  <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                )}
-                {card.icon === "check-circle" && (
-                  <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                )}
-                {card.icon === "map" && (
-                  <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
-                )}
-              </div>
-            </div>
-          </Link>
-        ))}
-      </div>
-
-      {/* 5-Sector Quick Hub Navigation */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
+      {/* BENTO ROW 1: Hero Command & Primary Demographics */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+        {/* Bento Tile 1: Hero Welcome & Quick Actions */}
+        <div className="lg:col-span-6 flex flex-col justify-between rounded-2xl border border-gray-200/80 bg-white p-5 shadow-xs dark:border-gray-800 dark:bg-gray-800/90">
           <div>
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">5 Development Sectors</h2>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Direct access to subsectors and data entry workflows</p>
+            <div className="flex flex-wrap items-center gap-2 mb-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 dark:bg-blue-900/30 px-2.5 py-0.5 text-[11px] font-semibold text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/40">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400 animate-pulse" />
+                PCW-DILG-DBM-NEDA JMC 2013-01
+              </span>
+              <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400">
+                Cycle: {currentYear}
+              </span>
+            </div>
+            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-gray-900 dark:text-white">
+              {getGreeting()}
+            </h1>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+              Sex-disaggregated database and gender mainstreaming monitoring system for the Municipality of Presentacion, Camarines Sur.
+            </p>
+          </div>
+
+          <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700/60 flex flex-wrap items-center gap-2">
+            <Link
+              to="/data-entry/social-development/demography"
+              className="inline-flex items-center gap-1 rounded-lg bg-brand-500 hover:bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white shadow-xs transition"
+            >
+              <span>Demography Grid</span>
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+            <Link
+              to="/barangays"
+              className="inline-flex items-center gap-1 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700/60 dark:hover:bg-gray-700 px-3 py-1.5 text-xs font-semibold text-gray-700 dark:text-gray-200 transition"
+            >
+              <span>18 Barangays</span>
+            </Link>
+            <Link
+              to="/gad-reports/gpb"
+              className="inline-flex items-center gap-1 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700/60 dark:hover:bg-gray-700 px-3 py-1.5 text-xs font-semibold text-gray-700 dark:text-gray-200 transition"
+            >
+              <span>GPB Form</span>
+            </Link>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        {/* Bento Tile 2: Total Population */}
+        <Link
+          to="/data-entry/social-development/demography"
+          className="lg:col-span-3 flex flex-col justify-between rounded-2xl border border-gray-200/80 bg-white p-5 shadow-xs transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-gray-800 dark:bg-gray-800/90 group"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              Total Population
+            </span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 group-hover:scale-105 transition-transform">
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+            </div>
+          </div>
+
+          <div className="my-2">
+            <div className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">
+              {totalPop.toLocaleString()}
+            </div>
+          </div>
+
+          <div>
+            {/* Visual Sex Split Bar */}
+            <div className="w-full h-1.5 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden flex mb-1.5">
+              <div style={{ width: `${malePct}%` }} className="h-full bg-blue-500" title={`Male: ${malePct}%`} />
+              <div style={{ width: `${femalePct}%` }} className="h-full bg-pink-500" title={`Female: ${femalePct}%`} />
+            </div>
+            <div className="flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400 font-medium">
+              <span className="text-blue-600 dark:text-blue-400 font-semibold">M: {malePop.toLocaleString()} ({malePct}%)</span>
+              <span className="text-pink-600 dark:text-pink-400 font-semibold">F: {femalePop.toLocaleString()} ({femalePct}%)</span>
+            </div>
+          </div>
+        </Link>
+
+        {/* Bento Tile 3: Total Households */}
+        <Link
+          to="/data-entry/social-development/demography"
+          className="lg:col-span-3 flex flex-col justify-between rounded-2xl border border-gray-200/80 bg-white p-5 shadow-xs transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-gray-800 dark:bg-gray-800/90 group"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              Total Households
+            </span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 group-hover:scale-105 transition-transform">
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+              </svg>
+            </div>
+          </div>
+
+          <div className="my-2">
+            <div className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">
+              {totalHh.toLocaleString()}
+            </div>
+          </div>
+
+          <div className="pt-2 border-t border-gray-100 dark:border-gray-700/60 flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400">
+            <span>Avg Size: <strong className="text-gray-800 dark:text-gray-200 font-bold">{avgHhSize}</strong> / HH</span>
+            <span className="text-emerald-600 dark:text-emerald-400 font-semibold">18 Barangays</span>
+          </div>
+        </Link>
+      </div>
+
+      {/* BENTO ROW 2: Demographics Visuals Grid */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+        {/* Population by Barangay Bar Chart */}
+        <div className="lg:col-span-7 rounded-2xl border border-gray-200/80 bg-white p-5 shadow-xs dark:border-gray-800 dark:bg-gray-800/90">
+          <div className="mb-3 flex items-center justify-between">
+            <div>
+              <h2 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white">
+                Population by Barangay
+              </h2>
+              <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                Official population counts across all 18 barangays
+              </p>
+            </div>
+            {stats?.years?.demographics && (
+              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/40">
+                Year: {stats.years.demographics}
+              </span>
+            )}
+          </div>
+          <ErrorBoundary>
+            <PopulationByBarangayChart data={stats?.barangayPop || []} height={250} />
+          </ErrorBoundary>
+        </div>
+
+        {/* Sex Distribution Donut Chart */}
+        <div className="lg:col-span-5 rounded-2xl border border-gray-200/80 bg-white p-5 shadow-xs dark:border-gray-800 dark:bg-gray-800/90 flex flex-col justify-between">
+          <div className="mb-2 flex items-center justify-between">
+            <div>
+              <h2 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white">
+                Sex Distribution &amp; Ratio
+              </h2>
+              <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                Overall municipal gender balance
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center justify-center my-auto">
+            <ErrorBoundary>
+              <SexDistributionChart
+                male={malePop}
+                female={femalePop}
+                height={210}
+              />
+            </ErrorBoundary>
+          </div>
+          <div className="pt-2.5 border-t border-gray-100 dark:border-gray-700/60 flex items-center justify-around text-xs font-semibold">
+            <span className="text-blue-600 dark:text-blue-400">Male: {malePop.toLocaleString()} ({malePct}%)</span>
+            <span className="text-gray-300 dark:text-gray-600">•</span>
+            <span className="text-pink-600 dark:text-pink-400">Female: {femalePop.toLocaleString()} ({femalePct}%)</span>
+          </div>
+        </div>
+      </div>
+
+      {/* BENTO ROW 3: JMC Compliance & Statutory GAD Budget */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+        {/* Compliance Widget */}
+        <div className="lg:col-span-5 rounded-2xl border border-gray-200/80 bg-white p-5 shadow-xs dark:border-gray-800 dark:bg-gray-800/90 flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h3 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white">MCW / DILG Compliance</h3>
+              <p className="text-[11px] text-gray-500 dark:text-gray-400">10 Statutory JMC 2013-01 Indicators ({currentYear})</p>
+            </div>
+            <Link
+              to="/gad-reports/compliance"
+              className="text-xs font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400"
+            >
+              Full Tracker →
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="p-3 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-800/40">
+              <div className="flex items-center gap-1.5 mb-1">
+                <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                <span className="text-xs font-semibold text-emerald-900 dark:text-emerald-200">Compliant</span>
+              </div>
+              <p className="text-xl font-extrabold text-emerald-700 dark:text-emerald-300">
+                {compliantCount} <span className="text-xs font-normal text-emerald-600 dark:text-emerald-400">/ {totalComplianceIndicators}</span>
+              </p>
+            </div>
+
+            <div className="p-3 rounded-xl bg-amber-50/80 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-800/40">
+              <div className="flex items-center gap-1.5 mb-1">
+                <div className="w-2 h-2 rounded-full bg-amber-500" />
+                <span className="text-xs font-semibold text-amber-900 dark:text-amber-200">In Progress</span>
+              </div>
+              <p className="text-xl font-extrabold text-amber-700 dark:text-amber-300">
+                {inProgressCount} <span className="text-xs font-normal text-amber-600 dark:text-amber-400">/ {totalComplianceIndicators}</span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* GAD Plan & Budget Utilization Widget */}
+        <div className="lg:col-span-7 rounded-2xl border border-gray-200/80 bg-white p-5 shadow-xs dark:border-gray-800 dark:bg-gray-800/90 flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h3 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white">Annual GAD Budget &amp; Utilization</h3>
+              <p className="text-[11px] text-gray-500 dark:text-gray-400">Statutory 5% Allocation vs Actual Expenditures ({currentYear})</p>
+            </div>
+            <Link
+              to="/gad-reports/gpb"
+              className="text-xs font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400"
+            >
+              GPB Form →
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="p-3.5 rounded-xl bg-blue-50/70 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/40">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Planned GAD Budget</span>
+              <p className="text-xl font-extrabold text-gray-900 dark:text-white mt-1">
+                ₱{totalGpbBudget > 0 ? totalGpbBudget.toLocaleString(undefined, { minimumFractionDigits: 2 }) : "5% Mandate"}
+              </p>
+              <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Formulated via JMC GPB Module</p>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-purple-50/70 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800/40">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">Actual Utilization</span>
+              <p className="text-xl font-extrabold text-gray-900 dark:text-white mt-1">
+                ₱{totalGpbActual > 0 ? totalGpbActual.toLocaleString(undefined, { minimumFractionDigits: 2 }) : "0.00"}
+              </p>
+              <p className="text-[10px] text-purple-600 dark:text-purple-300 font-semibold mt-0.5">
+                {totalGpbBudget > 0 ? `${utilizationRate}% Utilization Rate` : "Tracks GAD AR actuals"}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* BENTO ROW 4: 5 Development Sectors Quick Hub */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h2 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white">5 Development Sectors</h2>
+            <p className="text-[11px] text-gray-500 dark:text-gray-400">Direct access to subsectors, indicators, and data entry workflows</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
           {SECTORS_INFO.map((sec) => (
             <Link
               key={sec.slug}
               to={`/data-entry/${sec.slug}`}
-              className="group relative flex flex-col justify-between rounded-2xl bg-white dark:bg-gray-800 p-5 shadow-sm hover:shadow-md border border-gray-100 dark:border-gray-700/80 transition-all duration-200 hover:-translate-y-0.5"
+              className="group relative flex flex-col justify-between rounded-2xl bg-white dark:bg-gray-800/90 p-4 shadow-xs hover:shadow-md border border-gray-200/80 dark:border-gray-700/80 transition-all duration-200 hover:-translate-y-0.5"
             >
               <div>
-                <div className={`h-10 w-10 rounded-xl ${sec.lightBg} ${sec.textColor} flex items-center justify-center mb-3 group-hover:scale-105 transition-transform`}>
-                  {sec.icon}
+                <div className="flex items-center justify-between mb-2.5">
+                  <div className={`h-9 w-9 rounded-xl ${sec.lightBg} ${sec.textColor} flex items-center justify-center group-hover:scale-105 transition-transform`}>
+                    {sec.icon}
+                  </div>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+                    {sec.count} Subsectors
+                  </span>
                 </div>
-                <h3 className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                <h3 className="text-xs font-bold text-gray-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
                   {sec.name}
                 </h3>
-                <p className="mt-1 text-[11px] text-gray-500 dark:text-gray-400 line-clamp-2">
+                <p className="mt-1 text-[10px] text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed">
                   {sec.description}
                 </p>
               </div>
 
-              <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700/60 flex items-center justify-between text-xs">
-                <span className="font-semibold text-gray-500 dark:text-gray-400">{sec.count} Subsectors</span>
-                <span className="font-bold text-blue-600 dark:text-blue-400 group-hover:translate-x-0.5 transition-transform">
-                  Hub →
+              <div className="mt-3 pt-2.5 border-t border-gray-100 dark:border-gray-700/60 flex items-center justify-between text-[11px]">
+                <span className="font-semibold text-gray-400 dark:text-gray-500">Access Hub</span>
+                <span className="font-bold text-brand-600 dark:text-brand-400 group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
+                  Hub
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
                 </span>
               </div>
             </Link>
@@ -286,178 +455,131 @@ const DashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* JMC Compliance & GAD Budget Widget Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Compliance Widget */}
-        <div className="lg:col-span-1 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800/80 p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-base font-bold text-gray-900 dark:text-white">MCW / DILG Compliance</h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400">10 JMC 2013-01 Indicators ({currentYear})</p>
-            </div>
-            <Link
-              to="/gad-reports/compliance"
-              className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline"
-            >
-              Full Tracker →
-            </Link>
+      {/* BENTO ROW 5: Cross-Sectoral GAD Analytics */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h2 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white">Sectoral Distribution Analytics</h2>
+            <p className="text-[11px] text-gray-500 dark:text-gray-400">Live sectoral ratios and gender-responsive indicators across the municipality</p>
           </div>
+        </div>
 
-          <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-800/40">
-              <div className="flex items-center gap-2.5">
-                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                <span className="text-xs font-semibold text-emerald-900 dark:text-emerald-200">Compliant</span>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {/* Card 1: Economic & Livelihood */}
+          <div className="rounded-2xl border border-gray-200/80 bg-white dark:bg-gray-800/90 p-4 shadow-xs flex flex-col justify-between">
+            <div className="mb-2 flex items-center justify-between">
+              <div>
+                <h3 className="text-xs font-bold text-gray-900 dark:text-white">Livelihood &amp; Economic</h3>
+                <p className="text-[10px] text-gray-400 dark:text-gray-500">Producers &amp; Business Profile ({stats?.years?.econDev || currentYear})</p>
               </div>
-              <span className="text-sm font-bold text-emerald-700 dark:text-emerald-300">
-                {compliantCount} / {totalComplianceIndicators}
-              </span>
+              <Link to="/data-entry/economic-development" className="text-[10px] font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400">
+                View →
+              </Link>
             </div>
+            <div className="my-auto py-1">
+              <ErrorBoundary>
+                <MultiSeriesChart 
+                  noCard={true}
+                  type="donut"
+                  height={200}
+                  categories={["Farmers", "Fisherfolks", "MSMEs", "Vendors"]}
+                  series={[
+                    stats?.livelihood.farmers || 0,
+                    stats?.livelihood.fisherfolks || 0,
+                    stats?.livelihood.business || 0,
+                    stats?.livelihood.ambulantVendors || 0
+                  ]}
+                  colors={["#f59e0b", "#06b6d4", "#8b5cf6", "#ec4899"]}
+                />
+              </ErrorBoundary>
+            </div>
+          </div>
 
-            <div className="flex items-center justify-between p-3 rounded-xl bg-amber-50/70 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-800/40">
-              <div className="flex items-center gap-2.5">
-                <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-                <span className="text-xs font-semibold text-amber-900 dark:text-amber-200">In Progress</span>
+          {/* Card 2: GBV & Protection */}
+          <div className="rounded-2xl border border-gray-200/80 bg-white dark:bg-gray-800/90 p-4 shadow-xs flex flex-col justify-between">
+            <div className="mb-2 flex items-center justify-between">
+              <div>
+                <h3 className="text-xs font-bold text-gray-900 dark:text-white">GBV &amp; Protection</h3>
+                <p className="text-[10px] text-gray-400 dark:text-gray-500">VAWC &amp; Juvenile Cases ({stats?.years?.justice || currentYear})</p>
               </div>
-              <span className="text-sm font-bold text-amber-700 dark:text-amber-300">
-                {inProgressCount} / {totalComplianceIndicators}
-              </span>
+              <Link to="/data-entry/social-development" className="text-[10px] font-bold text-rose-600 hover:text-rose-700 dark:text-rose-400">
+                View →
+              </Link>
+            </div>
+            <div className="my-auto py-1">
+              <ErrorBoundary>
+                <MultiSeriesChart 
+                  noCard={true}
+                  type="donut"
+                  height={200}
+                  categories={["VAWC Reported", "CICL Cases", "Assault Cases"]}
+                  series={[
+                    stats?.justice.vawc || 0,
+                    stats?.justice.cicl || 0,
+                    stats?.justice.assault || 0
+                  ]}
+                  colors={["#ef4444", "#a855f7", "#f43f5e"]}
+                />
+              </ErrorBoundary>
             </div>
           </div>
-        </div>
 
-        {/* GAD Plan & Budget Utilization Widget */}
-        <div className="lg:col-span-2 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800/80 p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-base font-bold text-gray-900 dark:text-white">Annual GAD Budget & Utilization</h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Statutory 5% GAD Allocation vs Expenditures ({currentYear})</p>
+          {/* Card 3: Basic Infrastructure */}
+          <div className="rounded-2xl border border-gray-200/80 bg-white dark:bg-gray-800/90 p-4 shadow-xs flex flex-col justify-between">
+            <div className="mb-2 flex items-center justify-between">
+              <div>
+                <h3 className="text-xs font-bold text-gray-900 dark:text-white">Basic Infrastructure</h3>
+                <p className="text-[10px] text-gray-400 dark:text-gray-500">Utilities &amp; Housing Access ({stats?.years?.infrastructure || currentYear})</p>
+              </div>
+              <Link to="/data-entry/infrastructure" className="text-[10px] font-bold text-cyan-600 hover:text-cyan-700 dark:text-cyan-400">
+                View →
+              </Link>
             </div>
-            <Link
-              to="/gad-reports/gpb"
-              className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline"
-            >
-              GPB Form →
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="p-4 rounded-xl bg-blue-50/60 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/40">
-              <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Planned GAD Budget</span>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                ₱{totalGpbBudget > 0 ? totalGpbBudget.toLocaleString(undefined, { minimumFractionDigits: 2 }) : "5% Mandate"}
-              </p>
-              <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1">Formulated via JMC GPB Module</p>
-            </div>
-
-            <div className="p-4 rounded-xl bg-purple-50/60 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800/40">
-              <span className="text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wider">Actual Utilization</span>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                ₱{totalGpbActual > 0 ? totalGpbActual.toLocaleString(undefined, { minimumFractionDigits: 2 }) : "0.00"}
-              </p>
-              <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
-                {totalGpbBudget > 0 ? `${((totalGpbActual / totalGpbBudget) * 100).toFixed(1)}% Utilization Rate` : "Tracks GAD AR actuals"}
-              </p>
+            <div className="my-auto py-1">
+              <ErrorBoundary>
+                <MultiSeriesChart 
+                  noCard={true}
+                  type="donut"
+                  height={200}
+                  categories={["Safe Water", "Sanitary Toilet", "Informal Settlers"]}
+                  series={[
+                    stats?.infrastructure.safeWater || 0,
+                    stats?.infrastructure.sanitaryToilet || 0,
+                    stats?.infrastructure.informalSettlers || 0
+                  ]}
+                  colors={["#3b82f6", "#10b981", "#64748b"]}
+                />
+              </ErrorBoundary>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Population & Sex Ratio Charts */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Population by Barangay */}
-        <div className="lg:col-span-2 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800/80 p-6 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-                Population by Barangay
-              </h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Total population across all 18 barangays
-              </p>
+          {/* Card 4: Leadership & Governance */}
+          <div className="rounded-2xl border border-gray-200/80 bg-white dark:bg-gray-800/90 p-4 shadow-xs flex flex-col justify-between">
+            <div className="mb-2 flex items-center justify-between">
+              <div>
+                <h3 className="text-xs font-bold text-gray-900 dark:text-white">Leadership &amp; Governance</h3>
+                <p className="text-[10px] text-gray-400 dark:text-gray-500">Officials &amp; Appointed Heads ({stats?.years?.governance || currentYear})</p>
+              </div>
+              <Link to="/data-entry/institutional" className="text-[10px] font-bold text-purple-600 hover:text-purple-700 dark:text-purple-400">
+                View →
+              </Link>
             </div>
-            {stats?.years?.demographics && (
-              <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/40">
-                Year: {stats.years.demographics}
-              </span>
-            )}
-          </div>
-          <ErrorBoundary>
-            <PopulationByBarangayChart data={stats?.barangayPop || []} />
-          </ErrorBoundary>
-        </div>
-
-        {/* Sex Distribution */}
-        <div className="lg:col-span-1 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800/80 p-6 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-                Sex Distribution
-              </h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Overall municipal male to female ratio
-              </p>
+            <div className="my-auto py-1">
+              <ErrorBoundary>
+                <MultiSeriesChart 
+                  noCard={true}
+                  type="donut"
+                  height={200}
+                  categories={["Elected Officials", "Appointed Heads"]}
+                  series={[
+                    stats?.governance.elected || 0,
+                    stats?.governance.appointed || 0
+                  ]}
+                  colors={["#8b5cf6", "#f59e0b"]}
+                />
+              </ErrorBoundary>
             </div>
           </div>
-          <div className="flex items-center justify-center">
-            <ErrorBoundary>
-              <SexDistributionChart
-                male={stats?.sexDist.male || 0}
-                female={stats?.sexDist.female || 0}
-              />
-            </ErrorBoundary>
-          </div>
-        </div>
-      </div>
-
-      {/* 5-Sector Overview Charts */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800/80 p-5 shadow-sm">
-          <ErrorBoundary>
-            <MultiSeriesChart 
-              title={`Livelihood & Economic (${stats?.years?.econDev || ''})`}
-              type="pie"
-              categories={["Farmers", "Fisherfolks", "MSME Owners", "Ambulant Vendors"]}
-              series={[stats?.livelihood.farmers || 0, stats?.livelihood.fisherfolks || 0, stats?.livelihood.business || 0, stats?.livelihood.ambulantVendors || 0]}
-              colors={["#f59e0b", "#06b6d4", "#8b5cf6", "#ec4899"]}
-            />
-          </ErrorBoundary>
-        </div>
-
-        <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800/80 p-5 shadow-sm">
-          <ErrorBoundary>
-            <MultiSeriesChart 
-              title={`GBV & Protection (${stats?.years?.justice || ''})`}
-              type="pie"
-              categories={["VAWC Desks", "CICL Cases", "Other Abuse"]}
-              series={[stats?.justice.vawc || 0, stats?.justice.cicl || 0, stats?.justice.assault || 0]}
-              colors={["#ef4444", "#a855f7", "#f43f5e"]}
-            />
-          </ErrorBoundary>
-        </div>
-
-        <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800/80 p-5 shadow-sm">
-          <ErrorBoundary>
-            <MultiSeriesChart 
-              title={`Basic Infrastructure (${stats?.years?.infrastructure || ''})`}
-              type="pie"
-              categories={["Safe Water", "Sanitary Toilets", "Informal Settlers"]}
-              series={[stats?.infrastructure.safeWater || 0, stats?.infrastructure.sanitaryToilet || 0, stats?.infrastructure.informalSettlers || 0]}
-              colors={["#3b82f6", "#10b981", "#64748b"]}
-            />
-          </ErrorBoundary>
-        </div>
-
-        <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800/80 p-5 shadow-sm">
-          <ErrorBoundary>
-            <MultiSeriesChart 
-              title={`Leadership & Governance (${stats?.years?.governance || ''})`}
-              type="pie"
-              categories={["Elected Officials", "Appointed Heads"]}
-              series={[stats?.governance.elected || 0, stats?.governance.appointed || 0]}
-              colors={["#8b5cf6", "#f59e0b"]}
-            />
-          </ErrorBoundary>
         </div>
       </div>
     </div>

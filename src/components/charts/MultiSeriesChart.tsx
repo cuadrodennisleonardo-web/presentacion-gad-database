@@ -3,7 +3,7 @@ import ReactApexChart from "react-apexcharts";
 import { ApexOptions } from "apexcharts";
 
 interface MultiSeriesChartProps {
-  title: string;
+  title?: string;
   categories?: string[];
   series: any;
   colors?: string[];
@@ -11,6 +11,7 @@ interface MultiSeriesChartProps {
   stacked?: boolean;
   height?: number;
   isCurrency?: boolean;
+  noCard?: boolean;
 }
 
 const MultiSeriesChart: React.FC<MultiSeriesChartProps> = ({ 
@@ -21,7 +22,8 @@ const MultiSeriesChart: React.FC<MultiSeriesChartProps> = ({
   type = "bar",
   stacked = false,
   height = 350,
-  isCurrency = false
+  isCurrency = false,
+  noCard = false
 }) => {
   const isPieOrDonut = type === "pie" || type === "donut";
 
@@ -72,7 +74,7 @@ const MultiSeriesChart: React.FC<MultiSeriesChartProps> = ({
         } else {
           // Direct numbers array passed to bar chart
           sList = [{
-            name: title,
+            name: title || "Data",
             data: series.map((v: any) => (isNaN(Number(v)) ? 0 : Number(v))),
           }];
         }
@@ -168,20 +170,39 @@ const MultiSeriesChart: React.FC<MultiSeriesChartProps> = ({
     },
   }), [type, isPieOrDonut, stacked, colors, normalizedLabels, hasManyCategories, isCurrency]);
 
+  const chartContent = !hasValidData ? (
+    <div style={{ height: chartHeight }} className="flex w-full items-center justify-center text-xs font-medium text-gray-400 dark:text-gray-500 bg-gray-50/50 dark:bg-gray-900/20 rounded-xl border border-dashed border-gray-200 dark:border-gray-800">
+      No Data Recorded
+    </div>
+  ) : (
+    <ReactApexChart options={options} series={normalizedSeries} type={type} height={chartHeight} />
+  );
+
+  if (noCard) {
+    return (
+      <div className="w-full">
+        {title && (
+          <div className="mb-2">
+            <h3 className="text-sm font-bold text-gray-800 dark:text-white/90">
+              {title}
+            </h3>
+          </div>
+        )}
+        {chartContent}
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-sm dark:border-gray-800 dark:bg-white/[0.02]">
-      <div className="mb-4">
-        <h2 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-          {title}
-        </h2>
-      </div>
-      {!hasValidData ? (
-        <div style={{ height: chartHeight }} className="flex w-full items-center justify-center text-sm font-medium text-gray-400 dark:text-gray-500 bg-gray-50/50 dark:bg-gray-900/20 rounded-xl border border-dashed border-gray-200 dark:border-gray-800">
-          No Data Recorded
+      {title && (
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold text-gray-800 dark:text-white/90">
+            {title}
+          </h2>
         </div>
-      ) : (
-        <ReactApexChart options={options} series={normalizedSeries} type={type} height={chartHeight} />
       )}
+      {chartContent}
     </div>
   );
 };

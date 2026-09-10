@@ -1177,12 +1177,19 @@ export default function DynamicDataEntryGrid({ schema, barangays, year, entityNa
 
       <ConfirmationModal
         isOpen={showConfirmModal}
-        onCancel={() => setShowConfirmModal(false)}
+        onCancel={() => {
+          if (!mutation.isPending) {
+            setShowConfirmModal(false);
+          }
+        }}
         onConfirm={() => {
-          if (pendingChanges) {
+          if (pendingChanges && !mutation.isPending) {
             mutation.mutate(pendingChanges);
           }
         }}
+        isLoading={mutation.isPending}
+        confirmLabel="Submit for Approval"
+        loadingLabel="Submitting..."
         title="Submit Changes for Approval"
         message="Your changes will be submitted to the Superadmin for approval before updating the database. Proceed?"
       />

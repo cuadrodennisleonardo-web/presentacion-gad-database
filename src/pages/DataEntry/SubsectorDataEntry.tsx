@@ -147,7 +147,7 @@ export default function SubsectorDataEntry() {
                       : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:bg-white/60 dark:hover:bg-gray-800/60'
                   }`}
                 >
-                  Population &amp; Households (Native)
+                  Population &amp; Households
                 </button>
                 {dynamicSchemas.map((ds) => (
                   <button
@@ -177,7 +177,7 @@ export default function SubsectorDataEntry() {
                 </h3>
                 <p className="text-sm text-gray-500 mt-0.5">
                   {activeTab === 'native_demography'
-                    ? 'Manage official sex-disaggregated population, household heads, and age groups for all 18 official barangays.'
+                    ? 'Manage official population, household counts, and age groups for all 18 official barangays.'
                     : ((currentTabSchema?.schema as any)?.description || `Manage ${currentTabSchema?.tab_name || 'subsector'} indicators.`)}
                 </p>
               </div>

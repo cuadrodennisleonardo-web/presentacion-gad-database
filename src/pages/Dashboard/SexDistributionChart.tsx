@@ -4,11 +4,13 @@ import Chart from "react-apexcharts";
 interface SexDistributionChartProps {
   male: number;
   female: number;
+  height?: number | string;
 }
 
 const SexDistributionChart: React.FC<SexDistributionChartProps> = ({
   male,
   female,
+  height = 260,
 }) => {
   const options: ApexCharts.ApexOptions = useMemo(
     () => ({
@@ -22,18 +24,18 @@ const SexDistributionChart: React.FC<SexDistributionChartProps> = ({
       plotOptions: {
         pie: {
           donut: {
-            size: "70%",
+            size: "72%",
             labels: {
               show: true,
               name: {
                 show: true,
-                fontSize: "14px",
+                fontSize: "12px",
                 fontWeight: 500,
                 color: "#6b7280",
               },
               value: {
                 show: true,
-                fontSize: "24px",
+                fontSize: "20px",
                 fontWeight: 700,
                 color: "#1f2937",
                 formatter: (val) => Number(val).toLocaleString(),
@@ -42,7 +44,7 @@ const SexDistributionChart: React.FC<SexDistributionChartProps> = ({
                 show: true,
                 showAlways: true,
                 label: "Total",
-                fontSize: "14px",
+                fontSize: "12px",
                 fontWeight: 500,
                 color: "#6b7280",
                 formatter: function (w) {
@@ -66,13 +68,13 @@ const SexDistributionChart: React.FC<SexDistributionChartProps> = ({
         show: true,
         position: "bottom",
         horizontalAlign: "center",
-        fontSize: "14px",
+        fontSize: "12px",
         markers: {
           shape: "circle",
         },
         itemMargin: {
           horizontal: 10,
-          vertical: 5,
+          vertical: 4,
         },
       },
       theme: {
@@ -86,7 +88,7 @@ const SexDistributionChart: React.FC<SexDistributionChartProps> = ({
 
   if (male === 0 && female === 0) {
     return (
-      <div className="flex h-[300px] w-full flex-col items-center justify-center text-center p-4">
+      <div className="flex h-[260px] w-full flex-col items-center justify-center text-center p-4">
         <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-400 mb-2">
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
@@ -100,7 +102,7 @@ const SexDistributionChart: React.FC<SexDistributionChartProps> = ({
   }
 
   return (
-    <div className="h-[300px] w-full">
+    <div style={{ height }} className="w-full">
       <Chart options={options} series={series} type="donut" height="100%" />
     </div>
   );

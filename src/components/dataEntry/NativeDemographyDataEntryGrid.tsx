@@ -37,7 +37,6 @@ const DEMOGRAPHY_EXPORT_COLUMNS: ExportColumn[] = [
   { key: 'total_population', header: 'Total Population' },
   { key: 'household_heads_m', header: 'Male Household Heads' },
   { key: 'household_heads_f', header: 'Female Household Heads' },
-  { key: 'household_heads_total', header: 'Total Household Heads' },
   { key: 'total_households', header: 'Total Households' },
   { key: 'age_under_18', header: 'Age < 18' },
   { key: 'age_19_to_59', header: 'Age 19-59' },
@@ -91,6 +90,15 @@ export default function NativeDemographyDataEntryGrid({ year, entityName = 'Bara
 
     barangays.forEach(b => {
       const existing = dbMap.get(b.id) || {};
+      const calculatedPop = (existing.male_count !== null || existing.female_count !== null)
+        ? (Number(existing.male_count || 0) + Number(existing.female_count || 0))
+        : null;
+      const calculatedHh = existing.total_households ?? existing.household_heads_total ?? (
+        (existing.household_heads_m !== null || existing.household_heads_f !== null)
+          ? (Number(existing.household_heads_m || 0) + Number(existing.household_heads_f || 0))
+          : null
+      );
+
       initialMap[b.id] = {
         id: existing.id,
         barangay_id: b.id,
@@ -98,19 +106,11 @@ export default function NativeDemographyDataEntryGrid({ year, entityName = 'Bara
         year,
         male_count: existing.male_count ?? null,
         female_count: existing.female_count ?? null,
-        total_population: existing.total_population ?? (
-          (existing.male_count !== null || existing.female_count !== null)
-            ? (Number(existing.male_count || 0) + Number(existing.female_count || 0))
-            : null
-        ),
+        total_population: existing.total_population ?? calculatedPop,
         household_heads_m: existing.household_heads_m ?? null,
         household_heads_f: existing.household_heads_f ?? null,
-        household_heads_total: existing.household_heads_total ?? (
-          (existing.household_heads_m !== null || existing.household_heads_f !== null)
-            ? (Number(existing.household_heads_m || 0) + Number(existing.household_heads_f || 0))
-            : null
-        ),
-        total_households: existing.total_households ?? null,
+        household_heads_total: calculatedHh,
+        total_households: calculatedHh,
         age_under_18: existing.age_under_18 ?? null,
         age_19_to_59: existing.age_19_to_59 ?? null,
         age_60_plus: existing.age_60_plus ?? null,
@@ -142,18 +142,24 @@ export default function NativeDemographyDataEntryGrid({ year, entityName = 'Bara
         }
       }
 
-      // Auto-calculate Total Household Heads if male/female heads is edited
+      // Auto-calculate Total Households when Male or Female Head is edited
       if (field === 'household_heads_m' || field === 'household_heads_f') {
         const hm = field === 'household_heads_m' ? numVal : (row.household_heads_m ?? null);
         const hf = field === 'household_heads_f' ? numVal : (row.household_heads_f ?? null);
         if (hm !== null || hf !== null) {
-          row.household_heads_total = Number(hm || 0) + Number(hf || 0);
-          if (row.total_households === null || row.total_households === undefined) {
-            row.total_households = row.household_heads_total;
-          }
+          const hhSum = Number(hm || 0) + Number(hf || 0);
+          row.household_heads_total = hhSum;
+          row.total_households = hhSum;
         } else {
           row.household_heads_total = null;
+          row.total_households = null;
         }
+      }
+
+      // If user directly edits Total Households
+      if (field === 'total_households' || field === 'household_heads_total') {
+        row.total_households = numVal;
+        row.household_heads_total = numVal;
       }
 
       return { ...prev, [barangayId]: row };
@@ -201,6 +207,11 @@ export default function NativeDemographyDataEntryGrid({ year, entityName = 'Bara
       if (canDirectSave) {
         const upsertRows = Object.keys(data).map(bId => {
           const row = data[bId] || {};
+          const hhTotal = row.total_households ?? row.household_heads_total ?? (
+            (row.household_heads_m !== null || row.household_heads_f !== null)
+              ? (Number(row.household_heads_m || 0) + Number(row.household_heads_f || 0))
+              : null
+          );
           return {
             barangay_id: bId,
             year,
@@ -210,8 +221,8 @@ export default function NativeDemographyDataEntryGrid({ year, entityName = 'Bara
             total_population: row.total_population ?? null,
             household_heads_m: row.household_heads_m ?? null,
             household_heads_f: row.household_heads_f ?? null,
-            household_heads_total: row.household_heads_total ?? null,
-            total_households: row.total_households ?? null,
+            household_heads_total: hhTotal,
+            total_households: hhTotal,
             age_under_18: row.age_under_18 ?? null,
             age_19_to_59: row.age_19_to_59 ?? null,
             age_60_plus: row.age_60_plus ?? null,
@@ -219,11 +230,32 @@ export default function NativeDemographyDataEntryGrid({ year, entityName = 'Bara
           };
         });
 
-        const { error } = await supabase
+        // Try full upsert with all demography columns
+        const { error: fullError } = await supabase
           .from('population_stats')
           .upsert(upsertRows, { onConflict: 'barangay_id,year' });
 
-        if (error) throw error;
+        if (fullError) {
+          // If columns don't exist yet in population_stats table, fallback to core existing columns
+          const fallbackRows = upsertRows.map(r => ({
+            barangay_id: r.barangay_id,
+            year: r.year,
+            month_updated: r.month_updated,
+            male_count: r.male_count,
+            female_count: r.female_count,
+            total_population: r.total_population,
+            household_heads_m: r.household_heads_m,
+            household_heads_f: r.household_heads_f,
+            household_heads_total: r.household_heads_total,
+            updated_at: r.updated_at,
+          }));
+
+          const { error: fallbackError } = await supabase
+            .from('population_stats')
+            .upsert(fallbackRows, { onConflict: 'barangay_id,year' });
+
+          if (fallbackError) throw fallbackError;
+        }
 
         // Also update any matching dynamic_data row for Demography so everything stays 100% synchronized
         try {
@@ -235,6 +267,11 @@ export default function NativeDemographyDataEntryGrid({ year, entityName = 'Bara
           if (demoSchemas && demoSchemas.length > 0) {
             const dynamicUpserts = Object.keys(data).map(bId => {
               const row = data[bId] || {};
+              const hhTotal = row.total_households ?? row.household_heads_total ?? (
+                (row.household_heads_m !== null || row.household_heads_f !== null)
+                  ? (Number(row.household_heads_m || 0) + Number(row.household_heads_f || 0))
+                  : 0
+              );
               return {
                 barangay_id: bId,
                 year,
@@ -242,8 +279,8 @@ export default function NativeDemographyDataEntryGrid({ year, entityName = 'Bara
                 schema_id: demoSchemas[0].id,
                 data: {
                   total_pop: { m: row.male_count || 0, f: row.female_count || 0, total: row.total_population || 0 },
-                  hh_heads: { m: row.household_heads_m || 0, f: row.household_heads_f || 0, total: row.household_heads_total || 0 },
-                  total_households: row.total_households || 0,
+                  hh_heads: { m: row.household_heads_m || 0, f: row.household_heads_f || 0, total: hhTotal },
+                  total_households: hhTotal,
                   age_breakdown: {
                     under_18: row.age_under_18 || 0,
                     working_age: row.age_19_to_59 || 0,
@@ -297,31 +334,40 @@ export default function NativeDemographyDataEntryGrid({ year, entityName = 'Bara
   };
 
   const handleConfirmSave = async () => {
-    if (!pendingChanges) return;
-    await saveMutation.mutateAsync(pendingChanges);
+    if (!pendingChanges || saveMutation.isPending) return;
+    try {
+      await saveMutation.mutateAsync(pendingChanges);
+    } catch (err) {
+      console.error("Demography save error:", err);
+    }
   };
 
-  // Calculate grand totals across all 18 barangays
+  // Calculate grand totals across all 18 barangays accurately
   const summaryTotals = useMemo(() => {
     let totMale = 0;
     let totFemale = 0;
     let totPop = 0;
     let totHhMale = 0;
     let totHhFemale = 0;
-    let totHhHeads = 0;
     let totHouseholds = 0;
     let totUnder18 = 0;
     let tot19to59 = 0;
     let tot60Plus = 0;
 
     Object.values(data).forEach(r => {
-      totMale += Number(r.male_count || 0);
-      totFemale += Number(r.female_count || 0);
-      totPop += Number(r.total_population || 0);
-      totHhMale += Number(r.household_heads_m || 0);
-      totHhFemale += Number(r.household_heads_f || 0);
-      totHhHeads += Number(r.household_heads_total || 0);
-      totHouseholds += Number(r.total_households || 0);
+      const m = Number(r.male_count || 0);
+      const f = Number(r.female_count || 0);
+      const p = Number(r.total_population || (m + f));
+      const hhm = Number(r.household_heads_m || 0);
+      const hhf = Number(r.household_heads_f || 0);
+      const hh = Number(r.total_households ?? r.household_heads_total ?? (hhm + hhf));
+
+      totMale += m;
+      totFemale += f;
+      totPop += p;
+      totHhMale += hhm;
+      totHhFemale += hhf;
+      totHouseholds += hh;
       totUnder18 += Number(r.age_under_18 || 0);
       tot19to59 += Number(r.age_19_to_59 || 0);
       tot60Plus += Number(r.age_60_plus || 0);
@@ -333,7 +379,6 @@ export default function NativeDemographyDataEntryGrid({ year, entityName = 'Bara
       totPop,
       totHhMale,
       totHhFemale,
-      totHhHeads,
       totHouseholds,
       totUnder18,
       tot19to59,
@@ -352,6 +397,11 @@ export default function NativeDemographyDataEntryGrid({ year, entityName = 'Bara
   const exportData = useMemo(() => {
     return barangays.map(b => {
       const r = data[b.id] || {};
+      const hh = r.total_households ?? r.household_heads_total ?? (
+        (r.household_heads_m !== null || r.household_heads_f !== null)
+          ? (Number(r.household_heads_m || 0) + Number(r.household_heads_f || 0))
+          : ''
+      );
       return {
         barangay_name: b.name,
         male_count: r.male_count ?? '',
@@ -359,8 +409,7 @@ export default function NativeDemographyDataEntryGrid({ year, entityName = 'Bara
         total_population: r.total_population ?? '',
         household_heads_m: r.household_heads_m ?? '',
         household_heads_f: r.household_heads_f ?? '',
-        household_heads_total: r.household_heads_total ?? '',
-        total_households: r.total_households ?? '',
+        total_households: hh,
         age_under_18: r.age_under_18 ?? '',
         age_19_to_59: r.age_19_to_59 ?? '',
         age_60_plus: r.age_60_plus ?? '',
@@ -395,12 +444,16 @@ export default function NativeDemographyDataEntryGrid({ year, entityName = 'Bara
 
           if (row.household_heads_m !== undefined) currentRow.household_heads_m = parseNum(row.household_heads_m);
           if (row.household_heads_f !== undefined) currentRow.household_heads_f = parseNum(row.household_heads_f);
-          if (row.household_heads_total !== undefined) currentRow.household_heads_total = parseNum(row.household_heads_total);
-          else if (currentRow.household_heads_m !== null || currentRow.household_heads_f !== null) {
-            currentRow.household_heads_total = Number(currentRow.household_heads_m || 0) + Number(currentRow.household_heads_f || 0);
+          
+          if (row.total_households !== undefined) {
+            currentRow.total_households = parseNum(row.total_households);
+            currentRow.household_heads_total = currentRow.total_households;
+          } else if (currentRow.household_heads_m !== null || currentRow.household_heads_f !== null) {
+            const hSum = Number(currentRow.household_heads_m || 0) + Number(currentRow.household_heads_f || 0);
+            currentRow.household_heads_total = hSum;
+            currentRow.total_households = hSum;
           }
 
-          if (row.total_households !== undefined) currentRow.total_households = parseNum(row.total_households);
           if (row.age_under_18 !== undefined) currentRow.age_under_18 = parseNum(row.age_under_18);
           if (row.age_19_to_59 !== undefined) currentRow.age_19_to_59 = parseNum(row.age_19_to_59);
           if (row.age_60_plus !== undefined) currentRow.age_60_plus = parseNum(row.age_60_plus);
@@ -429,86 +482,50 @@ export default function NativeDemographyDataEntryGrid({ year, entityName = 'Bara
 
   return (
     <div className="space-y-5">
-      {/* 4 Spacious Summary KPI Cards matching Platform Design */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* 2 Spacious Summary KPI Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Card 1: Total Population */}
         <div className="rounded-2xl border border-gray-200/80 bg-gray-50/50 p-4 dark:border-gray-800 dark:bg-white/[0.02]">
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between mb-1.5">
             <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
               Total Population
             </span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
             </div>
           </div>
-          <div className="text-2xl font-bold text-gray-800 dark:text-white/90">
-            {summaryTotals.totPop.toLocaleString()}
+          <div className="flex items-baseline justify-between gap-2">
+            <div className="text-2xl font-bold text-gray-800 dark:text-white/90">
+              {summaryTotals.totPop.toLocaleString()}
+            </div>
+            <div className="text-xs text-gray-500 dark:text-gray-400 text-right">
+              Male: <span className="font-semibold text-gray-700 dark:text-gray-300">{summaryTotals.totMale.toLocaleString()}</span> • Female: <span className="font-semibold text-gray-700 dark:text-gray-300">{summaryTotals.totFemale.toLocaleString()}</span>
+            </div>
           </div>
-          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            Male: <span className="font-semibold text-gray-700 dark:text-gray-300">{summaryTotals.totMale.toLocaleString()}</span> • Female: <span className="font-semibold text-gray-700 dark:text-gray-300">{summaryTotals.totFemale.toLocaleString()}</span>
-          </p>
         </div>
 
         {/* Card 2: Total Households */}
         <div className="rounded-2xl border border-gray-200/80 bg-gray-50/50 p-4 dark:border-gray-800 dark:bg-white/[0.02]">
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between mb-1.5">
             <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
               Total Households
             </span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
               </svg>
             </div>
           </div>
-          <div className="text-2xl font-bold text-gray-800 dark:text-white/90">
-            {summaryTotals.totHouseholds.toLocaleString()}
-          </div>
-          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            Avg size: <span className="font-semibold text-gray-700 dark:text-gray-300">{summaryTotals.totHouseholds > 0 ? (summaryTotals.totPop / summaryTotals.totHouseholds).toFixed(1) : '0'}</span> members / HH
-          </p>
-        </div>
-
-        {/* Card 3: Household Heads */}
-        <div className="rounded-2xl border border-gray-200/80 bg-gray-50/50 p-4 dark:border-gray-800 dark:bg-white/[0.02]">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-              Household Heads
-            </span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+          <div className="flex items-baseline justify-between gap-2">
+            <div className="text-2xl font-bold text-gray-800 dark:text-white/90">
+              {summaryTotals.totHouseholds.toLocaleString()}
+            </div>
+            <div className="text-xs text-gray-500 dark:text-gray-400 text-right">
+              Avg size: <span className="font-semibold text-gray-700 dark:text-gray-300">{summaryTotals.totHouseholds > 0 ? (summaryTotals.totPop / summaryTotals.totHouseholds).toFixed(1) : '0'}</span> members / HH
             </div>
           </div>
-          <div className="text-2xl font-bold text-gray-800 dark:text-white/90">
-            {summaryTotals.totHhHeads.toLocaleString()}
-          </div>
-          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            Male: <span className="font-semibold text-gray-700 dark:text-gray-300">{summaryTotals.totHhMale.toLocaleString()}</span> • Female: <span className="font-semibold text-gray-700 dark:text-gray-300">{summaryTotals.totHhFemale.toLocaleString()}</span>
-          </p>
-        </div>
-
-        {/* Card 4: Official Barangays */}
-        <div className="rounded-2xl border border-gray-200/80 bg-gray-50/50 p-4 dark:border-gray-800 dark:bg-white/[0.02]">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-              Official Barangays
-            </span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-gray-800 dark:text-white/90">
-            {barangays.length} / 18
-          </div>
-          <p className="mt-1 text-xs text-brand-600 dark:text-brand-400 font-medium">
-            Live native database sync
-          </p>
         </div>
       </div>
 
@@ -579,27 +596,24 @@ export default function NativeDemographyDataEntryGrid({ year, entityName = 'Bara
                 {entityName}
               </th>
               <th colSpan={3} className="whitespace-nowrap px-4 py-2 font-bold text-center border-b border-r dark:border-gray-800 bg-brand-50/60 dark:bg-brand-950/30 text-brand-700 dark:text-brand-300">
-                Population (Sex-Disaggregated)
+                Population
               </th>
               <th colSpan={3} className="whitespace-nowrap px-4 py-2 font-bold text-center border-b border-r dark:border-gray-800 bg-gray-100/60 dark:bg-gray-800/60 text-gray-700 dark:text-gray-300">
-                Household Heads
-              </th>
-              <th rowSpan={2} className="whitespace-nowrap px-4 py-3 font-bold text-center border-b border-r dark:border-gray-800 min-w-[110px] bg-brand-50/40 dark:bg-brand-950/20 text-brand-700 dark:text-brand-300">
-                Total Households
+                Households
               </th>
               <th colSpan={3} className="whitespace-nowrap px-4 py-2 font-bold text-center border-b dark:border-gray-800 bg-gray-100/60 dark:bg-gray-800/60 text-gray-700 dark:text-gray-300">
-                Age Distribution Breakdown
+                Age Distribution
               </th>
             </tr>
             {/* Secondary column headers */}
             <tr>
               <th className="px-2.5 py-2 text-center border-b dark:border-gray-800 font-semibold min-w-[80px]">Male</th>
               <th className="px-2.5 py-2 text-center border-b dark:border-gray-800 font-semibold min-w-[80px]">Female</th>
-              <th className="px-2.5 py-2 text-center border-b border-r dark:border-gray-800 font-bold bg-brand-100/40 dark:bg-brand-950/20 text-brand-800 dark:text-brand-300 min-w-[90px]">Total Pop</th>
+              <th className="px-2.5 py-2 text-center border-b border-r dark:border-gray-800 font-bold bg-brand-100/40 dark:bg-brand-950/20 text-brand-800 dark:text-brand-300 min-w-[90px]">Total</th>
               
-              <th className="px-2.5 py-2 text-center border-b dark:border-gray-800 font-semibold min-w-[80px]">Male Hdr</th>
-              <th className="px-2.5 py-2 text-center border-b dark:border-gray-800 font-semibold min-w-[80px]">Female Hdr</th>
-              <th className="px-2.5 py-2 text-center border-b border-r dark:border-gray-800 font-bold bg-gray-100/80 dark:bg-gray-800/80 text-gray-800 dark:text-gray-200 min-w-[90px]">Total Hdr</th>
+              <th className="px-2.5 py-2 text-center border-b dark:border-gray-800 font-semibold min-w-[80px]">Male Head</th>
+              <th className="px-2.5 py-2 text-center border-b dark:border-gray-800 font-semibold min-w-[80px]">Female Head</th>
+              <th className="px-2.5 py-2 text-center border-b border-r dark:border-gray-800 font-bold bg-brand-100/40 dark:bg-brand-950/20 text-brand-800 dark:text-brand-300 min-w-[95px]">Total</th>
 
               <th className="px-2.5 py-2 text-center border-b dark:border-gray-800 font-semibold min-w-[80px]">&lt; 18 Yrs</th>
               <th className="px-2.5 py-2 text-center border-b dark:border-gray-800 font-semibold min-w-[80px]">19–59 Yrs</th>
@@ -694,21 +708,8 @@ export default function NativeDemographyDataEntryGrid({ year, entityName = 'Bara
                     />
                   </td>
 
-                  {/* Total Household Heads (Auto-Calculated) */}
-                  <td className="p-0 border-r dark:border-gray-800 bg-gray-50/80 dark:bg-gray-800/40 text-center font-bold text-gray-800 dark:text-gray-200">
-                    <input
-                      type="number"
-                      min="0"
-                      value={r.household_heads_total !== undefined && r.household_heads_total !== null ? r.household_heads_total : ''}
-                      onChange={(e) => handleCellChange(b.id, 'household_heads_total', e.target.value)}
-                      disabled={!canWrite || isLocked}
-                      placeholder="0"
-                      className="w-full min-w-[65px] bg-transparent px-2 py-2 text-center font-bold text-gray-800 dark:text-gray-200 outline-none focus:bg-gray-100 dark:focus:bg-gray-700 disabled:opacity-90"
-                    />
-                  </td>
-
-                  {/* Total Households */}
-                  <td className="p-0 border-r dark:border-gray-800 bg-brand-50/20 dark:bg-brand-950/10">
+                  {/* Total Households (Auto-Calculated from Heads, Editable if M/F blank) */}
+                  <td className="p-0 border-r dark:border-gray-800 bg-brand-50/30 dark:bg-brand-950/20 text-center font-bold text-brand-700 dark:text-brand-300">
                     <input
                       type="number"
                       min="0"
@@ -716,7 +717,7 @@ export default function NativeDemographyDataEntryGrid({ year, entityName = 'Bara
                       onChange={(e) => handleCellChange(b.id, 'total_households', e.target.value)}
                       disabled={!canWrite || isLocked}
                       placeholder="0"
-                      className="w-full min-w-[65px] bg-transparent px-2 py-2 text-center font-bold text-brand-700 dark:text-brand-300 outline-none focus:bg-brand-50 dark:focus:bg-brand-900/20 disabled:opacity-90"
+                      className="w-full min-w-[65px] bg-transparent px-2 py-2 text-center font-bold text-brand-800 dark:text-brand-200 outline-none focus:bg-brand-50 dark:focus:bg-brand-900/30 disabled:opacity-90"
                     />
                   </td>
 
@@ -776,10 +777,7 @@ export default function NativeDemographyDataEntryGrid({ year, entityName = 'Bara
               </td>
               <td className="px-2 py-3 text-center border-r dark:border-gray-800 font-bold">{summaryTotals.totHhMale.toLocaleString()}</td>
               <td className="px-2 py-3 text-center border-r dark:border-gray-800 font-bold">{summaryTotals.totHhFemale.toLocaleString()}</td>
-              <td className="px-2 py-3 text-center border-r dark:border-gray-800 font-extrabold bg-gray-200/60 dark:bg-gray-800/80">
-                {summaryTotals.totHhHeads.toLocaleString()}
-              </td>
-              <td className="px-2 py-3 text-center border-r dark:border-gray-800 font-extrabold bg-brand-100/40 dark:bg-brand-950/40 text-brand-900 dark:text-brand-200">
+              <td className="px-2 py-3 text-center border-r dark:border-gray-800 font-extrabold bg-brand-100/60 dark:bg-brand-950/60 text-brand-900 dark:text-brand-200">
                 {summaryTotals.totHouseholds.toLocaleString()}
               </td>
               <td className="px-2 py-3 text-center border-r dark:border-gray-800 font-bold">{summaryTotals.totUnder18.toLocaleString()}</td>
@@ -794,8 +792,15 @@ export default function NativeDemographyDataEntryGrid({ year, entityName = 'Bara
       {showConfirmModal && (
         <ConfirmationModal
           isOpen={showConfirmModal}
-          onCancel={() => setShowConfirmModal(false)}
+          onCancel={() => {
+            if (!saveMutation.isPending) {
+              setShowConfirmModal(false);
+            }
+          }}
           onConfirm={handleConfirmSave}
+          isLoading={saveMutation.isPending}
+          confirmLabel={canDirectSave ? "Save Changes" : "Submit for Approval"}
+          loadingLabel={canDirectSave ? "Saving Changes..." : "Submitting for Approval..."}
           title={canDirectSave ? "Save Demographics Directly" : "Submit Demographics for Approval"}
           message={
             canDirectSave
@@ -807,3 +812,4 @@ export default function NativeDemographyDataEntryGrid({ year, entityName = 'Bara
     </div>
   );
 }
+
