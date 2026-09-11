@@ -119,6 +119,29 @@ const MultiSeriesChart: React.FC<MultiSeriesChartProps> = ({
     },
     dataLabels: {
       enabled: isPieOrDonut,
+      formatter: (val: number) => {
+        if (typeof val === 'number' && !isNaN(val)) {
+          return `${val.toFixed(1)}%`;
+        }
+        return `${val}`;
+      },
+      style: {
+        fontSize: '11px',
+        fontFamily: 'Outfit, sans-serif',
+        fontWeight: '700',
+        colors: ['#ffffff'],
+      },
+      dropShadow: {
+        enabled: true,
+        top: 1,
+        left: 1,
+        blur: 3,
+        color: '#000000',
+        opacity: 0.85,
+      },
+      background: {
+        enabled: false,
+      },
     },
     stroke: {
       show: true,

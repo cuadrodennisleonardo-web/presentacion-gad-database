@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/config/supabase';
 import { useRole } from '@/hooks/useRole';
 import PageMeta from '@/components/common/PageMeta';
-import PageBreadcrumb from '@/components/common/PageBreadcrumb';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import type { Database } from '@/types/database';
 
@@ -180,157 +179,173 @@ export default function SectorHubPage({ sector, sectorSlug, description }: Secto
   const isViewer = role === 'viewer' || role === 'senior_viewer' || role === 'dept_viewer';
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-4 pb-10">
       <PageMeta title={`${sector} Hub`} description={description} />
-      <PageBreadcrumb pageTitle={sector} hideNav={false} />
-
-      {/* Header Banner */}
-      <div className="rounded-2xl bg-white dark:bg-gray-800/90 p-6 sm:p-7 shadow-sm border border-gray-100 dark:border-gray-800">
-        <div className="max-w-3xl">
-          <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 dark:bg-blue-900/30 px-3 py-1 text-xs font-semibold text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/40 mb-3">
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400" />
-            JMC 2013-01 Mandated Sector
+      
+      {/* Compact Bento Header: Combines Breadcrumb, Title, Description, Stats & Search into a unified space-saving block */}
+      <div className="rounded-2xl border border-gray-200/80 bg-white/90 dark:border-gray-800 dark:bg-gray-800/90 p-4 sm:p-5 shadow-xs backdrop-blur-sm">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 pb-3.5 border-b border-gray-100 dark:border-gray-700/60">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 dark:bg-blue-900/40 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/40">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400 animate-pulse" />
+                JMC 2013-01 Mandated Sector
+              </span>
+              <span className="text-xs text-gray-400 dark:text-gray-500">/</span>
+              <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Data Entry Hub</span>
+            </div>
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-gray-900 dark:text-white">
+              {sector}
+            </h1>
+            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 max-w-3xl line-clamp-2">
+              {description}
+            </p>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white mb-2">{sector}</h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base leading-relaxed">{description}</p>
 
-          {/* Quick Stat Badges */}
-          <div className="mt-5 flex flex-wrap gap-2.5">
-            <div className="flex items-center gap-2 rounded-xl bg-gray-50 dark:bg-gray-900/50 px-3.5 py-1.5 border border-gray-200/80 dark:border-gray-700/60 text-xs sm:text-sm">
-              <span className="font-bold text-gray-900 dark:text-white">{totalCount}</span>
-              <span className="text-gray-500 dark:text-gray-400">Subsectors Total</span>
+          {/* Quick Counter Bento Badges */}
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap shrink-0">
+            <div className="flex items-center gap-1.5 rounded-xl bg-gray-50 dark:bg-gray-900/60 px-3 py-1.5 border border-gray-200/70 dark:border-gray-700/60 text-xs">
+              <span className="font-extrabold text-gray-900 dark:text-white">{totalCount}</span>
+              <span className="text-gray-500 dark:text-gray-400 text-[11px]">Total</span>
             </div>
-            <div className="flex items-center gap-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 px-3.5 py-1.5 border border-emerald-200/80 dark:border-emerald-800/40 text-xs sm:text-sm">
-              <span className="font-bold text-emerald-700 dark:text-emerald-400">{barangayLevelCount}</span>
-              <span className="text-emerald-700/80 dark:text-emerald-400/80">Barangay-Level</span>
+            <div className="flex items-center gap-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 px-3 py-1.5 border border-emerald-200/70 dark:border-emerald-800/40 text-xs">
+              <span className="font-extrabold text-emerald-700 dark:text-emerald-400">{barangayLevelCount}</span>
+              <span className="text-emerald-700/80 dark:text-emerald-400/80 text-[11px]">Barangay</span>
             </div>
-            <div className="flex items-center gap-2 rounded-xl bg-amber-50 dark:bg-amber-950/30 px-3.5 py-1.5 border border-amber-200/80 dark:border-amber-800/40 text-xs sm:text-sm">
-              <span className="font-bold text-amber-700 dark:text-amber-400">{municipalLevelCount}</span>
-              <span className="text-amber-700/80 dark:text-amber-400/80">Municipal-Level</span>
+            <div className="flex items-center gap-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 px-3 py-1.5 border border-amber-200/70 dark:border-amber-800/40 text-xs">
+              <span className="font-extrabold text-amber-700 dark:text-amber-400">{municipalLevelCount}</span>
+              <span className="text-amber-700/80 dark:text-amber-400/80 text-[11px]">Municipal</span>
             </div>
+          </div>
+        </div>
+
+        {/* Integrated Filter and Search Row */}
+        <div className="pt-3.5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+          <div className="relative flex-1 max-w-md">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              type="text"
+              placeholder="Search subsectors or indicators..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full h-9 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-900/50 pl-9 pr-8 text-xs text-gray-800 dark:text-gray-200 placeholder-gray-400 focus:border-blue-500 focus:bg-white dark:focus:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xs"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-1 bg-gray-100/90 dark:bg-gray-900/70 p-1 rounded-xl shrink-0">
+            <button
+              onClick={() => setLevelFilter('all')}
+              className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                levelFilter === 'all'
+                  ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 shadow-xs'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              }`}
+            >
+              All ({totalCount})
+            </button>
+            <button
+              onClick={() => setLevelFilter('barangay')}
+              className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                levelFilter === 'barangay'
+                  ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 shadow-xs'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              }`}
+            >
+              Barangay ({barangayLevelCount})
+            </button>
+            <button
+              onClick={() => setLevelFilter('municipal')}
+              className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                levelFilter === 'municipal'
+                  ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 shadow-xs'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              }`}
+            >
+              Municipal ({municipalLevelCount})
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-        <div className="relative flex-1">
-          <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <input
-            type="text"
-            placeholder="Search subsectors, indicators, keywords..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 pl-10 pr-4 py-2 text-sm text-gray-800 dark:text-gray-200 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-        </div>
-
-        <div className="flex items-center gap-1.5 bg-gray-100 dark:bg-gray-900/60 p-1 rounded-lg">
-          <button
-            onClick={() => setLevelFilter('all')}
-            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-              levelFilter === 'all'
-                ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 shadow-sm'
-                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'
-            }`}
-          >
-            All ({totalCount})
-          </button>
-          <button
-            onClick={() => setLevelFilter('barangay')}
-            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-              levelFilter === 'barangay'
-                ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 shadow-sm'
-                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'
-            }`}
-          >
-            Barangay ({barangayLevelCount})
-          </button>
-          <button
-            onClick={() => setLevelFilter('municipal')}
-            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-              levelFilter === 'municipal'
-                ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 shadow-sm'
-                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'
-            }`}
-          >
-            Municipal ({municipalLevelCount})
-          </button>
-        </div>
-      </div>
-
-      {/* Subsectors Card Grid */}
+      {/* High-Density Bento Subsectors Card Grid */}
       {filteredSubsectors.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-gray-200 dark:border-gray-700 p-12 text-center">
-          <div className="mx-auto w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-500 mb-3">
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="rounded-2xl border border-dashed border-gray-200 dark:border-gray-700 p-8 text-center bg-white/50 dark:bg-gray-800/50">
+          <div className="mx-auto w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-500 mb-2">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <h3 className="text-base font-semibold text-gray-800 dark:text-gray-200">No subsectors found</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Try adjusting your search or filter terms.</p>
+          <h3 className="text-sm font-bold text-gray-800 dark:text-gray-200">No subsectors found</h3>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Try adjusting your search query or filter level.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3.5">
           {filteredSubsectors.map((sub) => {
             const tableCount = schemaCountBySubsector[sub.id] || 0;
-            // Native tables indicator for demography / population
             const isNative = sub.id === 'demography';
 
             return (
               <div
                 key={sub.id}
                 onClick={() => navigate(`/data-entry/${sectorSlug}/${sub.id}`)}
-                className="group relative flex flex-col justify-between rounded-2xl bg-white dark:bg-gray-800 p-5 shadow-sm hover:shadow-md border border-gray-100 dark:border-gray-700/80 transition-all duration-200 hover:-translate-y-0.5 cursor-pointer"
+                className="group relative flex flex-col justify-between rounded-xl bg-white dark:bg-gray-800/90 p-4 shadow-xs hover:shadow-md border border-gray-200/80 dark:border-gray-700/80 hover:border-blue-400 dark:hover:border-blue-500/50 transition-all duration-200 hover:-translate-y-0.5 cursor-pointer"
               >
                 <div>
-                  <div className="flex items-start justify-between gap-3 mb-3.5">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-200">
-                      <SubsectorIcon icon={sub.icon} className="w-5 h-5" />
+                  <div className="flex items-center justify-between gap-2 mb-2.5">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-200 shrink-0">
+                      <SubsectorIcon icon={sub.icon} className="w-4 h-4" />
                     </div>
 
                     <div className="flex items-center gap-1.5">
                       {sub.is_barangay_level ? (
-                        <span className="inline-flex items-center rounded-full bg-emerald-50 dark:bg-emerald-900/30 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 border border-emerald-200/50 dark:border-emerald-800/40">
+                        <span className="inline-flex items-center rounded-md bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40">
                           Barangay
                         </span>
                       ) : (
-                        <span className="inline-flex items-center rounded-full bg-amber-50 dark:bg-amber-900/30 px-2.5 py-0.5 text-[11px] font-semibold text-amber-700 dark:text-amber-300 border border-amber-200/50 dark:border-amber-800/40">
+                        <span className="inline-flex items-center rounded-md bg-amber-50 dark:bg-amber-900/30 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/40">
                           Municipal
                         </span>
                       )}
                     </div>
                   </div>
 
-                  <h3 className="text-base font-bold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-1">
                     {sub.name}
                   </h3>
-                  <p className="mt-1.5 text-xs text-gray-600 dark:text-gray-300 line-clamp-3 leading-relaxed">
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 line-clamp-2 min-h-[32px] leading-relaxed">
                     {sub.description || 'Sex-disaggregated indicators and statistics.'}
                   </p>
                 </div>
 
-                <div className="mt-5 pt-3.5 border-t border-gray-100 dark:border-gray-700/60 flex items-center justify-between">
-                  <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                <div className="mt-3.5 pt-2.5 border-t border-gray-100 dark:border-gray-700/60 flex items-center justify-between">
+                  <span className="text-[10px] font-semibold text-gray-500 dark:text-gray-400">
                     {isNative ? (
-                      <span className="inline-flex items-center text-blue-600 dark:text-blue-400 font-semibold">
+                      <span className="inline-flex items-center text-blue-600 dark:text-blue-400">
                         Native + Dynamic
                       </span>
                     ) : tableCount > 0 ? (
-                      <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
-                        {tableCount} {tableCount === 1 ? 'Table' : 'Tables'} Configured
+                      <span className="text-emerald-600 dark:text-emerald-400">
+                        {tableCount} {tableCount === 1 ? 'Table' : 'Tables'}
                       </span>
                     ) : (
                       <span className="text-gray-400">Dynamic Ready</span>
                     )}
                   </span>
 
-                  <span className="inline-flex items-center text-xs font-semibold text-blue-600 dark:text-blue-400 group-hover:translate-x-0.5 transition-transform">
+                  <span className="inline-flex items-center text-xs font-bold text-blue-600 dark:text-blue-400 group-hover:translate-x-0.5 transition-transform">
                     {isViewer ? 'View' : 'Open'}
-                    <svg className="w-3.5 h-3.5 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    <svg className="w-3 h-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
                     </svg>
                   </span>
                 </div>
@@ -342,21 +357,21 @@ export default function SectorHubPage({ sector, sectorSlug, description }: Secto
 
       {/* Superadmin footer helper */}
       {isSuperAdmin && (
-        <div className="mt-8 rounded-xl bg-blue-50/70 dark:bg-blue-900/20 p-4 border border-blue-100 dark:border-blue-800/40 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-lg bg-blue-600 text-white flex items-center justify-center shrink-0">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="rounded-xl bg-blue-50/60 dark:bg-blue-900/20 p-3.5 border border-blue-100 dark:border-blue-800/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="h-7 w-7 rounded-lg bg-blue-600 text-white flex items-center justify-center shrink-0">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
             </div>
             <div>
-              <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Need to create custom indicators for this sector?</h4>
-              <p className="text-xs text-gray-600 dark:text-gray-400">Add dynamic schemas or configure new subsector tables using Dynamic Tables Manager.</p>
+              <h4 className="text-xs font-bold text-gray-900 dark:text-gray-100">Need to create custom indicators for this sector?</h4>
+              <p className="text-[11px] text-gray-500 dark:text-gray-400">Add dynamic schemas or configure new subsector tables using Dynamic Tables Manager.</p>
             </div>
           </div>
           <Link
             to="/settings/dynamic-tables"
-            className="shrink-0 px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium transition-colors shadow-sm"
+            className="shrink-0 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-colors shadow-xs"
           >
             Manage Dynamic Tables
           </Link>

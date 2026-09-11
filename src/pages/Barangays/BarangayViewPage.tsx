@@ -2,10 +2,10 @@ import React, { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import PageMeta from "@/components/common/PageMeta";
-import PageBreadcrumb from "@/components/common/PageBreadcrumb";
 import { supabase } from "@/config/supabase";
 import { useRole } from "@/hooks/useRole";
-import DeptKPIChart from "@/components/charts/DeptKPIChart";
+import MultiSeriesChart from "@/components/charts/MultiSeriesChart";
+import ErrorBoundary from "@/components/common/ErrorBoundary";
 import YearSelector from "@/components/common/YearSelector";
 import { getDefaultYear } from "@/utils/yearUtils";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
@@ -121,115 +121,103 @@ const BarangayViewPage: React.FC = () => {
   const totalHH = popStats?.total_households || popStats?.household_heads_total || 0;
   const maleCount = popStats?.male_count || 0;
   const femaleCount = popStats?.female_count || 0;
-  const pwdCount = (popStats?.pwd_m || 0) + (popStats?.pwd_f || 0);
-  const fourPsCount = (popStats?.four_ps_m || 0) + (popStats?.four_ps_f || 0);
 
   const activeSectorInfo = SECTORS.find(s => s.id === activeSector);
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-4 pb-10">
       <PageMeta title={`Barangay ${barangayName}`} description={`Profile and 5-sector statistics for Barangay ${barangayName}`} />
       
-      {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <PageBreadcrumb 
-          pageTitle={barangayName} 
-          rootLabel="Menu"
-          rootPath={null}
-          items={[{ label: "Barangays", path: "/barangays" }]} 
-        />
-        <div className="flex items-center gap-3">
-          {activeSectorInfo && canWrite && (
-            <Link
-              to={`/data-entry/${activeSectorInfo.slug}`}
-              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-100 text-xs font-semibold transition-colors border border-blue-200/60 dark:border-blue-800/40 shadow-sm"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+      {/* Compact Bento Profile Header & Controls */}
+      <div className="rounded-2xl border border-gray-200/80 bg-white/90 dark:border-gray-800 dark:bg-gray-800/90 p-4 sm:p-5 shadow-xs backdrop-blur-sm">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 pb-3.5 border-b border-gray-100 dark:border-gray-700/60">
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 dark:bg-blue-900/40 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/40">
+                Barangay Profile
+              </span>
+              <span className="text-xs text-gray-400 dark:text-gray-500">•</span>
+              <Link to="/barangays" className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline">
+                Barangays Directory
+              </Link>
+            </div>
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-gray-900 dark:text-white mt-1">
+              Barangay {barangayName}
+            </h1>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Complete sex-disaggregated indicators and multi-sector development monitoring for calendar year {year}.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
+            {activeSectorInfo && canWrite && (
+              <Link
+                to={`/data-entry/${activeSectorInfo.slug}`}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-100 text-xs font-semibold transition-colors border border-blue-200/60 dark:border-blue-800/40 shadow-xs"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Enter Data for Sector
+              </Link>
+            )}
+            <YearSelector year={year} setYear={setYear} scopeKey="Barangay_View" />
+          </div>
+        </div>
+
+        {/* Native Demographic Bento KPI Cards (Total Population & Total Households only) */}
+        <div className="pt-3.5 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="rounded-xl border border-gray-200/70 dark:border-gray-700/60 bg-gray-50/70 dark:bg-gray-900/40 p-3.5 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Total Population</p>
+              <div className="mt-1 flex items-baseline gap-2">
+                <span className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white">
+                  {totalPop.toLocaleString()}
+                </span>
+                <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-md">
+                  M: {maleCount.toLocaleString()} | F: {femaleCount.toLocaleString()}
+                </span>
+              </div>
+            </div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 shrink-0">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
-              Enter Data for Sector
-            </Link>
-          )}
-          <YearSelector year={year} setYear={setYear} scopeKey="Barangay_View" />
-        </div>
-      </div>
-
-      {/* Hero Banner */}
-      <div className="rounded-2xl bg-white dark:bg-gray-800/90 p-6 sm:p-7 shadow-sm border border-gray-100 dark:border-gray-800">
-        <div className="max-w-3xl">
-          <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 dark:bg-blue-900/30 px-3 py-1 text-xs font-semibold text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/40 mb-3">
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400" />
-            Barangay Profile • Municipality of Presentacion
+            </div>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white mb-2">Barangay {barangayName}</h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base leading-relaxed">
-            Complete sex-disaggregated indicators and multi-sector development monitoring for calendar year {year}.
-          </p>
-        </div>
-      </div>
 
-      {/* Core Demographic Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800/80 p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Total Population</p>
-          <div className="mt-2 flex items-end justify-between">
-            <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
-              {totalPop.toLocaleString()}
-            </p>
-            <span className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-md">
-              M: {maleCount.toLocaleString()} | F: {femaleCount.toLocaleString()}
-            </span>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800/80 p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Total Households</p>
-          <div className="mt-2 flex items-end justify-between">
-            <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
-              {totalHH.toLocaleString()}
-            </p>
-            <span className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-0.5 rounded-md">
-              Families
-            </span>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800/80 p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Registered PWDs</p>
-          <div className="mt-2 flex items-end justify-between">
-            <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
-              {pwdCount.toLocaleString()}
-            </p>
-            <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-md">
-              Persons
-            </span>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800/80 p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">4Ps Beneficiaries</p>
-          <div className="mt-2 flex items-end justify-between">
-            <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
-              {fourPsCount.toLocaleString()}
-            </p>
-            <span className="text-[11px] font-semibold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/30 px-2 py-0.5 rounded-md">
-              Beneficiaries
-            </span>
+          <div className="rounded-xl border border-gray-200/70 dark:border-gray-700/60 bg-gray-50/70 dark:bg-gray-900/40 p-3.5 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Total Households</p>
+              <div className="mt-1 flex items-baseline gap-2">
+                <span className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white">
+                  {totalHH.toLocaleString()}
+                </span>
+                <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-0.5 rounded-md">
+                  Families
+                </span>
+              </div>
+            </div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 shrink-0">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+              </svg>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* 5-Sector Tab Navigation */}
-      <div className="border-b border-gray-200 dark:border-gray-700">
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+      {/* 5-Sector Pill Navigation */}
+      <div className="bg-white/90 dark:bg-gray-800/90 p-1.5 rounded-xl border border-gray-200/80 dark:border-gray-700/80 shadow-xs">
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
           {SECTORS.map((sec) => (
             <button
               key={sec.id}
               onClick={() => setActiveSector(sec.id)}
-              className={`pb-3 px-4 text-sm font-semibold border-b-2 transition-all whitespace-nowrap cursor-pointer ${
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap cursor-pointer ${
                 activeSector === sec.id
-                  ? "border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400"
-                  : "border-transparent text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+                  ? "bg-blue-600 text-white shadow-xs"
+                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700/50"
               }`}
             >
               {sec.label}
@@ -346,14 +334,28 @@ const BarangayViewPage: React.FC = () => {
 
       {/* Sex Ratio Donut Chart for Social Development */}
       {activeSector === "Social Development" && (
-        <div className="bg-white dark:bg-gray-800/80 rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm max-w-md">
-          <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3">Sex Ratio ({year})</h3>
-          <DeptKPIChart 
-            title={`Sex Distribution - ${barangayName}`}
-            categories={["Male", "Female"]}
-            seriesData={[maleCount, femaleCount]}
-            type="pie"
-          />
+        <div className="rounded-2xl border border-gray-200/80 bg-white dark:border-gray-800 dark:bg-gray-800/90 p-4 sm:p-5 shadow-xs max-w-md">
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <h3 className="text-sm font-bold text-gray-900 dark:text-white">Sex Distribution ({year})</h3>
+              <p className="text-[11px] text-gray-400 dark:text-gray-500">Barangay {barangayName} male to female ratio</p>
+            </div>
+            <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded">
+              Demography
+            </span>
+          </div>
+          <div className="py-2">
+            <ErrorBoundary>
+              <MultiSeriesChart 
+                noCard={true}
+                type="donut"
+                height={220}
+                categories={["Male", "Female"]}
+                series={[maleCount, femaleCount]}
+                colors={["#3b82f6", "#ec4899"]}
+              />
+            </ErrorBoundary>
+          </div>
         </div>
       )}
     </div>
