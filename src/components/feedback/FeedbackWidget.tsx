@@ -311,18 +311,13 @@ export default function FeedbackWidget() {
               {/* Header */}
               <div className="p-5 border-b border-gray-100 dark:border-gray-800 bg-gradient-to-br from-blue-50/50 via-white to-purple-50/30 dark:from-gray-900 dark:to-gray-850">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-lg shadow-sm">
-                      <ChatIcon className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <h2 className="text-base font-bold text-gray-900 dark:text-white">
-                        {isSuperAdmin ? "Feedback & Critique Manager" : "Submit Feedback & Critique"}
-                      </h2>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {isSuperAdmin ? "Review and manage submissions from municipal reviewers" : "Help us improve the Presentacion GAD Database"}
-                      </p>
-                    </div>
+                  <div>
+                    <h2 className="text-base font-bold text-gray-900 dark:text-white">
+                      {isSuperAdmin ? "Feedback & Critique Manager" : "Submit Feedback & Critique"}
+                    </h2>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {isSuperAdmin ? "Review and manage submissions from municipal reviewers" : "Help us improve the Presentacion GAD Database"}
+                    </p>
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -414,26 +409,6 @@ export default function FeedbackWidget() {
                   </div>
                 ) : activeTab === 'submit' ? (
                   <form onSubmit={handleSubmit} className="space-y-4">
-                    
-                    {/* User Profile Indicator */}
-                    <div className="p-3 rounded-xl bg-gray-50 dark:bg-gray-800/60 border border-gray-100 dark:border-gray-800 flex items-center justify-between">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-bold flex items-center justify-center text-xs">
-                          {(authorName || 'U').charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-xs font-bold text-gray-900 dark:text-white">
-                              {authorName}
-                            </span>
-                            {renderRoleBadge(authorRole)}
-                          </div>
-                          <span className="text-[11px] text-gray-500 dark:text-gray-400">
-                            {user?.email || 'Public Reviewer'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
 
                     {/* Category Selector */}
                     <div>
