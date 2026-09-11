@@ -309,32 +309,27 @@ export default function FeedbackWidget() {
             <div className="w-screen max-w-lg bg-white dark:bg-gray-900 shadow-2xl border-l border-gray-100 dark:border-gray-800 flex flex-col h-full">
               
               {/* Header */}
-              <div className="px-4 py-2.5 border-b border-gray-100 dark:border-gray-800 bg-gradient-to-r from-blue-50/60 via-white to-purple-50/40 dark:from-gray-900 dark:to-gray-850 shrink-0">
-                <div className="flex items-center justify-between">
-                  <div className="min-w-0 pr-2">
-                    <h2 className="text-sm font-black text-gray-900 dark:text-white truncate">
+              <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800 bg-gradient-to-r from-blue-50/50 via-white to-purple-50/30 dark:from-gray-900 dark:to-gray-850 shrink-0">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h2 className="text-base font-black text-gray-900 dark:text-white">
                       {isSuperAdmin ? "Feedback & Critique Manager" : "Submit Feedback & Critique"}
                     </h2>
-                    <div className="flex items-center gap-1 mt-0.5 text-[10px] text-gray-500 dark:text-gray-400">
-                      <span className="truncate">Presentacion GAD Database</span>
-                      <span>•</span>
-                      <span className="inline-flex items-center gap-0.5 text-blue-600 dark:text-blue-400 font-semibold truncate max-w-[170px]">
-                        <PinIcon className="w-2.5 h-2.5 shrink-0" />
-                        <span className="truncate">{currentPageTitle}</span>
-                      </span>
-                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                      {isSuperAdmin ? "Review and manage submissions from reviewers" : "Help us improve the Presentacion GAD Database"}
+                    </p>
                   </div>
 
-                  <div className="flex items-center gap-1 shrink-0">
+                  <div className="flex items-center gap-1.5 shrink-0">
                     {isSuperAdmin && (
                       <Link
                         to="/feedback"
                         onClick={() => setIsOpen(false)}
-                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/50 border border-blue-200/60 dark:border-blue-800/40 text-[10px] font-bold text-blue-700 dark:text-blue-300 hover:bg-blue-100 transition cursor-pointer"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/50 border border-blue-200/60 dark:border-blue-800/40 text-xs font-bold text-blue-700 dark:text-blue-300 hover:bg-blue-100 transition cursor-pointer"
                         title="Open Full Management Hub"
                       >
                         <span>Admin Hub</span>
-                        <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                         </svg>
                       </Link>
@@ -342,40 +337,46 @@ export default function FeedbackWidget() {
 
                     <button
                       onClick={() => setIsOpen(false)}
-                      className="rounded-lg p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                      className="rounded-lg p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer"
                     >
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </button>
                   </div>
                 </div>
 
+                {/* Current Page Context Badge */}
+                <div className="mt-2.5 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-900/40 text-xs font-semibold text-blue-700 dark:text-blue-300">
+                  <PinIcon className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                  <span className="truncate">Current Page: {currentPageTitle}</span>
+                </div>
+
                 {/* Navigation Tabs (Only visible if Superadmin) */}
                 {isSuperAdmin && (
-                  <div className="mt-2 flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5">
+                  <div className="mt-2.5 flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5">
                     <button
                       onClick={() => setActiveTab('submit')}
-                      className={`flex-1 py-0.5 text-[10px] font-bold rounded-md transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                      className={`flex-1 py-1 text-xs font-bold rounded-md transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                         activeTab === 'submit'
                           ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-xs'
                           : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                       }`}
                     >
-                      <ChatIcon className="w-3 h-3" />
+                      <ChatIcon className="w-3.5 h-3.5" />
                       <span>Leave Feedback</span>
                     </button>
                     <button
                       onClick={() => setActiveTab('browse')}
-                      className={`flex-1 py-0.5 text-[10px] font-bold rounded-md transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                      className={`flex-1 py-1 text-xs font-bold rounded-md transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                         activeTab === 'browse'
                           ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-xs'
                           : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                       }`}
                     >
-                      <LightbulbIcon className="w-3 h-3" />
+                      <LightbulbIcon className="w-3.5 h-3.5" />
                       <span>Review Feedbacks</span>
-                      <span className="px-1 py-0.2 rounded-full bg-blue-100 dark:bg-blue-900/50 text-[9px] font-extrabold text-blue-700 dark:text-blue-300">
+                      <span className="px-1.5 py-0.2 rounded-full bg-blue-100 dark:bg-blue-900/50 text-[10px] font-extrabold text-blue-700 dark:text-blue-300">
                         {total}
                       </span>
                     </button>
@@ -384,37 +385,37 @@ export default function FeedbackWidget() {
               </div>
 
               {/* Body */}
-              <div className="flex-1 overflow-y-auto px-4 py-2.5 space-y-2">
+              <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
                 {isSubmittedSuccess && !isSuperAdmin ? (
-                  <div className="py-6 px-4 text-center rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-900/40 space-y-2">
-                    <div className="w-9 h-9 rounded-full bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto">
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <div className="py-10 px-4 text-center rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-900/40 space-y-3">
+                    <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto shadow-sm">
+                      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                       </svg>
                     </div>
-                    <h3 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white">
+                    <h3 className="text-base font-bold text-gray-900 dark:text-white">
                       Feedback Submitted Successfully!
                     </h3>
-                    <p className="text-[11px] text-gray-600 dark:text-gray-400 max-w-xs mx-auto leading-relaxed">
+                    <p className="text-xs text-gray-600 dark:text-gray-400 max-w-sm mx-auto leading-relaxed">
                       Thank you for your feedback. Your suggestions and critique have been recorded and sent directly to the Super Admin for review.
                     </p>
                     <button
                       type="button"
                       onClick={() => setIsSubmittedSuccess(false)}
-                      className="mt-1 px-3 py-1 rounded-lg bg-blue-600 text-white text-[11px] font-bold shadow-xs hover:bg-blue-700 transition cursor-pointer"
+                      className="mt-2 px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold shadow-md hover:bg-blue-700 transition cursor-pointer"
                     >
                       Submit Another Feedback
                     </button>
                   </div>
                 ) : activeTab === 'submit' ? (
-                  <form onSubmit={handleSubmit} className="space-y-2">
+                  <form onSubmit={handleSubmit} className="space-y-3.5">
 
                     {/* Category Selector */}
                     <div>
-                      <label className="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-1">
+                      <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
                         What type of feedback are you providing?
                       </label>
-                      <div className="grid grid-cols-3 gap-1">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                         {CATEGORIES.map(cat => {
                           const IconComp = cat.icon;
                           const isSelected = category === cat.id;
@@ -423,14 +424,14 @@ export default function FeedbackWidget() {
                               key={cat.id}
                               type="button"
                               onClick={() => setCategory(cat.id)}
-                              className={`px-1.5 py-1 rounded-md border text-left transition-all cursor-pointer flex items-center gap-1 ${
+                              className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex items-center gap-2 ${
                                 isSelected
-                                  ? `${cat.bg} ${cat.border} ring-1.5 ring-blue-500/50 shadow-xs`
-                                  : 'border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800/40 hover:bg-gray-50'
+                                  ? `${cat.bg} ${cat.border} ring-2 ring-blue-500/50 shadow-xs`
+                                  : 'border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-850 hover:bg-gray-50 dark:hover:bg-gray-800'
                               }`}
                             >
-                              <IconComp className={`w-3 h-3 shrink-0 ${isSelected ? cat.text : 'text-gray-400'}`} />
-                              <span className={`text-[10px] font-bold truncate ${isSelected ? cat.text : 'text-gray-700 dark:text-gray-300'}`}>
+                              <IconComp className={`w-4 h-4 shrink-0 ${isSelected ? cat.text : 'text-gray-400'}`} />
+                              <span className={`text-xs font-bold truncate ${isSelected ? cat.text : 'text-gray-700 dark:text-gray-300'}`}>
                                 {cat.label}
                               </span>
                             </button>
@@ -439,9 +440,35 @@ export default function FeedbackWidget() {
                       </div>
                     </div>
 
+                    {/* Overall Satisfaction / Rating */}
+                    <div className="flex items-center justify-between bg-gray-50/80 dark:bg-gray-850 px-3.5 py-2.5 rounded-xl border border-gray-100 dark:border-gray-800">
+                      <div>
+                        <span className="text-xs font-bold text-gray-800 dark:text-gray-200 block">
+                          Overall Satisfaction / Rating
+                        </span>
+                        <span className="text-[11px] text-gray-400">
+                          {rating ? `${rating} of 5 Stars` : 'Optional'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            type="button"
+                            onClick={() => setRating(star === rating ? null : star)}
+                            className={`p-1 transition-transform hover:scale-115 focus:outline-none cursor-pointer ${
+                              rating && star <= rating ? 'text-amber-400' : 'text-gray-300 dark:text-gray-600 hover:text-amber-300'
+                            }`}
+                          >
+                            <StarIcon filled={!!(rating && star <= rating)} className="w-5 h-5" />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
                     {/* Headline / Summary */}
                     <div>
-                      <label className="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-0.5">
+                      <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
                         Headline / Summary <span className="text-rose-500">*</span>
                       </label>
                       <input
@@ -449,77 +476,50 @@ export default function FeedbackWidget() {
                         required
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
-                        placeholder="e.g. Add export button, or UI layout clarification..."
-                        className="w-full h-7 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-2.5 py-1 text-xs text-gray-900 dark:text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1.5 focus:ring-blue-500/20"
+                        placeholder="e.g. Add export button to Education table, or UI layout clarification..."
+                        className="w-full h-9 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-850 px-3 py-1.5 text-xs sm:text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                       />
                     </div>
 
                     {/* Detailed Content */}
                     <div>
-                      <label className="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-0.5">
+                      <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
                         Detailed Critique or Suggestion <span className="text-rose-500">*</span>
                       </label>
                       <textarea
                         required
-                        rows={2}
+                        rows={3}
                         value={content}
                         onChange={(e) => setContent(e.target.value)}
-                        placeholder="Describe your suggestion, what could be improved, or observed issues..."
-                        className="w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-2.5 py-1.5 text-xs text-gray-900 dark:text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1.5 focus:ring-blue-500/20 h-14 min-h-[48px] resize-none"
+                        placeholder="Describe your suggestion, what could be improved, any observed issues, or ideas for new metrics..."
+                        className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-850 px-3 py-2 text-xs sm:text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 min-h-[76px] resize-y"
                       />
                     </div>
 
-                    {/* Compact Combined Row: Rating + Priority */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 bg-gray-50/70 dark:bg-gray-800/40 p-1.5 rounded-lg border border-gray-100 dark:border-gray-800">
-                      {/* Left: Star Rating */}
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-bold text-gray-600 dark:text-gray-400">
-                          Rating:
-                        </span>
-                        <div className="flex items-center gap-0.5">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <button
-                              key={star}
-                              type="button"
-                              onClick={() => setRating(star === rating ? null : star)}
-                              className={`p-0.5 transition-transform hover:scale-110 focus:outline-none cursor-pointer ${
-                                rating && star <= rating ? 'text-amber-400' : 'text-gray-300 dark:text-gray-600 hover:text-amber-300'
-                              }`}
-                            >
-                              <StarIcon filled={!!(rating && star <= rating)} className="w-3.5 h-3.5" />
-                            </button>
-                          ))}
-                          <span className="text-[9px] font-semibold text-amber-500 ml-1">
-                            {rating ? `${rating}★` : 'Optional'}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Right: Priority */}
-                      <div className="flex items-center justify-between sm:justify-end gap-1">
-                        <span className="text-[10px] font-bold text-gray-600 dark:text-gray-400 sm:hidden">
-                          Priority:
-                        </span>
-                        <div className="flex items-center gap-0.5">
-                          {(['low', 'medium', 'high', 'urgent'] as FeedbackPriority[]).map((p) => (
-                            <button
-                              key={p}
-                              type="button"
-                              onClick={() => setPriority(p)}
-                              className={`px-1.5 py-0.5 text-[9px] font-bold rounded uppercase tracking-wider transition-colors cursor-pointer ${
-                                priority === p
-                                  ? p === 'urgent'
-                                  ? 'bg-rose-600 text-white shadow-2xs'
-                                  : p === 'high'
-                                  ? 'bg-amber-500 text-white shadow-2xs'
-                                  : 'bg-blue-600 text-white shadow-2xs'
-                                  : 'bg-gray-200/80 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-300'
-                              }`}
-                            >
-                              {p.slice(0, 3)}
-                            </button>
-                          ))}
-                        </div>
+                    {/* Priority Level */}
+                    <div className="flex items-center justify-between pt-0.5">
+                      <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
+                        Priority Level:
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        {(['low', 'medium', 'high', 'urgent'] as FeedbackPriority[]).map((p) => (
+                          <button
+                            key={p}
+                            type="button"
+                            onClick={() => setPriority(p)}
+                            className={`px-3 py-1 text-xs font-bold rounded-lg uppercase tracking-wide transition-all cursor-pointer ${
+                              priority === p
+                                ? p === 'urgent'
+                                ? 'bg-rose-600 text-white shadow-xs'
+                                : p === 'high'
+                                ? 'bg-amber-500 text-white shadow-xs'
+                                : 'bg-blue-600 text-white shadow-xs'
+                                : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+                            }`}
+                          >
+                            {p}
+                          </button>
+                        ))}
                       </div>
                     </div>
 
@@ -527,11 +527,11 @@ export default function FeedbackWidget() {
                     <button
                       type="submit"
                       disabled={submitMutation.isPending || !title.trim() || !content.trim()}
-                      className="w-full rounded-lg bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 py-2 text-xs font-bold text-white shadow-md shadow-blue-500/20 hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 transition-all cursor-pointer flex items-center justify-center gap-1.5 mt-1"
+                      className="w-full rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 py-3 text-sm font-bold text-white shadow-lg shadow-blue-500/25 hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 mt-2"
                     >
                       {submitMutation.isPending ? (
                         <>
-                          <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
+                          <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
                           </svg>
