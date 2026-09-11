@@ -115,7 +115,7 @@ const UserCheckIcon = ({ className = "w-3 h-3" }: { className?: string }) => (
 
 const CATEGORY_CONFIG: Record<FeedbackCategory, { label: string; icon: React.FC<{ className?: string }>; bg: string; text: string; border: string }> = {
   suggestion: { label: 'Suggestion', icon: LightbulbIcon, bg: 'bg-amber-50 dark:bg-amber-950/40', text: 'text-amber-700 dark:text-amber-300', border: 'border-amber-200 dark:border-amber-800/60' },
-  critique: { label: 'UI/UX Critique', icon: PaletteIcon, bg: 'bg-purple-50 dark:bg-purple-950/40', text: 'text-purple-700 dark:text-purple-300', border: 'border-purple-200 dark:border-purple-800/60' },
+  critique: { label: 'Design Critique', icon: PaletteIcon, bg: 'bg-purple-50 dark:bg-purple-950/40', text: 'text-purple-700 dark:text-purple-300', border: 'border-purple-200 dark:border-purple-800/60' },
   data_accuracy: { label: 'Data Accuracy', icon: ChartBarIcon, bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300', border: 'border-blue-200 dark:border-blue-800/60' },
   bug: { label: 'Bug Report', icon: BugIcon, bg: 'bg-rose-50 dark:bg-rose-950/40', text: 'text-rose-700 dark:text-rose-300', border: 'border-rose-200 dark:border-rose-800/60' },
   general: { label: 'General', icon: ChatIcon, bg: 'bg-gray-50 dark:bg-gray-800/60', text: 'text-gray-700 dark:text-gray-300', border: 'border-gray-200 dark:border-gray-700' },
@@ -129,32 +129,50 @@ const STATUS_CONFIG: Record<FeedbackStatus, { label: string; bg: string; text: s
   dismissed: { label: 'Closed', bg: 'bg-gray-100 dark:bg-gray-800', text: 'text-gray-600 dark:text-gray-400', dot: 'bg-gray-400', border: 'border-gray-200 dark:border-gray-700' },
 };
 
+function formatRoleTitle(roleStr: string): string {
+  if (!roleStr) return 'Reviewer';
+  const clean = roleStr.replace(/_/g, ' ');
+  return clean
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+}
+
 function renderRoleBadge(roleStr: string) {
   const r = (roleStr || 'reviewer').toLowerCase();
-  if (r.includes('superadmin') || r.includes('super admin')) {
+  const formatted = formatRoleTitle(roleStr);
+
+  if (r.includes('superadmin') || r.includes('super_admin') || r.includes('super admin')) {
     return (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-50 dark:bg-rose-950/50 text-[10px] font-extrabold text-rose-700 dark:text-rose-300 border border-rose-200/60 dark:border-rose-800/50">
         <ShieldIcon className="w-3 h-3 text-rose-600 dark:text-rose-400" /> Super Admin
       </span>
     );
   }
-  if (r.includes('dept') || r.includes('head') || r.includes('admin') || r.includes('encoder')) {
+  if (r.includes('senior')) {
     return (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/50 text-[10px] font-extrabold text-indigo-700 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/50">
-        <BriefcaseIcon className="w-3 h-3 text-indigo-600 dark:text-indigo-400" /> Dept Admin
+        <BriefcaseIcon className="w-3 h-3 text-indigo-600 dark:text-indigo-400" /> {formatted}
       </span>
     );
   }
-  if (r.includes('reviewer') || r.includes('stakeholder') || r.includes('evaluator')) {
+  if (r.includes('dept') || r.includes('head') || r.includes('admin') || r.includes('encoder')) {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/50 text-[10px] font-extrabold text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/50">
+        <BriefcaseIcon className="w-3 h-3 text-blue-600 dark:text-blue-400" /> {formatted}
+      </span>
+    );
+  }
+  if (r.includes('reviewer') || r.includes('stakeholder') || r.includes('evaluator') || r.includes('viewer')) {
     return (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-cyan-50 dark:bg-cyan-950/50 text-[10px] font-extrabold text-cyan-700 dark:text-cyan-300 border border-cyan-200/60 dark:border-cyan-800/50">
-        <UserCheckIcon className="w-3 h-3 text-cyan-600 dark:text-cyan-400" /> Reviewer
+        <UserCheckIcon className="w-3 h-3 text-cyan-600 dark:text-cyan-400" /> {formatted}
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/50 text-[10px] font-extrabold text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/50 capitalize">
-      <UserCheckIcon className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> {roleStr}
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/50 text-[10px] font-extrabold text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/50">
+      <UserCheckIcon className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> {formatted}
     </span>
   );
 }

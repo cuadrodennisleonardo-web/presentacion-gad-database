@@ -333,7 +333,7 @@ const AppSidebar: React.FC = () => {
     if (isSuperAdmin) {
       items.push({
         icon: <FeedbackIcon />,
-        name: "Feedback & Ideas",
+        name: "Feedback & Critique",
         path: "/feedback",
         badge: pendingFeedbackCount > 0,
       });
