@@ -62,7 +62,8 @@ const SexDistributionChart: React.FC<SexDistributionChartProps> = ({
       },
       stroke: {
         show: true,
-        colors: ["transparent"],
+        width: 3,
+        colors: ["#ffffff"],
       },
       legend: {
         show: true,
@@ -77,8 +78,28 @@ const SexDistributionChart: React.FC<SexDistributionChartProps> = ({
           vertical: 4,
         },
       },
-      theme: {
-        mode: "light",
+      tooltip: {
+        enabled: true,
+        theme: "dark",
+        custom: function({ series, seriesIndex, w }: any) {
+          const label = w.globals.labels[seriesIndex] || (seriesIndex === 0 ? "Male" : "Female");
+          const value = series[seriesIndex] !== undefined ? series[seriesIndex] : 0;
+          const total = series.reduce((a: number, b: number) => a + (Number(b) || 0), 0);
+          const pct = total > 0 ? ((value / total) * 100).toFixed(1) : "0";
+          const color = (w.globals.colors && w.globals.colors[seriesIndex]) || (seriesIndex === 0 ? "#3b82f6" : "#ec4899");
+          return `
+            <div style="background: rgba(17, 24, 39, 0.95); backdrop-filter: blur(8px); border: 1px solid rgba(55, 65, 81, 0.8); border-radius: 10px; padding: 8px 12px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4); font-family: Outfit, sans-serif; color: #ffffff;">
+              <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 3px;">
+                <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: ${color};"></span>
+                <span style="font-size: 11px; font-weight: 700; color: #e5e7eb;">${label} Population</span>
+              </div>
+              <div style="font-size: 13px; font-weight: 800; color: #ffffff;">
+                ${Number(value).toLocaleString()}
+                <span style="font-size: 11px; font-weight: 500; color: #9ca3af; margin-left: 6px;">(${pct}%)</span>
+              </div>
+            </div>
+          `;
+        },
       },
     }),
     []

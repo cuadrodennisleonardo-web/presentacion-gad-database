@@ -121,8 +121,10 @@ const MultiSeriesChart: React.FC<MultiSeriesChartProps> = ({
       enabled: isPieOrDonut,
     },
     stroke: {
+      show: true,
       curve: "smooth",
-      width: type === "bar" || isPieOrDonut ? 0 : 2,
+      width: isPieOrDonut ? 3 : (type === "bar" ? 0 : 2),
+      colors: isPieOrDonut ? ["#ffffff"] : undefined,
     },
     ...(isPieOrDonut && normalizedLabels && normalizedLabels.length > 0 ? { labels: normalizedLabels } : {}),
     xaxis: !isPieOrDonut ? {
@@ -152,6 +154,27 @@ const MultiSeriesChart: React.FC<MultiSeriesChartProps> = ({
       }
     } : undefined,
     tooltip: {
+      enabled: true,
+      theme: 'dark',
+      custom: isPieOrDonut ? function({ series, seriesIndex, w }: any) {
+        const label = w.globals.labels[seriesIndex] || `Indicator ${seriesIndex + 1}`;
+        const value = series[seriesIndex] !== undefined ? series[seriesIndex] : 0;
+        const total = series.reduce((a: number, b: number) => a + (Number(b) || 0), 0);
+        const pct = total > 0 ? ((value / total) * 100).toFixed(1) : '0';
+        const color = (w.globals.colors && w.globals.colors[seriesIndex]) || '#3b82f6';
+        return `
+          <div style="background: rgba(17, 24, 39, 0.95); backdrop-filter: blur(8px); border: 1px solid rgba(55, 65, 81, 0.8); border-radius: 10px; padding: 8px 12px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4); font-family: Outfit, sans-serif; color: #ffffff;">
+            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 3px;">
+              <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: ${color};"></span>
+              <span style="font-size: 11px; font-weight: 700; color: #e5e7eb;">${label}</span>
+            </div>
+            <div style="font-size: 13px; font-weight: 800; color: #ffffff;">
+              ${isCurrency ? '₱' + Number(value).toLocaleString() : Number(value).toLocaleString()}
+              <span style="font-size: 11px; font-weight: 500; color: #9ca3af; margin-left: 6px;">(${pct}%)</span>
+            </div>
+          </div>
+        `;
+      } : undefined,
       y: {
         formatter: (val) => {
           if (val === undefined || val === null || isNaN(val)) return "0";
